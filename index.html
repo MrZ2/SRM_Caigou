@@ -1,0 +1,3044 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SRM 采购管理系统</title>
+  <!-- Ant Design 4.x CSS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/antd@4.24.16/dist/antd.min.css">
+  <style>
+    /* ===== 全局重置 ===== */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body, #root { height: 100%; }
+
+    /* ===== Logo 区域 ===== */
+    .logo-wrapper {
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      overflow: hidden;
+      white-space: nowrap;
+      transition: all 0.2s;
+    }
+    .logo-icon {
+      width: 36px;
+      height: 36px;
+      background: linear-gradient(135deg, #1677ff, #69b1ff);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 18px;
+      font-weight: bold;
+      flex-shrink: 0;
+    }
+    .logo-text {
+      margin-left: 10px;
+      color: #fff;
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      transition: opacity 0.2s;
+    }
+    .logo-collapsed .logo-text { opacity: 0; width: 0; margin-left: 0; }
+
+    /* ===== Sider 菜单区域 ===== */
+    .sider-menu {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+    .sider-menu::-webkit-scrollbar { width: 6px; }
+    .sider-menu::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 3px;
+    }
+    .sider-menu::-webkit-scrollbar-track { background: transparent; }
+
+    /* ===== Header ===== */
+    .site-header {
+      background: #fff !important;
+      padding: 0 24px !important;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+      z-index: 10;
+      height: 64px;
+      line-height: 64px;
+    }
+    .header-left {
+      display: flex;
+      align-items: center;
+    }
+    .header-left .trigger {
+      font-size: 18px;
+      cursor: pointer;
+      transition: color 0.3s;
+      color: #595959;
+    }
+    .header-left .trigger:hover { color: #1677ff; }
+    .header-right {
+      display: flex;
+      align-items: center;
+    }
+    .header-right .ant-badge { cursor: pointer; }
+    .header-right .ant-badge .anticon {
+      font-size: 18px;
+      color: #595959;
+      padding: 8px;
+      border-radius: 50%;
+      transition: background 0.3s;
+    }
+    .header-right .ant-badge .anticon:hover { background: rgba(0, 0, 0, 0.04); }
+    .user-avatar-dropdown {
+      cursor: pointer;
+      padding: 0 8px;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      transition: background 0.3s;
+    }
+    .user-avatar-dropdown:hover { background: rgba(0, 0, 0, 0.025); }
+    .user-name {
+      margin-left: 8px;
+      color: #262626;
+      font-size: 14px;
+    }
+
+    /* ===== Content 区域 ===== */
+    .site-content {
+      margin: 24px;
+      min-height: calc(100vh - 64px - 48px);
+    }
+    .content-card {
+      background: #fff;
+      border-radius: 8px;
+      padding: 32px;
+      min-height: 360px;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+    }
+    .page-header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 24px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .page-icon {
+      width: 48px;
+      height: 48px;
+      background: linear-gradient(135deg, #e6f4ff, #bae0ff);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      color: #1677ff;
+      margin-right: 16px;
+    }
+    .page-title {
+      font-size: 20px;
+      font-weight: 600;
+      color: #262626;
+      margin: 0 0 4px 0;
+    }
+    .page-subtitle {
+      font-size: 13px;
+      color: #8c8c8c;
+      margin: 0;
+    }
+    .welcome-message {
+      text-align: center;
+      padding: 80px 0;
+      color: #8c8c8c;
+    }
+    .welcome-message .anticon {
+      font-size: 64px;
+      color: #d9d9d9;
+      margin-bottom: 16px;
+    }
+    .welcome-message h2 {
+      font-size: 22px;
+      color: #434343;
+      margin-bottom: 8px;
+      font-weight: 500;
+    }
+
+    /* ===== Sider 内自定义布局 ===== */
+    .ant-layout-sider {
+      display: flex !important;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+    }
+    .ant-layout-sider-children {
+      display: flex !important;
+      flex-direction: column;
+      height: 100%;
+    }
+
+    /* ===== 全局 UI 优化 ===== */
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'PingFang SC', 'Microsoft YaHei', sans-serif; -webkit-font-smoothing: antialiased; }
+
+    /* 侧边栏菜单优化 */
+    .ant-menu-dark .ant-menu-item { margin: 2px 8px !important; border-radius: 6px !important; height: 38px !important; line-height: 38px !important; }
+    .ant-menu-dark .ant-menu-item-selected { background: #1677ff !important; }
+    .ant-menu-dark .ant-menu-submenu-title { margin: 2px 8px !important; border-radius: 6px !important; height: 38px !important; line-height: 38px !important; }
+    .ant-menu-dark .ant-menu-submenu-selected > .ant-menu-submenu-title { color: #fff !important; }
+
+    /* Header 优化 */
+    .site-header { border-bottom: 1px solid #f0f0f0 !important; box-shadow: 0 1px 2px rgba(0,0,0,0.04) !important; }
+
+    /* 表格优化 */
+    .ant-table-thead > tr > th { background: #fafbfc !important; font-weight: 600 !important; color: #262626 !important; font-size: 13px !important; }
+    .ant-table-tbody > tr:hover > td { background: #f0f7ff !important; }
+    .ant-table-tbody > tr > td { font-size: 13px !important; }
+
+    /* 按钮优化 */
+    .ant-btn { border-radius: 6px !important; font-weight: 500 !important; }
+    .ant-btn-primary { box-shadow: 0 2px 4px rgba(22,119,255,0.2) !important; }
+
+    /* Modal 优化 */
+    .ant-modal-content { border-radius: 12px !important; overflow: hidden; }
+    .ant-modal-header { border-radius: 12px 12px 0 0 !important; }
+
+    /* Tag 优化 */
+    .ant-tag { border-radius: 4px !important; }
+
+    /* 分页优化 */
+    .ant-pagination .ant-pagination-item-active { border-color: #1677ff !important; }
+
+    /* Input/Select 优化 */
+    .ant-input, .ant-select-selector { border-radius: 6px !important; }
+    .ant-input:focus, .ant-input-focused { box-shadow: 0 0 0 2px rgba(22,119,255,0.1) !important; }
+
+    /* 滚动条全局优化 */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.12); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.2); }
+    ::-webkit-scrollbar-track { background: transparent; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <!-- React 18 -->
+  <script src="https://cdn.jsdelivr.net/npm/react@18/umd/react.production.min.js"></script>
+  <!-- ReactDOM 18 -->
+  <script src="https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.production.min.js"></script>
+  <!-- Babel Standalone (JSX transpilation) -->
+  <script src="https://cdn.jsdelivr.net/npm/@babel/standalone@7/babel.min.js"></script>
+  <!-- dayjs (antd 依赖) -->
+  <script src="https://cdn.jsdelivr.net/npm/dayjs@1/dayjs.min.js"></script>
+  <!-- Ant Design 4.x -->
+  <script src="https://cdn.jsdelivr.net/npm/antd@4.24.16/dist/antd.min.js"></script>
+  <!-- Ant Design Icons -->
+  <script src="https://cdn.jsdelivr.net/npm/@ant-design/icons@4.8.3/dist/index.umd.min.js"></script>
+  <!-- ECharts -->
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+  <!-- ECharts 中国地图 -->
+  <script src="https://cdn.jsdelivr.net/npm/echarts@4.9.0/map/js/china.js"></script>
+
+  <script type="text/babel">
+    const { useState, useMemo, useCallback, useRef, useEffect } = React;
+    const {
+      Layout, Menu, Breadcrumb, Space, Badge, Avatar,
+      Dropdown, Card, Typography, Row, Col, Input, Button,
+      Modal, Tag, Table, Select, Checkbox, Popover, Upload,
+      Tooltip, Pagination, Divider, Form
+    } = antd;
+    const { Header, Sider, Content } = Layout;
+    const { Text } = Typography;
+    const { TextArea } = Input;
+    const { Option } = Select;
+
+    // ===== 图标解构 =====
+    const {
+      HomeOutlined,
+      UserOutlined,
+      ShopOutlined,
+      SafetyCertificateOutlined,
+      ShoppingCartOutlined,
+      FileSearchOutlined,
+      ThunderboltOutlined,
+      AuditOutlined,
+      SnippetsOutlined,
+      DollarOutlined,
+      OrderedListOutlined,
+      FundOutlined,
+      SettingOutlined,
+      BellOutlined,
+      LogoutOutlined,
+      MenuFoldOutlined,
+      MenuUnfoldOutlined,
+      DashboardOutlined,
+      FormOutlined,
+      FileTextOutlined,
+      FileAddOutlined,
+      SolutionOutlined,
+      ProfileOutlined,
+      TeamOutlined,
+      CheckCircleOutlined,
+      AppstoreOutlined,
+      UnorderedListOutlined,
+      SearchOutlined,
+      SendOutlined,
+      CheckSquareOutlined,
+      TrophyOutlined,
+      EyeOutlined,
+      FieldTimeOutlined,
+      DatabaseOutlined,
+      ToolOutlined,
+      CopyOutlined,
+      TagOutlined,
+      EditOutlined,
+      PictureOutlined,
+      DiffOutlined,
+      BookOutlined,
+      HistoryOutlined,
+      ScheduleOutlined,
+      CarOutlined,
+      NotificationOutlined,
+      InboxOutlined,
+      ExperimentOutlined,
+      ShoppingOutlined,
+      RollbackOutlined,
+      BarChartOutlined,
+      KeyOutlined,
+      EnvironmentOutlined,
+      GlobalOutlined,
+      GoldOutlined,
+      DownloadOutlined,
+      FullscreenOutlined,
+      ImportOutlined,
+      ExportOutlined,
+      DeleteOutlined,
+      ClockCircleOutlined,
+      ApartmentOutlined,
+      PlusOutlined,
+      UploadOutlined,
+      HolderOutlined,
+      CloseOutlined,
+      ColumnWidthOutlined,
+      TableOutlined,
+      ReloadOutlined,
+      ExpandOutlined,
+      MessageOutlined,
+    } = icons;
+
+    // ===== 菜单数据定义 =====
+    const menuData = [
+      {
+        key: "home",
+        label: "首页",
+        icon: React.createElement(HomeOutlined),
+      },
+      {
+        key: "personal",
+        label: "个人中心",
+        icon: React.createElement(UserOutlined),
+        children: [
+          { key: "personal/todo", label: "我的待办", icon: React.createElement(FieldTimeOutlined) },
+          { key: "personal/initiated", label: "我发起的", icon: React.createElement(SendOutlined) },
+          { key: "personal/handled", label: "我处理的", icon: React.createElement(CheckSquareOutlined) },
+          { key: "personal/cc", label: "抄送我的", icon: React.createElement(CopyOutlined) },
+        ],
+      },
+      {
+        key: "supplier",
+        label: "供应商管理",
+        icon: React.createElement(ShopOutlined),
+        children: [
+          { key: "supplier/board", label: "供应商看板", icon: React.createElement(DashboardOutlined) },
+          { key: "supplier/register", label: "供应商注册", icon: React.createElement(FormOutlined) },
+          { key: "supplier/access", label: "供应商准入", icon: React.createElement(SolutionOutlined) },
+          { key: "supplier/archive", label: "供应商档案", icon: React.createElement(ProfileOutlined) },
+          { key: "supplier/type", label: "供应商类型", icon: React.createElement(TagOutlined) },
+        ],
+      },
+      {
+        key: "quality",
+        label: "质量管理",
+        icon: React.createElement(SafetyCertificateOutlined),
+        children: [
+          { key: "quality/board", label: "供应商绩效看板", icon: React.createElement(DashboardOutlined) },
+          { key: "quality/evaluation", label: "绩效考核评价", icon: React.createElement(EditOutlined) },
+          { key: "quality/plan", label: "绩效考核方案", icon: React.createElement(FileTextOutlined) },
+        ],
+      },
+      {
+        key: "procurement",
+        label: "采购管理",
+        icon: React.createElement(ShoppingCartOutlined),
+        children: [
+          {
+            key: "procurement/data-board",
+            label: "采购数据看板",
+            icon: React.createElement(DashboardOutlined),
+            children: [
+              { key: "procurement/data-board/demand", label: "采购需求看板" },
+              { key: "procurement/data-board/track", label: "需求跟踪看板" },
+              { key: "procurement/data-board/source", label: "寻源统计看板" },
+            ],
+          },
+          { key: "procurement/project", label: "项目管理", icon: React.createElement(AppstoreOutlined) },
+          { key: "procurement/apply", label: "采购申请", icon: React.createElement(FormOutlined) },
+          { key: "procurement/pool", label: "采购需求池", icon: React.createElement(DatabaseOutlined) },
+        ],
+      },
+      {
+        key: "rfq",
+        label: "询比价",
+        icon: React.createElement(FileSearchOutlined),
+        children: [
+          { key: "rfq/hall", label: "询价大厅", icon: React.createElement(SearchOutlined) },
+          { key: "rfq/apply", label: "询价申请", icon: React.createElement(FormOutlined) },
+          { key: "rfq/signup", label: "询价报名", icon: React.createElement(SolutionOutlined) },
+          { key: "rfq/confirm", label: "询价结果确认", icon: React.createElement(CheckCircleOutlined) },
+          { key: "rfq/quote", label: "供应商报价单", icon: React.createElement(FileTextOutlined) },
+          { key: "rfq/result", label: "询价中标明细", icon: React.createElement(TrophyOutlined) },
+          { key: "rfq/publicity", label: "询价结果公示", icon: React.createElement(EyeOutlined) },
+          { key: "rfq/template", label: "报价模板管理", icon: React.createElement(ToolOutlined) },
+        ],
+      },
+      {
+        key: "bidding",
+        label: "竞价",
+        icon: React.createElement(ThunderboltOutlined),
+        children: [
+          { key: "bidding/invite", label: "竞价邀请", icon: React.createElement(SendOutlined) },
+          { key: "bidding/signup", label: "竞价报名", icon: React.createElement(SolutionOutlined) },
+          { key: "bidding/manage", label: "竞价管理（后台）", icon: React.createElement(SettingOutlined) },
+          { key: "bidding/hall", label: "竞价大厅（供应商）", icon: React.createElement(DashboardOutlined) },
+          { key: "bidding/audit", label: "竞价核价", icon: React.createElement(CheckCircleOutlined) },
+          { key: "bidding/config", label: "竞价配置", icon: React.createElement(ToolOutlined) },
+        ],
+      },
+      {
+        key: "tender",
+        label: "招投标",
+        icon: React.createElement(AuditOutlined),
+        children: [
+          { key: "tender/plan", label: "招标计划", icon: React.createElement(ScheduleOutlined) },
+          { key: "tender/hall", label: "招标大厅", icon: React.createElement(DashboardOutlined) },
+          { key: "tender/bid-open", label: "开标管理", icon: React.createElement(KeyOutlined) },
+          { key: "tender/second-quote", label: "二次报价", icon: React.createElement(DollarOutlined) },
+          { key: "tender/evaluation", label: "评标管理", icon: React.createElement(EditOutlined) },
+          { key: "tender/confirm", label: "定标结果确认", icon: React.createElement(CheckSquareOutlined) },
+          { key: "tender/deposit", label: "保证金管理", icon: React.createElement(GoldOutlined) },
+          { key: "tender/refund", label: "保证金退还", icon: React.createElement(RollbackOutlined) },
+          { key: "tender/rules", label: "评标规则管理", icon: React.createElement(BookOutlined) },
+        ],
+      },
+      {
+        key: "contract",
+        label: "合同管理",
+        icon: React.createElement(SnippetsOutlined),
+        children: [
+          { key: "contract/draft", label: "合同起草", icon: React.createElement(EditOutlined) },
+          { key: "contract/ledger", label: "合同台账", icon: React.createElement(BookOutlined) },
+          { key: "contract/seal", label: "合同用印", icon: React.createElement(PictureOutlined) },
+          { key: "contract/archive", label: "合同归档", icon: React.createElement(HistoryOutlined) },
+          { key: "contract/search", label: "合同检索", icon: React.createElement(SearchOutlined) },
+          { key: "contract/compare", label: "合同比对", icon: React.createElement(DiffOutlined) },
+          {
+            key: "contract/config",
+            label: "合同基础配置",
+            icon: React.createElement(ToolOutlined),
+            children: [
+              { key: "contract/config/category", label: "合同分类" },
+              { key: "contract/config/party", label: "合同签约方" },
+              { key: "contract/config/seal-info", label: "印章信息" },
+              { key: "contract/config/risk-clause", label: "风险条款" },
+            ],
+          },
+        ],
+      },
+      {
+        key: "price",
+        label: "价格管理",
+        icon: React.createElement(DollarOutlined),
+        children: [
+          { key: "price/library", label: "价格库", icon: React.createElement(DatabaseOutlined) },
+          { key: "price/adjustment", label: "调价单", icon: React.createElement(EditOutlined) },
+        ],
+      },
+      {
+        key: "order",
+        label: "订单执行",
+        icon: React.createElement(OrderedListOutlined),
+        children: [
+          { key: "order/delivery-board", label: "交货计划看板", icon: React.createElement(DashboardOutlined) },
+          { key: "order/po", label: "采购订单", icon: React.createElement(ShoppingOutlined) },
+          { key: "order/delivery-change", label: "交期变更", icon: React.createElement(ScheduleOutlined) },
+          { key: "order/appointment", label: "送货预约", icon: React.createElement(CarOutlined) },
+          { key: "order/notice", label: "送货通知", icon: React.createElement(NotificationOutlined) },
+          { key: "order/delivery", label: "发货管理", icon: React.createElement(SendOutlined) },
+          { key: "order/receipt", label: "收货确认", icon: React.createElement(InboxOutlined) },
+          { key: "order/inspection", label: "质检验收", icon: React.createElement(ExperimentOutlined) },
+          { key: "order/warehouse", label: "采购入库", icon: React.createElement(UnorderedListOutlined) },
+          { key: "order/return", label: "采购退货", icon: React.createElement(RollbackOutlined) },
+          {
+            key: "order/report",
+            label: "数据报表",
+            icon: React.createElement(BarChartOutlined),
+            children: [
+              { key: "order/report/contract-order", label: "合同订单看板" },
+              { key: "order/report/material-price", label: "物料价格看板" },
+              { key: "order/report/plan", label: "采购计划看板" },
+              { key: "order/report/track", label: "订单执行跟踪" },
+            ],
+          },
+        ],
+      },
+      {
+        key: "finance",
+        label: "财务管理",
+        icon: React.createElement(FundOutlined),
+        children: [
+          {
+            key: "finance/data-board",
+            label: "财务数据看板",
+            icon: React.createElement(DashboardOutlined),
+            children: [
+              { key: "finance/data-board/expense", label: "财务支出看板" },
+              { key: "finance/data-board/payable", label: "应付未付统计" },
+            ],
+          },
+          { key: "finance/payment-plan", label: "付款计划", icon: React.createElement(ScheduleOutlined) },
+          { key: "finance/reconciliation", label: "供应商对账", icon: React.createElement(DiffOutlined) },
+          { key: "finance/deduction", label: "供应商扣款", icon: React.createElement(DollarOutlined) },
+          { key: "finance/payment-apply", label: "付款申请", icon: React.createElement(FormOutlined) },
+        ],
+      },
+      {
+        key: "system",
+        label: "系统配置管理",
+        icon: React.createElement(SettingOutlined),
+        children: [
+          { key: "system/material", label: "物料档案", icon: React.createElement(ProfileOutlined) },
+          { key: "system/bom", label: "物料BOM", icon: React.createElement(UnorderedListOutlined) },
+          { key: "system/material-category", label: "物料分类", icon: React.createElement(TagOutlined) },
+          { key: "system/bid-deposit-status", label: "投标保证金状态", icon: React.createElement(GoldOutlined) },
+          { key: "system/address", label: "收货地址维护", icon: React.createElement(EnvironmentOutlined) },
+          { key: "system/review-plan", label: "入围评审方案", icon: React.createElement(SolutionOutlined) },
+          { key: "system/exchange-rate", label: "币种汇率", icon: React.createElement(GlobalOutlined) },
+        ],
+      },
+    ];
+
+    // ===== 工具函数 =====
+    /** 递归查找菜单项的完整路径（用于面包屑） */
+    function findBreadcrumb(items, targetKey, path) {
+      path = path || [];
+      for (let i = 0; i < items.length; i++) {
+        const item = items[i];
+        const currentPath = path.concat([{ title: item.label, key: item.key }]);
+        if (item.key === targetKey) return currentPath;
+        if (item.children) {
+          const result = findBreadcrumb(item.children, targetKey, currentPath);
+          if (result) return result;
+        }
+      }
+      return null;
+    }
+
+    /** 递归查找目标菜单项的所有父级 key（用于自动展开） */
+    function findAllParentKeys(items, targetKey, parentKeys) {
+      parentKeys = parentKeys || [];
+      for (let i = 0; i < items.length; i++) {
+        const item = items[i];
+        if (item.key === targetKey) return parentKeys;
+        if (item.children) {
+          const result = findAllParentKeys(item.children, targetKey, parentKeys.concat([item.key]));
+          if (result) return result;
+        }
+      }
+      return null;
+    }
+
+    /** 递归查找目标菜单项（用于获取 icon） */
+    function findMenuItem(items, targetKey) {
+      for (let i = 0; i < items.length; i++) {
+        const item = items[i];
+        if (item.key === targetKey) return item;
+        if (item.children) {
+          const result = findMenuItem(item.children, targetKey);
+          if (result) return result;
+        }
+      }
+      return null;
+    }
+
+    // ===== Hash 路由工具 =====
+    function getHashKey() {
+      const hash = window.location.hash.replace(/^#\/?/, '');
+      return hash || 'home';
+    }
+
+    function setHashKey(key) {
+      window.location.hash = '/' + key;
+    }
+
+    // ===== 用户下拉菜单 =====
+    const userMenuItems = [
+      { key: "profile", label: "个人中心", icon: React.createElement(UserOutlined) },
+      { key: "settings", label: "账号设置", icon: React.createElement(SettingOutlined) },
+      { type: "divider" },
+      { key: "logout", label: "退出登录", icon: React.createElement(LogoutOutlined), danger: true },
+    ];
+
+    // ===== 首页数据看板组件 =====
+    function HomeDashboard() {
+      const chartRef = useRef(null);
+      const chartInstance = useRef(null);
+
+      useEffect(() => {
+        if (!chartRef.current) return;
+        const chart = echarts.init(chartRef.current);
+        chartInstance.current = chart;
+        chart.setOption({
+          tooltip: { trigger: 'axis' },
+          legend: { bottom: 0, data: ['含税总额'] },
+          grid: { left: 60, right: 30, top: 20, bottom: 40 },
+          xAxis: { type: 'category', boundaryGap: false, data: ['2024年07月', '2025年06月', '2025年10月', '2025年12月'] },
+          yAxis: { type: 'value', axisLabel: { formatter: function(v) { return v >= 1000000 ? (v/1000000).toFixed(0)+'000000' : v; } } },
+          series: [{
+            name: '含税总额', type: 'line', smooth: true,
+            areaStyle: { color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1, colorStops: [{ offset: 0, color: 'rgba(22,119,255,0.35)' }, { offset: 1, color: 'rgba(22,119,255,0.02)' }] } },
+            lineStyle: { color: '#1677ff', width: 2 },
+            itemStyle: { color: '#1677ff' },
+            label: { show: true, position: 'top', fontSize: 11, color: '#595959' },
+            data: [64999.97, 802300, 24750, 430593.6, 54.24, 3232930, 17644761.49]
+          }]
+        });
+        const handleResize = () => chart.resize();
+        window.addEventListener('resize', handleResize);
+        return () => { window.removeEventListener('resize', handleResize); chart.dispose(); };
+      }, []);
+
+      const statCards = [
+        { label: '总需求', value: '68,877,837.99' },
+        { label: '总采购金额', value: '29,506,050.00' },
+        { label: '已订单总数', value: '50238' },
+        { label: '未下单数量', value: '50996' },
+        { label: '供应商数量', value: '9' },
+        { label: '待执行金额', value: '31,469,307.11' },
+      ];
+
+      const shortcuts = [
+        { label: '采购申请', icon: React.createElement(FormOutlined, { style: { color: '#fa8c16', fontSize: 18 } }), color: 'rgba(250,140,22,0.1)' },
+        { label: '采购需求池', icon: React.createElement(DatabaseOutlined, { style: { color: '#1677ff', fontSize: 18 } }), color: 'rgba(22,119,255,0.1)' },
+        { label: '询价申请', icon: React.createElement(FileSearchOutlined, { style: { color: '#fa8c16', fontSize: 18 } }), color: 'rgba(250,140,22,0.1)' },
+        { label: '采购订单', icon: React.createElement(ShoppingOutlined, { style: { color: '#fa8c16', fontSize: 18 } }), color: 'rgba(250,140,22,0.1)' },
+        { label: '供应商档案', icon: React.createElement(ProfileOutlined, { style: { color: '#1677ff', fontSize: 18 } }), color: 'rgba(22,119,255,0.1)' },
+        { label: '付款计划', icon: React.createElement(ScheduleOutlined, { style: { color: '#1677ff', fontSize: 18 } }), color: 'rgba(22,119,255,0.1)' },
+      ];
+
+      const stages = [
+        { name: '需求阶段', icon: React.createElement(SendOutlined), count: 0, items: [] },
+        { name: '询价阶段', icon: React.createElement(SearchOutlined), count: 0, items: [] },
+        { name: '竞价阶段', icon: React.createElement(ThunderboltOutlined), count: 0, items: [] },
+        { name: '招标阶段', icon: React.createElement(AuditOutlined), count: 0, items: [] },
+        { name: '评审阶段', icon: React.createElement(TeamOutlined), count: 0, items: [] },
+        { name: '核价阶段', icon: React.createElement(DollarOutlined), count: 1, items: [{ name: '招标项目202601002...', code: '招标项目2026...', owner: '用户257522' }] },
+      ];
+
+      const orderData = [
+        { key: '1', date: '2025-12-25', orderName: '2025第四季度原材料采购合同-第二份', supplier: '上海易点科技有限公司', amount: '1,059,030' },
+        { key: '2', date: '2025-12-25', orderName: '2025第四季度原材料采购合同-第一份', supplier: '上海易点科技有限公司', amount: '6,781,322.1' },
+        { key: '3', date: '2025-12-25', orderName: '2025生产材料二季度第二批采购', supplier: '上海易点科技有限公司', amount: '542,505.77' },
+        { key: '4', date: '2025-12-24', orderName: '上海易点科技有限公司原材料2025年第一批采购1', supplier: '上海易点科技有限公司', amount: '3,428,955.62' },
+      ];
+
+      const receiveData = [
+        { key: '1', shipNo: 'FH20260111001', shipDate: '无查看权限', supplier: '北京鲸采云', express: 'SF45642316547', orderNo: 'DD20251120001', product: '雷达传感器', spec: '奔驰 A0009059117', qty: 350 },
+        { key: '2', shipNo: 'FH20260201001', shipDate: '无查看权限', supplier: '北京鲸采云', express: '', orderNo: 'DD20251229001', product: '移动硬盘', spec: '希捷1t', qty: 5 },
+      ];
+
+      const orderColumns = [
+        { title: '采购日期', dataIndex: 'date', width: 100 },
+        { title: '订单名称', dataIndex: 'orderName', width: 200 },
+        { title: '供应商名称', dataIndex: 'supplier', width: 160 },
+        { title: '含税总额', dataIndex: 'amount', width: 120, align: 'right' },
+      ];
+
+      const receiveColumns = [
+        { title: '发货单号', dataIndex: 'shipNo', width: 140 },
+        { title: '发货日期', dataIndex: 'shipDate', width: 100 },
+        { title: '供应商', dataIndex: 'supplier', width: 100 },
+        { title: '快递号', dataIndex: 'express', width: 130 },
+        { title: 'Shipping Details', children: [
+          { title: '订单编号', dataIndex: 'orderNo', width: 130 },
+          { title: '商品', dataIndex: 'product', width: 90 },
+          { title: '规格型号', dataIndex: 'spec', width: 140 },
+          { title: '本次发货', dataIndex: 'qty', width: 80, align: 'right' },
+        ]},
+      ];
+
+      const cardStyle = { background: '#fff', borderRadius: 8, padding: '16px 20px', boxShadow: '0 1px 3px rgba(0,0,0,0.06)', border: '1px solid #f0f0f0' };
+
+      return (
+        <div style={{ background: '#f0f2f5', padding: 16, borderRadius: 8 }}>
+          {/* 区域1：统计卡片 */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 12, marginBottom: 16 }}>
+            {statCards.map((item, idx) => (
+              <div key={idx} style={cardStyle}>
+                <div style={{ fontSize: 13, color: '#8c8c8c', marginBottom: 8 }}>{item.label}</div>
+                <div style={{ fontSize: 22, fontWeight: 600, color: '#262626', letterSpacing: '-0.5px' }}>{item.value}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* 区域2：中间左右分栏 */}
+          <div style={{ display: 'grid', gridTemplateColumns: '2fr 3fr', gap: 12, marginBottom: 16 }}>
+            {/* 左侧 */}
+            <div>
+              {/* 快捷入口 */}
+              <div style={{ ...cardStyle, marginBottom: 12 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px 8px' }}>
+                  {shortcuts.map((item, idx) => (
+                    <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', padding: '8px 10px', borderRadius: 8, transition: 'all 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.background = '#f5f7fa'} onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
+                      <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 32, height: 32, borderRadius: 8, background: item.color }}>{item.icon}</span>
+                      <span style={{ fontSize: 13, color: '#262626', fontWeight: 500 }}>{item.label}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              {/* 采购订单趋势 */}
+              <div style={cardStyle}>
+                <div style={{ fontSize: 14, fontWeight: 500, marginBottom: 8 }}>采购订单趋势</div>
+                <div ref={chartRef} style={{ width: '100%', height: 260 }}></div>
+              </div>
+            </div>
+
+            {/* 右侧 - 项目看板 */}
+            <div style={cardStyle}>
+              <div style={{ fontSize: 14, fontWeight: 500, marginBottom: 12 }}>项目看板</div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 8 }}>
+                {stages.map((stage, idx) => (
+                  <div key={idx}>
+                    <div style={{ background: '#1677ff', color: '#fff', borderRadius: 6, padding: '8px 4px', textAlign: 'center', fontSize: 12, fontWeight: 500, marginBottom: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, boxShadow: '0 2px 4px rgba(22,119,255,0.2)' }}>
+                      {stage.icon} {stage.name}
+                    </div>
+                    <div style={{ fontSize: 12, color: '#8c8c8c', textAlign: 'center', marginBottom: 6 }}>共计: <b style={{ color: '#262626' }}>{stage.count}</b> 个项目</div>
+                    {stage.items.map((item, i) => (
+                      <div key={i} style={{ background: '#fafafa', border: '1px solid #f0f0f0', borderRadius: 4, padding: '6px 8px', marginBottom: 4, fontSize: 11, color: '#595959' }}>
+                        <div style={{ fontWeight: 500, color: '#262626', marginBottom: 2 }}>{item.name}</div>
+                        <div>编号：{item.code}</div>
+                        <div>负责人：{item.owner}</div>
+                      </div>
+                    ))}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* 区域3：底部左右分栏 */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            {/* 采购订单明细 */}
+            <div style={cardStyle}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, paddingBottom: 12, borderBottom: '1px solid #f0f0f0' }}>
+                <span style={{ fontSize: 14, fontWeight: 500 }}>采购订单明细</span>
+                <Space size={8} style={{ color: '#8c8c8c' }}>
+                  {React.createElement(ReloadOutlined, { style: { cursor: 'pointer' } })}
+                  {React.createElement(UnorderedListOutlined, { style: { cursor: 'pointer' } })}
+                  {React.createElement(ExpandOutlined, { style: { cursor: 'pointer' } })}
+                </Space>
+              </div>
+              <Table columns={orderColumns} dataSource={orderData} bordered size="small" pagination={{ position: ['bottomRight'], size: 'small', showTotal: (t) => `共 ${t} 条记录`, total: 16, pageSize: 15 }} scroll={{ x: 580 }} />
+            </div>
+
+            {/* 待收货明细 */}
+            <div style={cardStyle}>
+              <div style={{ fontSize: 14, fontWeight: 500, marginBottom: 12, paddingBottom: 12, borderBottom: '1px solid #f0f0f0' }}>待收货明细</div>
+              <Table columns={receiveColumns} dataSource={receiveData} bordered size="small" pagination={{ position: ['bottomRight'], size: 'small', showTotal: (t) => `共 ${t} 条记录`, total: 2, pageSize: 15 }} scroll={{ x: 810 }} />
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // ===== 供应商看板组件 =====
+    function SupplierBoard() {
+      const chartRefs = useRef({});
+      const chartsRef = useRef([]);
+
+      const setChartRef = (name) => (el) => {
+        if (el) chartRefs.current[name] = el;
+      };
+
+      useEffect(() => {
+        const charts = [];
+        const colorPalette = ['#1677ff', '#69b1ff', '#91caff', '#bae0ff'];
+
+        // 经营方式饼图
+        const pie1 = echarts.init(chartRefs.current.pie1);
+        pie1.setOption({
+          color: colorPalette,
+          tooltip: { trigger: 'item' },
+          legend: { bottom: 0, data: ['服务商', '贸易商', '生产商'] },
+          series: [{
+            type: 'pie', radius: ['0%', '65%'], center: ['50%', '45%'],
+            label: { formatter: '{b} {d}%' },
+            data: [
+              { value: 5, name: '服务商' },
+              { value: 2, name: '贸易商' },
+              { value: 2, name: '生产商' }
+            ]
+          }]
+        });
+        charts.push(pie1);
+
+        // 供应商与企业关系占比
+        const pie2 = echarts.init(chartRefs.current.pie2);
+        pie2.setOption({
+          color: ['#1677ff'],
+          tooltip: { trigger: 'item' },
+          legend: { bottom: 0, data: ['外部供应商'] },
+          series: [{
+            type: 'pie', radius: ['0%', '65%'], center: ['50%', '45%'],
+            label: { formatter: '{b} {d}%' },
+            data: [{ value: 9, name: '外部供应商' }]
+          }]
+        });
+        charts.push(pie2);
+
+        // 类型分布
+        const pie3 = echarts.init(chartRefs.current.pie3);
+        pie3.setOption({
+          color: ['#1677ff', '#69b1ff'],
+          tooltip: { trigger: 'item' },
+          legend: { bottom: 0, data: ['信息服务供应商', '原材料供应商'] },
+          series: [{
+            type: 'pie', radius: ['0%', '65%'], center: ['50%', '45%'],
+            label: { formatter: '{b} {c}' },
+            data: [
+              { value: 5, name: '信息服务供应商' },
+              { value: 4, name: '原材料供应商' }
+            ]
+          }]
+        });
+        charts.push(pie3);
+
+        // 供应商评级柱状图
+        const bar1 = echarts.init(chartRefs.current.bar1);
+        bar1.setOption({
+          color: ['#1677ff'],
+          tooltip: { trigger: 'axis' },
+          legend: { bottom: 0, data: ['供应商编号'] },
+          xAxis: { type: 'category', data: ['一般供应商', '重要供应商'] },
+          yAxis: { type: 'value', min: 0, max: 6 },
+          series: [{ name: '供应商编号', type: 'bar', barWidth: '40%', data: [6, 3] }]
+        });
+        charts.push(bar1);
+
+        // 供应商分布地图
+        const map1 = echarts.init(chartRefs.current.map1);
+        map1.setOption({
+          tooltip: { trigger: 'item' },
+          visualMap: { min: 0, max: 5, left: 10, bottom: 10, inRange: { color: ['#e0e0ff', '#6395f9'] }, show: true },
+          series: [{
+            type: 'map', map: 'china', roam: false,
+            label: { show: false },
+            itemStyle: { areaColor: '#fff', borderColor: '#1677ff', borderWidth: 0.5 },
+            emphasis: { itemStyle: { areaColor: '#ffd' } },
+            data: [{ name: '河北', value: 1 }]
+          }]
+        });
+        charts.push(map1);
+
+        // 生命周期柱状图
+        const bar2 = echarts.init(chartRefs.current.bar2);
+        bar2.setOption({
+          color: ['#1677ff'],
+          tooltip: { trigger: 'axis' },
+          legend: { bottom: 0, data: ['供应商编号'] },
+          xAxis: { type: 'category', data: ['淘汰供应商', '潜在供应商', '合格供应商'] },
+          yAxis: { type: 'value', min: 0, max: 5 },
+          series: [{ name: '供应商编号', type: 'bar', barWidth: '40%', data: [2, 2, 5] }]
+        });
+        charts.push(bar2);
+
+        // 供应商订单排名横向柱状图
+        const bar3 = echarts.init(chartRefs.current.bar3);
+        bar3.setOption({
+          color: ['#1677ff'],
+          tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+          legend: { bottom: 0, data: ['含税总额'] },
+          grid: { left: 140, right: 80 },
+          xAxis: { type: 'value' },
+          yAxis: { type: 'category', data: ['广州金鼎商贸', '会计师事务所', '京东企业购', '上海商贸', '上海天天商贸', '上海易点', '上海易点科技有限公司', '天津海叶商贸'].reverse() },
+          series: [{
+            name: '含税总额', type: 'bar', barWidth: '50%',
+            label: { show: true, position: 'right', formatter: function(p) { return p.value.toLocaleString('zh-CN', {minimumFractionDigits: 2}); } },
+            data: [435050.00, 24750.00, 54.24, 64999.97, 367250.00, 426343.60, 19476221.49, 1405720.00].reverse()
+          }]
+        });
+        charts.push(bar3);
+
+        // 月度合同订单金额
+        const bar4 = echarts.init(chartRefs.current.bar4);
+        bar4.setOption({
+          color: ['#1677ff', '#69b1ff'],
+          tooltip: { trigger: 'axis' },
+          legend: { bottom: 0, data: ['合同金额', '订单金额'] },
+          xAxis: { type: 'category', data: ['2025年11月', '2025年12月'] },
+          yAxis: { type: 'value', axisLabel: { formatter: function(v) { return v.toLocaleString(); } } },
+          series: [
+            { name: '合同金额', type: 'bar', barWidth: '25%', label: { show: true, position: 'top', formatter: function(p) { return p.value.toLocaleString('zh-CN', {minimumFractionDigits: 2}); } }, data: [2570575.81, 93520288.00] },
+            { name: '订单金额', type: 'bar', barWidth: '25%', label: { show: true, position: 'top', formatter: function(p) { return p.value.toLocaleString('zh-CN', {minimumFractionDigits: 2}); } }, data: [169500.00, 219480775.95] }
+          ]
+        });
+        charts.push(bar4);
+
+        chartsRef.current = charts;
+
+        const handleResize = () => charts.forEach(c => c.resize());
+        window.addEventListener('resize', handleResize);
+        return () => {
+          window.removeEventListener('resize', handleResize);
+          charts.forEach(c => c.dispose());
+        };
+      }, []);
+
+      const statCards = [
+        { label: '供应商总数', value: 9 },
+        { label: '合格供应商', value: 5 },
+        { label: '潜在供应商', value: 1 },
+        { label: '淘汰供应商', value: 2 },
+        { label: '协同供应商', value: 4 },
+        { label: '非协同供应商', value: 5 },
+      ];
+
+      const cardStyle = { background: '#fff', borderRadius: 8, padding: '16px 20px', boxShadow: '0 1px 3px rgba(0,0,0,0.06)' };
+      const chartCardStyle = { ...cardStyle, minHeight: 340 };
+
+      return (
+        <div style={{ background: '#f0f2f5', padding: 16, borderRadius: 8 }}>
+          {/* 顶部标题栏 */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+            <span style={{ fontSize: 16, fontWeight: 600, color: '#262626' }}>供应商看板</span>
+            <Space size={16}>
+              <span style={{ cursor: 'pointer', color: '#595959' }}>{React.createElement(DownloadOutlined)}</span>
+              <span style={{ cursor: 'pointer', color: '#595959' }}>{React.createElement(FullscreenOutlined)} 全屏</span>
+              <span style={{ cursor: 'pointer', color: '#595959' }}>{React.createElement(EditOutlined)} 编辑</span>
+            </Space>
+          </div>
+
+          {/* 统计卡片行 */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 12, marginBottom: 16 }}>
+            {statCards.map((item, idx) => (
+              <div key={idx} style={cardStyle}>
+                <div style={{ fontSize: 13, color: '#8c8c8c', marginBottom: 12 }}>{item.label}</div>
+                <div style={{ fontSize: 36, fontWeight: 500, color: '#262626', textAlign: 'center' }}>{item.value}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* 第二行：三个饼图 */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 16 }}>
+            <div style={chartCardStyle}>
+              <div style={{ fontSize: 14, fontWeight: 500, marginBottom: 8 }}>经营方式</div>
+              <div ref={setChartRef('pie1')} style={{ width: '100%', height: 280 }}></div>
+            </div>
+            <div style={chartCardStyle}>
+              <div style={{ fontSize: 14, fontWeight: 500, marginBottom: 8 }}>供应商与企业关系占比</div>
+              <div ref={setChartRef('pie2')} style={{ width: '100%', height: 280 }}></div>
+            </div>
+            <div style={chartCardStyle}>
+              <div style={{ fontSize: 14, fontWeight: 500, marginBottom: 8 }}>类型分布</div>
+              <div ref={setChartRef('pie3')} style={{ width: '100%', height: 280 }}></div>
+            </div>
+          </div>
+
+          {/* 第三行：评级 + 地图 + 生命周期 */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 16 }}>
+            <div style={chartCardStyle}>
+              <div style={{ fontSize: 14, fontWeight: 500, marginBottom: 8 }}>供应商评级</div>
+              <div ref={setChartRef('bar1')} style={{ width: '100%', height: 280 }}></div>
+            </div>
+            <div style={chartCardStyle}>
+              <div style={{ fontSize: 14, fontWeight: 500, marginBottom: 8 }}>供应商分布</div>
+              <div ref={setChartRef('map1')} style={{ width: '100%', height: 280 }}></div>
+            </div>
+            <div style={chartCardStyle}>
+              <div style={{ fontSize: 14, fontWeight: 500, marginBottom: 8 }}>生命周期</div>
+              <div ref={setChartRef('bar2')} style={{ width: '100%', height: 280 }}></div>
+            </div>
+          </div>
+
+          {/* 第四行：订单排名 + 月度金额 */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12 }}>
+            <div style={chartCardStyle}>
+              <div style={{ fontSize: 14, fontWeight: 500, marginBottom: 8 }}>供应商订单排名</div>
+              <div ref={setChartRef('bar3')} style={{ width: '100%', height: 320 }}></div>
+            </div>
+            <div style={chartCardStyle}>
+              <div style={{ fontSize: 14, fontWeight: 500, marginBottom: 8 }}>月度合同订单金额</div>
+              <div ref={setChartRef('bar4')} style={{ width: '100%', height: 320 }}></div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // ===== 供应商准入组件 =====
+    function SupplierAccess() {
+      const [modalVisible, setModalVisible] = useState(false);
+      const [colSettingVisible, setColSettingVisible] = useState(false);
+      const [selectedRowKeys, setSelectedRowKeys] = useState([]);
+      const [detailVisible, setDetailVisible] = useState(false);
+      const [detailRecord, setDetailRecord] = useState(null);
+      const [supplierSelectVisible, setSupplierSelectVisible] = useState(false);
+
+      // 弹框表单状态（选择潜在供应商后回显）
+      const [formData, setFormData] = useState({ code: '', type: '', name: '', creditCode: '' });
+      // 潜在供应商数据
+      const potentialSuppliers = [
+        { key: '1', code: 'GYS000011', name: '上海易点科技有限公司', type: '信息服务供应商', country: '中国', province: '上海', city: '上海市', address: '上海市徐汇区宜山路700号B2栋1103室' },
+        { key: '2', code: 'GYS000010', name: '上海易点', type: '信息服务供应商', country: '中国', province: '上海', city: '上海市', address: '上海市徐汇区宜山路700号B2栋1103室' },
+        { key: '3', code: 'GYS000009', name: '上海天天商贸', type: '五金供应商', country: '中国', province: '上海', city: '上海市', address: '上海市徐汇区宜山路700号B2栋1103室' },
+        { key: '4', code: 'GYS000008', name: '天津海叶商贸', type: '五金供应商', country: '中国', province: '天津', city: '天津市', address: '天津市河西区解放南路与浯水道交口西南侧喜年广场1-1508-1' },
+        { key: '5', code: 'GYS000007', name: '上海商贸', type: '五金供应商', country: '中国', province: '上海', city: '上海市', address: '上海市徐汇区宜山路700号B2栋1103室' },
+      ];
+      const handleSelectSupplier = () => {
+        setSupplierSelectVisible(true);
+      };
+      const handleConfirmSelect = (record) => {
+        setFormData({ code: record.code, type: record.type, name: record.name, creditCode: '' });
+        setSupplierSelectVisible(false);
+      };
+      const supplierSelectColumns = [
+        { title: '供应商编码', dataIndex: 'code', width: 120 },
+        { title: '供应商名称', dataIndex: 'name', width: 160 },
+        { title: '供应商类型', dataIndex: 'type', width: 130 },
+        { title: '国家', dataIndex: 'country', width: 70 },
+        { title: '省份', dataIndex: 'province', width: 70 },
+        { title: '城市', dataIndex: 'city', width: 80 },
+        { title: '详细地址', dataIndex: 'address', width: 280 },
+        { title: '操作', key: 'action', width: 70, render: (_, record) => React.createElement('a', { style: { color: '#1677ff' }, onClick: () => handleConfirmSelect(record) }, '选择') },
+      ];
+
+      // 列设置状态
+      const allColumns = ['流程状态','流水号','供应商编码','供应商类型','供应商名称','统一社会信用代码','附件','准入说明','提交人','提交时间','更新时间','当前节点','当前负责人'];
+      const [checkedCols, setCheckedCols] = useState([...allColumns]);
+      const [colSearch, setColSearch] = useState('');
+
+      const filteredCols = allColumns.filter(c => c.includes(colSearch));
+
+      const handleColCheck = (col, checked) => {
+        setCheckedCols(prev => checked ? [...prev, col] : prev.filter(c => c !== col));
+      };
+      const handleSelectAll = (e) => {
+        setCheckedCols(e.target.checked ? [...allColumns] : []);
+      };
+
+      // 表格数据
+      const tableData = [
+        { key: '1', status: '已生效', serialNo: 'GYS000003', code: 'GYS000008', type: '五金供应商', name: '天津海叶商贸', creditCode: '91440604MA56789012', attachment: '', remark: '同意进入', submitter: '用户257522', submitTime: '2026-07-21 11:31:45', updateTime: '2026-07-21 14:20:33', currentNode: '审批完成', currentOwner: '-' },
+        { key: '2', status: '已生效', serialNo: 'GYS000002', code: 'GYS000002', type: '五金供应商', name: '京东企业购', creditCode: '91310101MA1F056789', attachment: '', remark: '同意进入', submitter: '用户257522', submitTime: '2026-07-21 11:31:42', updateTime: '2026-07-21 13:55:18', currentNode: '审批完成', currentOwner: '-' },
+      ];
+
+      const handleViewDetail = (record) => {
+        setDetailRecord(record);
+        setDetailVisible(true);
+      };
+
+      const columns = [
+        { title: '流程状态', dataIndex: 'status', width: 90, render: (v) => React.createElement(Tag, { color: 'success' }, v) },
+        { title: '流水号', dataIndex: 'serialNo', width: 120, render: (v) => React.createElement('a', { style: { color: '#1677ff' } }, v) },
+        { title: '供应商编码', dataIndex: 'code', width: 120 },
+        { title: '供应商类型', dataIndex: 'type', width: 110 },
+        { title: '供应商名称', dataIndex: 'name', width: 120 },
+        { title: '统一社会信用代码', dataIndex: 'creditCode', width: 180 },
+        { title: '附件', dataIndex: 'attachment', width: 80 },
+        { title: '准入说明', dataIndex: 'remark', width: 100 },
+        { title: '提交人', dataIndex: 'submitter', width: 110, render: (v) => React.createElement('a', { style: { color: '#1677ff' } }, v) },
+        { title: '提交时间', dataIndex: 'submitTime', width: 170 },
+        { title: '更新时间', dataIndex: 'updateTime', width: 170 },
+        { title: '当前节点', dataIndex: 'currentNode', width: 100 },
+        { title: '当前负责人', dataIndex: 'currentOwner', width: 110 },
+        { title: '操作', key: 'action', width: 90, fixed: 'right', render: (_, record) => React.createElement('a', { style: { color: '#1677ff' }, onClick: () => handleViewDetail(record) }, '查看详情') },
+      ];
+
+      // 列设置弹出内容
+      const colSettingContent = (
+        <div style={{ width: 220 }}>
+          <Input
+            prefix={React.createElement(SearchOutlined)}
+            placeholder="搜索 (多个关键词用空格隔开)"
+            size="small"
+            value={colSearch}
+            onChange={(e) => setColSearch(e.target.value)}
+            style={{ marginBottom: 8 }}
+          />
+          <div style={{ marginBottom: 8 }}>
+            <Checkbox
+              checked={checkedCols.length === allColumns.length}
+              indeterminate={checkedCols.length > 0 && checkedCols.length < allColumns.length}
+              onChange={handleSelectAll}
+            > 全选</Checkbox>
+          </div>
+          <div style={{ maxHeight: 300, overflowY: 'auto' }}>
+            {filteredCols.map(col => (
+              <div key={col} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 0' }}>
+                <Checkbox
+                  checked={checkedCols.includes(col)}
+                  onChange={(e) => handleColCheck(col, e.target.checked)}
+                > {col}</Checkbox>
+                <HolderOutlined style={{ color: '#bfbfbf', cursor: 'grab' }} />
+              </div>
+            ))}
+          </div>
+          <Divider style={{ margin: '8px 0' }} />
+          <Button type="link" block onClick={() => setCheckedCols([...allColumns])} style={{ color: '#1677ff' }}>还原列设置</Button>
+        </div>
+      );
+
+      // 供应商信息表格列
+      const infoColumns = [
+        { title: '统一社会信用代码', dataIndex: 'creditCode', align: 'center' },
+        { title: '营业执照副本', dataIndex: 'license', align: 'center' },
+        { title: '经营范围', dataIndex: 'scope', align: 'center' },
+        { title: '电子邮件', dataIndex: 'email', align: 'center' },
+        { title: '供应商状态', dataIndex: 'status', align: 'center' },
+      ];
+
+      // 供应商资质表格列
+      const qualColumns = [
+        { title: '证书名称', dataIndex: 'certName', align: 'center' },
+        { title: '证书类别', dataIndex: 'certType', align: 'center' },
+        { title: '附件', dataIndex: 'attachment', align: 'center' },
+        { title: '到期时间', dataIndex: 'expireDate', align: 'center' },
+        { title: '证书状态', dataIndex: 'certStatus', align: 'center' },
+      ];
+
+      const purpleBtnStyle = { background: '#1677ff', borderColor: '#1677ff' };
+
+      return (
+        <div style={{ background: '#fff', borderRadius: 8, padding: '16px 24px' }}>
+          {/* 工具栏 */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+            <Space size={8}>
+              <Button type="primary" style={purpleBtnStyle} icon={React.createElement(PlusOutlined)} onClick={() => { setFormData({ code: '', type: '', name: '', creditCode: '' }); setModalVisible(true); }}>新建</Button>
+              <Button icon={React.createElement(ImportOutlined)}>导入</Button>
+              <Button icon={React.createElement(ExportOutlined)}>导出</Button>
+            </Space>
+            <Space size={8}>
+              <Select defaultValue="all" size="middle" style={{ width: 110 }}>
+                <Option value="all">搜索范围</Option>
+              </Select>
+              <Input placeholder="请输入搜索内容" style={{ width: 220 }} suffix={React.createElement(SearchOutlined)} />
+              <Popover content={colSettingContent} trigger="click" open={colSettingVisible} onOpenChange={setColSettingVisible} placement="bottomRight">
+                {React.createElement(SettingOutlined, { style: { cursor: 'pointer', color: '#8c8c8c', fontSize: 16 } })}
+              </Popover>
+            </Space>
+          </div>
+
+          {/* 数据表格 */}
+          <Table
+            columns={columns}
+            dataSource={tableData}
+            rowSelection={{ selectedRowKeys, onChange: setSelectedRowKeys }}
+            bordered
+            size="middle"
+            pagination={false}
+            scroll={{ x: 1800 }}
+          />
+
+          {/* 底部分页 */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 12, paddingTop: 12, padding: '12px 0 8px', borderTop: '1px solid #f0f0f0' }}>
+            <Space size={16}>
+              {React.createElement(ColumnWidthOutlined, { style: { color: '#8c8c8c' } })}
+              <Select defaultValue="20" size="small" style={{ width: 90 }}>
+                <Option value="20">20条/页</Option>
+                <Option value="50">50条/页</Option>
+                <Option value="100">100条/页</Option>
+              </Select>
+              <span style={{ color: '#595959', fontSize: 13 }}>共 2 条</span>
+            </Space>
+            <Pagination current={1} total={2} pageSize={20} size="small" showSizeChanger={false} />
+          </div>
+
+          {/* 新建弹框 */}
+          <Modal
+            title={null}
+            open={modalVisible}
+            onCancel={() => setModalVisible(false)}
+            footer={null}
+            width={900}
+            closable={false}
+            bodyStyle={{ padding: 0 }}
+            style={{ top: 20 }}
+          >
+            {/* 弹框头部 */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 24px', borderBottom: '1px solid #f0f0f0' }}>
+              <Space size={12}>
+                <span style={{ fontSize: 16, fontWeight: 600 }}>供应商准入</span>
+                <a style={{ color: '#1677ff', fontSize: 13 }}>{React.createElement(GlobalOutlined)} 智能预测</a>
+              </Space>
+              <Space size={16} style={{ color: '#8c8c8c', fontSize: 16 }}>
+                {React.createElement(MessageOutlined, { style: { cursor: 'pointer' } })}
+                {React.createElement(ExpandOutlined, { style: { cursor: 'pointer' } })}
+                {React.createElement(CloseOutlined, { style: { cursor: 'pointer' }, onClick: () => setModalVisible(false) })}
+              </Space>
+            </div>
+
+            {/* 弹框内容 */}
+            <div style={{ padding: '20px 24px', maxHeight: '70vh', overflowY: 'auto' }}>
+              {/* 表单第一行 */}
+              <Row gutter={16} style={{ marginBottom: 16 }}>
+                <Col span={8}>
+                  <div style={{ marginBottom: 6, fontSize: 13, color: '#595959' }}>选择潜在供应商</div>
+                  <Input.Group compact>
+                    <Input placeholder="供应商名称" style={{ width: 'calc(100% - 60px)' }} readOnly value={formData.name || ''} />
+                    <Button type="primary" style={{ ...purpleBtnStyle, width: 60 }} onClick={handleSelectSupplier}>选择</Button>
+                  </Input.Group>
+                </Col>
+                <Col span={8}>
+                  <div style={{ marginBottom: 6, fontSize: 13, color: '#595959' }}>供应商编码</div>
+                  <Input disabled value={formData.code} />
+                </Col>
+                <Col span={8}>
+                  <div style={{ marginBottom: 6, fontSize: 13, color: '#595959' }}>供应商类型</div>
+                  <Input disabled value={formData.type} />
+                </Col>
+              </Row>
+
+              {/* 表单第二行 */}
+              <Row gutter={16} style={{ marginBottom: 16 }}>
+                <Col span={8}>
+                  <div style={{ marginBottom: 6, fontSize: 13, color: '#595959' }}>供应商名称</div>
+                  <Input disabled value={formData.name} />
+                </Col>
+                <Col span={8}>
+                  <div style={{ marginBottom: 6, fontSize: 13, color: '#595959' }}>统一社会信用代码</div>
+                  <Input disabled value={formData.creditCode} />
+                </Col>
+                <Col span={8}>
+                  <div style={{ marginBottom: 6, fontSize: 13, color: '#595959' }}>附件</div>
+                  <Upload.Dragger style={{ padding: '4px 0', height: 32, background: '#fafafa', border: '1px dashed #d9d9d9', borderRadius: 4 }} showUploadList={false}>
+                    <span style={{ fontSize: 12, color: '#8c8c8c' }}>{React.createElement(UploadOutlined)} 将文件拖拽到此处 或点击上传</span>
+                  </Upload.Dragger>
+                </Col>
+              </Row>
+
+              {/* 准入说明 */}
+              <div style={{ marginBottom: 20 }}>
+                <div style={{ marginBottom: 6, fontSize: 13, color: '#595959' }}>准入说明</div>
+                <TextArea rows={4} style={{ background: '#fafafa' }} />
+              </div>
+
+              {/* 供应商信息表格 */}
+              <div style={{ marginBottom: 20 }}>
+                <div style={{ fontSize: 14, fontWeight: 500, marginBottom: 8 }}>供应商信息</div>
+                <Table columns={infoColumns} dataSource={[]} bordered size="small" pagination={{ position: ['bottomRight'], size: 'small', showTotal: (t) => `共 ${t} 条`, total: 0 }} />
+              </div>
+
+              {/* 供应商资质表格 */}
+              <div style={{ marginBottom: 20 }}>
+                <div style={{ fontSize: 14, fontWeight: 500, marginBottom: 8 }}>供应商资质</div>
+                <Table columns={qualColumns} dataSource={[]} bordered size="small" pagination={{ position: ['bottomRight'], size: 'small', showTotal: (t) => `共 ${t} 条`, total: 0 }} />
+              </div>
+            </div>
+
+            {/* 弹框底部提交按钮 */}
+            <div style={{ textAlign: 'center', padding: '12px 24px 20px', borderTop: '1px solid #f0f0f0' }}>
+              <Button type="primary" style={{ ...purpleBtnStyle, width: 120, height: 36 }}>提交</Button>
+            </div>
+          </Modal>
+
+          {/* 查看详情弹框 */}
+          <Modal
+            title="准入详情"
+            open={detailVisible}
+            onCancel={() => setDetailVisible(false)}
+            footer={<Button onClick={() => setDetailVisible(false)}>关闭</Button>}
+            width={700}
+          >
+            {detailRecord && (
+              <div style={{ padding: '16px 20px', background: '#fafbfc', borderRadius: 8 }}>
+                <Row gutter={[16, 16]}>
+                  <Col span={12}><Text type="secondary">流程状态：</Text><Tag color="success">{detailRecord.status}</Tag></Col>
+                  <Col span={12}><Text type="secondary">流水号：</Text><span>{detailRecord.serialNo}</span></Col>
+                  <Col span={12}><Text type="secondary">供应商编码：</Text><span>{detailRecord.code}</span></Col>
+                  <Col span={12}><Text type="secondary">供应商类型：</Text><span>{detailRecord.type}</span></Col>
+                  <Col span={12}><Text type="secondary">供应商名称：</Text><span>{detailRecord.name}</span></Col>
+                  <Col span={12}><Text type="secondary">统一社会信用代码：</Text><span>{detailRecord.creditCode}</span></Col>
+                  <Col span={12}><Text type="secondary">准入说明：</Text><span>{detailRecord.remark}</span></Col>
+                  <Col span={12}><Text type="secondary">提交人：</Text><span>{detailRecord.submitter}</span></Col>
+                  <Col span={12}><Text type="secondary">提交时间：</Text><span>{detailRecord.submitTime}</span></Col>
+                  <Col span={12}><Text type="secondary">更新时间：</Text><span>{detailRecord.updateTime}</span></Col>
+                  <Col span={12}><Text type="secondary">当前节点：</Text><span>{detailRecord.currentNode}</span></Col>
+                  <Col span={12}><Text type="secondary">当前负责人：</Text><span>{detailRecord.currentOwner}</span></Col>
+                </Row>
+              </div>
+            )}
+          </Modal>
+
+          {/* 选择潜在供应商弹框 */}
+          <Modal
+            title="选择潜在供应商"
+            open={supplierSelectVisible}
+            onCancel={() => setSupplierSelectVisible(false)}
+            footer={null}
+            width={960}
+          >
+            <Table
+              columns={supplierSelectColumns}
+              dataSource={potentialSuppliers}
+              bordered
+              size="small"
+              pagination={false}
+              scroll={{ x: 920 }}
+            />
+          </Modal>
+        </div>
+      );
+    }
+
+    // ===== 供应商类型组件 =====
+    function SupplierType() {
+      const [modalVisible, setModalVisible] = useState(false);
+      const [modalMode, setModalMode] = useState('add'); // 'add' | 'edit'
+      const [editRecord, setEditRecord] = useState(null);
+      const [typeName, setTypeName] = useState('');
+      const [qualRows, setQualRows] = useState([{ key: 1, certName: '', certType: '', expireDate: '' }]);
+
+      const [tableData, setTableData] = useState([
+        {
+          key: '1', code: '202404070001', typeName: '信息服务供应商',
+          quals: [
+            { certName: 'ISO证书', certType: '行业资质', expireDate: '' },
+            { certName: '著作权', certType: '专利著作权', expireDate: '' },
+          ],
+          submitter: '用户257522', submitTime: '2026-07-21 11:31:49', updateTime: ''
+        },
+        {
+          key: '2', code: '202404070002', typeName: '原材料供应商',
+          quals: [
+            { certName: '生产资格证', certType: '行业资质', expireDate: '' },
+            { certName: '人权认证', certType: '行业资质', expireDate: '' },
+            { certName: '可持续发展认证', certType: '行业资质', expireDate: '' },
+            { certName: '环评认证', certType: '安全证书', expireDate: '' },
+            { certName: '排污许可证', certType: '安全证书', expireDate: '' },
+          ],
+          submitter: '用户257522', submitTime: '2026-07-21 11:31:49', updateTime: ''
+        },
+      ]);
+
+      const addQualRow = () => {
+        setQualRows(prev => [...prev, { key: prev.length + 1, certName: '', certType: '', expireDate: '' }]);
+      };
+
+      // 新建
+      const handleAdd = () => {
+        setModalMode('add');
+        setEditRecord(null);
+        setTypeName('');
+        setQualRows([{ key: 1, certName: '', certType: '', expireDate: '' }]);
+        setModalVisible(true);
+      };
+
+      // 编辑
+      const handleEdit = (record) => {
+        setModalMode('edit');
+        setEditRecord(record);
+        setTypeName(record.typeName);
+        setQualRows(record.quals.map((q, i) => ({ key: i + 1, certName: q.certName, certType: q.certType, expireDate: q.expireDate })));
+        setModalVisible(true);
+      };
+
+      // 删除
+      const handleDelete = (record) => {
+        Modal.confirm({
+          title: '确认删除',
+          content: `确定要删除供应商类型「${record.typeName}」吗？此操作不可恢复。`,
+          okText: '确定',
+          cancelText: '取消',
+          okButtonProps: { danger: true },
+          onOk: () => {
+            setTableData(prev => prev.filter(item => item.key !== record.key));
+            antd.message.success('删除成功');
+          },
+        });
+      };
+
+      // 提交/保存
+      const handleSubmit = () => {
+        if (!typeName.trim()) { antd.message.warning('请输入类型名称'); return; }
+        if (modalMode === 'edit' && editRecord) {
+          setTableData(prev => prev.map(item => item.key === editRecord.key ? { ...item, typeName, quals: qualRows.map(r => ({ certName: r.certName, certType: r.certType, expireDate: r.expireDate })), updateTime: new Date().toLocaleString('zh-CN', { hour12: false }).replace(/\//g, '-') } : item));
+          antd.message.success('保存成功');
+        } else {
+          const newKey = String(tableData.length + 1);
+          const newCode = '20240407000' + newKey;
+          setTableData(prev => [...prev, { key: newKey, code: newCode, typeName, quals: qualRows.map(r => ({ certName: r.certName, certType: r.certType, expireDate: r.expireDate })), submitter: '用户257522', submitTime: new Date().toLocaleString('zh-CN', { hour12: false }).replace(/\//g, '-'), updateTime: '' }]);
+          antd.message.success('提交成功');
+        }
+        setModalVisible(false);
+      };
+
+      const handleSaveDraft = () => {
+        antd.message.success('草稿已保存');
+        setModalVisible(false);
+      };
+
+      // 自定义渲染表格
+      const renderTable = () => {
+        const rows = [];
+        tableData.forEach((item, idx) => {
+          const rowSpan = item.quals.length + (idx === 1 ? 1 : 0); // 第二行加"加载更多"
+          item.quals.forEach((q, qi) => {
+            rows.push(
+              <tr key={`${item.key}-${qi}`} style={{ borderBottom: '1px solid #f0f0f0' }}>
+                {qi === 0 && <td rowSpan={rowSpan} style={{ padding: '8px 12px', textAlign: 'center', verticalAlign: 'top', borderRight: '1px solid #f0f0f0' }}><input type="checkbox" /></td>}
+                {qi === 0 && <td rowSpan={rowSpan} style={{ padding: '8px 12px', verticalAlign: 'top', borderRight: '1px solid #f0f0f0' }}><a style={{ color: '#1677ff' }}>{item.code}</a></td>}
+                {qi === 0 && <td rowSpan={rowSpan} style={{ padding: '8px 12px', verticalAlign: 'top', borderRight: '1px solid #f0f0f0' }}>{item.typeName}</td>}
+                <td style={{ padding: '8px 12px', borderRight: '1px solid #f0f0f0' }}>{q.certName}</td>
+                <td style={{ padding: '8px 12px', borderRight: '1px solid #f0f0f0' }}>{q.certType}</td>
+                <td style={{ padding: '8px 12px', borderRight: '1px solid #f0f0f0' }}>{q.expireDate}</td>
+                {qi === 0 && <td rowSpan={rowSpan} style={{ padding: '8px 12px', verticalAlign: 'top', borderRight: '1px solid #f0f0f0' }}><a style={{ color: '#1677ff' }}>{item.submitter}</a></td>}
+                {qi === 0 && <td rowSpan={rowSpan} style={{ padding: '8px 12px', verticalAlign: 'top', borderRight: '1px solid #f0f0f0' }}>{item.submitTime}</td>}
+                {qi === 0 && <td rowSpan={rowSpan} style={{ padding: '8px 12px', verticalAlign: 'top' }}>{item.updateTime}</td>}
+                {qi === 0 && <td rowSpan={rowSpan} style={{ padding: '8px 12px', verticalAlign: 'top' }}><Space size={8}><a style={{ color: '#1677ff' }} onClick={() => handleEdit(item)}>编辑</a><a style={{ color: '#ff4d4f' }} onClick={() => handleDelete(item)}>删除</a></Space></td>}
+              </tr>
+            );
+          });
+          // 第二行加"加载更多"
+          if (idx === 1) {
+            rows.push(
+              <tr key={`${item.key}-more`} style={{ borderBottom: '1px solid #f0f0f0' }}>
+                <td style={{ padding: '8px 12px', borderRight: '1px solid #f0f0f0' }}><a style={{ color: '#1677ff' }}>加载更多</a></td>
+                <td style={{ padding: '8px 12px', borderRight: '1px solid #f0f0f0' }}></td>
+                <td style={{ padding: '8px 12px', borderRight: '1px solid #f0f0f0' }}></td>
+                <td style={{ padding: '8px 12px' }}></td>
+              </tr>
+            );
+          }
+        });
+        return rows;
+      };
+
+      const blueBtnStyle = { background: '#1677ff', borderColor: '#1677ff' };
+
+      return (
+        <div style={{ background: '#fff', borderRadius: 8, padding: '16px 24px' }}>
+          {/* 工具栏 */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+            <Space size={8}>
+              <Button type="primary" style={blueBtnStyle} icon={React.createElement(PlusOutlined)} onClick={handleAdd}>新建</Button>
+              <Button icon={React.createElement(ImportOutlined)}>导入</Button>
+              <Button icon={React.createElement(ExportOutlined)}>导出</Button>
+            </Space>
+            <Space size={8}>
+              <Select defaultValue="all" size="middle" style={{ width: 110 }}>
+                <Option value="all">搜索范围</Option>
+              </Select>
+              <Input placeholder="请输入搜索内容" style={{ width: 220 }} suffix={React.createElement(SearchOutlined)} />
+            </Space>
+          </div>
+
+          {/* 数据表格 */}
+          <div style={{ border: '1px solid #f0f0f0', borderRadius: 4, overflow: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+              <thead>
+                <tr style={{ background: '#fafafa', borderBottom: '1px solid #f0f0f0' }}>
+                  <th style={{ padding: '10px 12px', width: 40, textAlign: 'center', borderRight: '1px solid #f0f0f0' }}><input type="checkbox" /></th>
+                  <th style={{ padding: '10px 12px', width: 140, textAlign: 'left', borderRight: '1px solid #f0f0f0' }}>ID</th>
+                  <th style={{ padding: '10px 12px', width: 130, textAlign: 'left', borderRight: '1px solid #f0f0f0' }}>类型名称</th>
+                  <th colSpan={3} style={{ padding: '10px 12px', textAlign: 'center', borderRight: '1px solid #f0f0f0' }}>资质要求</th>
+                  <th style={{ padding: '10px 12px', width: 110, textAlign: 'left', borderRight: '1px solid #f0f0f0' }}>提交人</th>
+                  <th style={{ padding: '10px 12px', width: 170, textAlign: 'left', borderRight: '1px solid #f0f0f0' }}>提交时间</th>
+                  <th style={{ padding: '10px 12px', width: 120, textAlign: 'left', borderRight: '1px solid #f0f0f0' }}>更新时间</th>
+                  <th style={{ padding: '10px 12px', width: 110, textAlign: 'left' }}>操作</th>
+                </tr>
+                <tr style={{ background: '#fafafa', borderBottom: '1px solid #f0f0f0' }}>
+                  <th style={{ padding: '0', border: 'none' }}></th>
+                  <th style={{ padding: '0', border: 'none' }}></th>
+                  <th style={{ padding: '0', border: 'none' }}></th>
+                  <th style={{ padding: '8px 12px', textAlign: 'left', borderRight: '1px solid #f0f0f0', fontWeight: 500 }}>证书名称</th>
+                  <th style={{ padding: '8px 12px', textAlign: 'left', borderRight: '1px solid #f0f0f0', fontWeight: 500 }}>证书类型</th>
+                  <th style={{ padding: '8px 12px', textAlign: 'left', borderRight: '1px solid #f0f0f0', fontWeight: 500 }}>到期日期</th>
+                  <th style={{ padding: '0', border: 'none' }}></th>
+                  <th style={{ padding: '0', border: 'none' }}></th>
+                  <th style={{ padding: '0', border: 'none' }}></th>
+                  <th style={{ padding: '0', border: 'none' }}></th>
+                </tr>
+              </thead>
+              <tbody>
+                {renderTable()}
+              </tbody>
+            </table>
+          </div>
+
+          {/* 底部分页 */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 12, paddingTop: 12, padding: '12px 0 8px', borderTop: '1px solid #f0f0f0' }}>
+            <Space size={16}>
+              {React.createElement(ColumnWidthOutlined, { style: { color: '#8c8c8c' } })}
+              <Select defaultValue="20" size="small" style={{ width: 90 }}>
+                <Option value="20">20条/页</Option>
+                <Option value="50">50条/页</Option>
+                <Option value="100">100条/页</Option>
+              </Select>
+              <span style={{ color: '#595959', fontSize: 13 }}>共 {tableData.length} 条</span>
+            </Space>
+            <Pagination current={1} total={tableData.length} pageSize={20} size="small" showSizeChanger={false} />
+          </div>
+
+          {/* 新建弹框 */}
+          <Modal
+            title={null}
+            open={modalVisible}
+            onCancel={() => setModalVisible(false)}
+            footer={null}
+            width={860}
+            closable={false}
+            bodyStyle={{ padding: 0 }}
+            style={{ top: 20 }}
+          >
+            {/* 弹框头部 */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 24px', borderBottom: '1px solid #f0f0f0' }}>
+              <span style={{ fontSize: 16, fontWeight: 600 }}>{modalMode === 'edit' ? '编辑供应商类型' : '供应商类型'}</span>
+              <Space size={16} style={{ color: '#8c8c8c', fontSize: 16 }}>
+                {React.createElement(MessageOutlined, { style: { cursor: 'pointer' } })}
+                {React.createElement(ExpandOutlined, { style: { cursor: 'pointer' } })}
+                {React.createElement(CloseOutlined, { style: { cursor: 'pointer' }, onClick: () => setModalVisible(false) })}
+              </Space>
+            </div>
+
+            {/* 弹框内容 */}
+            <div style={{ padding: '20px 24px', minHeight: 400 }}>
+              {/* 类型名称 */}
+              <div style={{ marginBottom: 20 }}>
+                <div style={{ marginBottom: 6, fontSize: 13, color: '#595959' }}>类型名称</div>
+                <Input style={{ width: 380 }} value={typeName} onChange={(e) => setTypeName(e.target.value)} />
+              </div>
+
+              {/* 资质要求 */}
+              <div style={{ marginBottom: 12 }}>
+                <div style={{ marginBottom: 8, fontSize: 13, color: '#595959' }}>资质要求</div>
+                <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #f0f0f0', fontSize: 13 }}>
+                  <thead>
+                    <tr style={{ background: '#fafafa' }}>
+                      <th style={{ padding: '8px 12px', width: 50, textAlign: 'center', border: '1px solid #f0f0f0' }}>#</th>
+                      <th style={{ padding: '8px 12px', textAlign: 'center', border: '1px solid #f0f0f0' }}>证书名称</th>
+                      <th style={{ padding: '8px 12px', textAlign: 'center', border: '1px solid #f0f0f0' }}>证书类型</th>
+                      <th style={{ padding: '8px 12px', textAlign: 'center', border: '1px solid #f0f0f0' }}>到期日期</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {qualRows.map((row, idx) => (
+                      <tr key={row.key}>
+                        <td style={{ padding: '8px 12px', textAlign: 'center', border: '1px solid #f0f0f0' }}>{idx + 1}</td>
+                        <td style={{ padding: '4px 8px', border: '1px solid #f0f0f0' }}><Input size="small" value={row.certName} onChange={(e) => { const v = e.target.value; setQualRows(prev => prev.map(r => r.key === row.key ? { ...r, certName: v } : r)); }} /></td>
+                        <td style={{ padding: '4px 8px', border: '1px solid #f0f0f0' }}><Select size="small" style={{ width: '100%' }} value={row.certType || undefined} placeholder="" allowClear onChange={(v) => { setQualRows(prev => prev.map(r => r.key === row.key ? { ...r, certType: v } : r)); }}><Option value="行业资质">行业资质</Option><Option value="安全证书">安全证书</Option><Option value="专利著作权">专利著作权</Option></Select></td>
+                        <td style={{ padding: '4px 8px', border: '1px solid #f0f0f0' }}><Input size="small" value={row.expireDate} onChange={(e) => { const v = e.target.value; setQualRows(prev => prev.map(r => r.key === row.key ? { ...r, expireDate: v } : r)); }} /></td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 8 }}>
+                  <Space size={16}>
+                    <a style={{ color: '#1677ff', fontSize: 13 }} onClick={addQualRow}>{React.createElement(PlusOutlined)} 添加</a>
+                    <a style={{ color: '#1677ff', fontSize: 13 }}>{React.createElement(ImportOutlined)} 导入</a>
+                    <a style={{ color: '#1677ff', fontSize: 13 }}>{React.createElement(EditOutlined)} 快速填报</a>
+                  </Space>
+                  <span style={{ color: '#8c8c8c', fontSize: 12 }}>{qualRows.length} / 200</span>
+                </div>
+              </div>
+            </div>
+
+            {/* 弹框底部 */}
+            <div style={{ textAlign: 'center', padding: '12px 24px 20px', borderTop: '1px solid #f0f0f0' }}>
+              <Space size={16}>
+                <Button type="primary" style={{ ...blueBtnStyle, width: 100, height: 36 }} onClick={handleSubmit}>{modalMode === 'edit' ? '保存' : '提交'}</Button>
+                <Button type="primary" style={{ background: '#52c41a', borderColor: '#52c41a', width: 100, height: 36 }} onClick={handleSaveDraft}>保存草稿</Button>
+              </Space>
+            </div>
+          </Modal>
+        </div>
+      );
+    }
+
+    // ===== 供应商档案组件 =====
+    function SupplierArchive() {
+      const [selectedRowKeys, setSelectedRowKeys] = useState([]);
+      const [detailVisible, setDetailVisible] = useState(false);
+      const [detailRecord, setDetailRecord] = useState(null);
+      const [editVisible, setEditVisible] = useState(false);
+      const [editRecord, setEditRecord] = useState(null);
+      const [editFormData, setEditFormData] = useState({});
+      const [addVisible, setAddVisible] = useState(false);
+      const [addFormData, setAddFormData] = useState({
+        collabType: '协同供应商', type: '', name: '', creditCode: '', email: '',
+        interSupplier: '', phone: '', interContact: '', contact: '', bizMode: '',
+        materialLevel: '', supplierLevel: '', status: '', relation: '',
+        purchaseHelper: '', bizScope: '',
+        bank: '', accountName: '', accountNo: '', tel: '', address: '',
+        riskLevel: '', selfRisk: 0, aroundRisk: 0, historyRisk: 0, warnRisk: 0
+      });
+
+      const handleAddChange = (field, value) => {
+        setAddFormData(prev => ({ ...prev, [field]: value }));
+      };
+
+      const handleAddSubmit = () => {
+        antd.message.success('提交成功');
+        setAddVisible(false);
+      };
+
+      const handleAddSaveDraft = () => {
+        antd.message.success('草稿已保存');
+        setAddVisible(false);
+      };
+
+      const [tableData, setTableData] = useState([
+        { key: '1', code: 'GYS000008', collabType: '协同', type: '五金供应商', name: '天津海叶商贸', creditCode: '91440604MA56789012', license: '已上传', email: 'haiye@163.com', interSupplier: '是', phone: '022-88886666', interContact: '张三', contact: '李四', bizMode: '贸易商', materialLevel: '一般', supplierLevel: '一般供应商', status: '合格', relation: '外部供应商', attachment: '-', purchaseHelper: '王五', bizScope: '五金工具、建材', bank: '中国工商银行天津分行', accountName: '天津海叶商贸有限公司', accountNo: '6222021234567890123', tel: '022-88886666', address: '天津市河西区解放南路', submitter: '用户257522', submitTime: '2026-07-21 11:31:49', updateTime: '2026-07-21 14:20:33', riskLevel: '低', selfRisk: 0, aroundRisk: 0, historyRisk: 0, warnRisk: 0 },
+        { key: '2', code: 'GYS000002', collabType: '协同', type: '五金供应商', name: '京东企业购', creditCode: '91310101MA1F056789', license: '已上传', email: 'b2b@jd.com', interSupplier: '是', phone: '400-606-5500', interContact: '赵六', contact: '孙七', bizMode: '服务商', materialLevel: '重要', supplierLevel: '重要供应商', status: '合格', relation: '外部供应商', attachment: '-', purchaseHelper: '周八', bizScope: '办公用品、IT设备', bank: '招商银行北京分行', accountName: '北京京东世纪贸易有限公司', accountNo: '6225880123456789', tel: '400-606-5500', address: '北京市亦庄经济开发区', submitter: '用户257522', submitTime: '2026-07-21 11:31:42', updateTime: '2026-07-21 13:55:18', riskLevel: '中', selfRisk: 2, aroundRisk: 1, historyRisk: 3, warnRisk: 1 },
+        { key: '3', code: 'GYS000015', collabType: '非协同', type: '信息服务供应商', name: '上海易点科技有限公司', creditCode: '91310000MA1FL8XX3T', license: '已上传', email: 'info@yidian.com', interSupplier: '否', phone: '021-55667788', interContact: '-', contact: '吴九', bizMode: '服务商', materialLevel: '一般', supplierLevel: '一般供应商', status: '潜在', relation: '外部供应商', attachment: '-', purchaseHelper: '-', bizScope: '软件开发、信息技术', bank: '中国银行上海分行', accountName: '上海易点科技有限公司', accountNo: '6217001234567890', tel: '021-55667788', address: '上海市徐汇区宜山路700号', submitter: '用户257522', submitTime: '2026-07-20 09:15:30', updateTime: '2026-07-20 09:15:30', riskLevel: '低', selfRisk: 0, aroundRisk: 0, historyRisk: 0, warnRisk: 0 },
+      ]);
+
+      // 查看详情
+      const handleViewDetail = (record) => {
+        setDetailRecord(record);
+        setDetailVisible(true);
+      };
+
+      // 编辑
+      const handleEdit = (record) => {
+        setEditRecord(record);
+        setEditFormData({ ...record });
+        setEditVisible(true);
+      };
+
+      // 编辑表单字段更新
+      const handleEditChange = (field, value) => {
+        setEditFormData(prev => ({ ...prev, [field]: value }));
+      };
+
+      // 保存编辑
+      const handleEditSave = () => {
+        setTableData(prev => prev.map(item => item.key === editRecord.key ? { ...editFormData } : item));
+        setEditVisible(false);
+        antd.message.success('保存成功');
+      };
+
+      // 删除
+      const handleDelete = (record) => {
+        Modal.confirm({
+          title: '确认删除',
+          content: `确定要删除供应商「${record.name}」吗？此操作不可恢复。`,
+          okText: '确定',
+          cancelText: '取消',
+          okButtonProps: { danger: true },
+          onOk: () => {
+            setTableData(prev => prev.filter(item => item.key !== record.key));
+            antd.message.success('删除成功');
+          },
+        });
+      };
+
+      const columns = [
+        { title: '供应商编号', dataIndex: 'code', width: 120, fixed: 'left' },
+        { title: '协同类型', dataIndex: 'collabType', width: 90 },
+        { title: '供应商类型', dataIndex: 'type', width: 120 },
+        { title: '供应商名称', dataIndex: 'name', width: 140 },
+        { title: '统一社会信用代码', dataIndex: 'creditCode', width: 180 },
+        { title: '营业执照副本', dataIndex: 'license', width: 110 },
+        { title: '电子邮件', dataIndex: 'email', width: 150 },
+        { title: '互联供应商', dataIndex: 'interSupplier', width: 90 },
+        { title: '联系电话', dataIndex: 'phone', width: 120 },
+        { title: '供应商联系人（互联用户）', dataIndex: 'interContact', width: 180 },
+        { title: '供应商联系人', dataIndex: 'contact', width: 110 },
+        { title: '经营方式', dataIndex: 'bizMode', width: 90 },
+        { title: '物资重要度', dataIndex: 'materialLevel', width: 100 },
+        { title: '供应商重要度', dataIndex: 'supplierLevel', width: 110 },
+        { title: '供应商状态', dataIndex: 'status', width: 100, render: (v) => React.createElement(Tag, { color: v === '合格' ? 'success' : v === '淘汰' ? 'error' : 'processing' }, v) },
+        { title: '供应商与企业关系', dataIndex: 'relation', width: 140 },
+        { title: '其它附件', dataIndex: 'attachment', width: 80 },
+        { title: '采购协助人', dataIndex: 'purchaseHelper', width: 100 },
+        { title: '经营范围', dataIndex: 'bizScope', width: 150 },
+        { title: '开户行', dataIndex: 'bank', width: 140 },
+        { title: '账户名称', dataIndex: 'accountName', width: 120 },
+        { title: '账号', dataIndex: 'accountNo', width: 160 },
+        { title: '电话', dataIndex: 'tel', width: 120 },
+        { title: '地址', dataIndex: 'address', width: 200 },
+        { title: '提交人', dataIndex: 'submitter', width: 100, render: (v) => React.createElement('a', { style: { color: '#1677ff' } }, v) },
+        { title: '提交时间', dataIndex: 'submitTime', width: 170 },
+        { title: '更新时间', dataIndex: 'updateTime', width: 170 },
+        { title: '风险等级', dataIndex: 'riskLevel', width: 90, render: (v) => { const color = v === '高' ? 'red' : v === '中' ? 'orange' : 'green'; return React.createElement(Tag, { color }, v); } },
+        { title: '自身风险条数', dataIndex: 'selfRisk', width: 110, align: 'center' },
+        { title: '周边风险条数', dataIndex: 'aroundRisk', width: 110, align: 'center' },
+        { title: '历史风险条数', dataIndex: 'historyRisk', width: 110, align: 'center' },
+        { title: '预警风险条数', dataIndex: 'warnRisk', width: 110, align: 'center' },
+        { title: '操作', key: 'action', width: 150, fixed: 'right', render: (_, record) => React.createElement(Space, { size: 8 }, React.createElement('a', { style: { color: '#1677ff' }, onClick: () => handleViewDetail(record) }, '详情'), React.createElement('a', { style: { color: '#1677ff' }, onClick: () => handleEdit(record) }, '编辑'), React.createElement('a', { style: { color: '#ff4d4f' }, onClick: () => handleDelete(record) }, '删除')) },
+      ];
+
+      const blueBtnStyle = { background: '#1677ff', borderColor: '#1677ff' };
+
+      return (
+        <div style={{ background: '#fff', borderRadius: 8, padding: '16px 24px' }}>
+          {/* 工具栏 */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+            <Space size={8}>
+              <Button type="primary" style={blueBtnStyle} icon={React.createElement(PlusOutlined)} onClick={() => { setAddFormData({ collabType: '协同供应商', type: '', name: '', creditCode: '', email: '', interSupplier: '', phone: '', interContact: '', contact: '', bizMode: '', materialLevel: '', supplierLevel: '', status: '', relation: '', purchaseHelper: '', bizScope: '', bank: '', accountName: '', accountNo: '', tel: '', address: '', riskLevel: '', selfRisk: 0, aroundRisk: 0, historyRisk: 0, warnRisk: 0 }); setAddVisible(true); }}>新建</Button>
+              <Button icon={React.createElement(ImportOutlined)}>导入</Button>
+              <Button icon={React.createElement(ExportOutlined)}>导出</Button>
+            </Space>
+            <Space size={8}>
+              <Select defaultValue="all" size="middle" style={{ width: 110 }}>
+                <Option value="all">搜索范围</Option>
+              </Select>
+              <Input placeholder="请输入搜索内容" style={{ width: 220 }} suffix={React.createElement(SearchOutlined)} />
+            </Space>
+          </div>
+
+          {/* 数据表格 */}
+          <Table
+            columns={columns}
+            dataSource={tableData}
+            rowSelection={{ selectedRowKeys, onChange: setSelectedRowKeys }}
+            bordered
+            size="middle"
+            pagination={false}
+            scroll={{ x: 4200 }}
+          />
+
+          {/* 底部分页 */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 12, paddingTop: 12, padding: '12px 0 8px', borderTop: '1px solid #f0f0f0' }}>
+            <Space size={16}>
+              {React.createElement(ColumnWidthOutlined, { style: { color: '#8c8c8c' } })}
+              <Select defaultValue="20" size="small" style={{ width: 90 }}>
+                <Option value="20">20条/页</Option>
+                <Option value="50">50条/页</Option>
+                <Option value="100">100条/页</Option>
+              </Select>
+              <span style={{ color: '#595959', fontSize: 13 }}>共 {tableData.length} 条</span>
+            </Space>
+            <Pagination current={1} total={tableData.length} pageSize={20} size="small" showSizeChanger={false} />
+          </div>
+
+          {/* 详情弹窗 */}
+          <Modal
+            title="供应商详情"
+            open={detailVisible}
+            onCancel={() => setDetailVisible(false)}
+            footer={<Button onClick={() => setDetailVisible(false)}>关闭</Button>}
+            width={900}
+          >
+            {detailRecord && (
+              <div style={{ padding: '16px 20px', background: '#fafbfc', borderRadius: 8 }}>
+                {/* 基本信息 */}
+                <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 12, paddingBottom: 8, borderBottom: '1px solid #f0f0f0' }}>基本信息</div>
+                <Row gutter={[16, 12]} style={{ marginBottom: 20 }}>
+                  <Col span={12}><Text type="secondary">供应商编号：</Text><span>{detailRecord.code}</span></Col>
+                  <Col span={12}><Text type="secondary">协同类型：</Text><span>{detailRecord.collabType}</span></Col>
+                  <Col span={12}><Text type="secondary">供应商类型：</Text><span>{detailRecord.type}</span></Col>
+                  <Col span={12}><Text type="secondary">供应商名称：</Text><span>{detailRecord.name}</span></Col>
+                  <Col span={12}><Text type="secondary">统一社会信用代码：</Text><span>{detailRecord.creditCode}</span></Col>
+                  <Col span={12}><Text type="secondary">营业执照副本：</Text><span>{detailRecord.license}</span></Col>
+                  <Col span={12}><Text type="secondary">电子邮件：</Text><span>{detailRecord.email}</span></Col>
+                  <Col span={12}><Text type="secondary">互联供应商：</Text><span>{detailRecord.interSupplier}</span></Col>
+                  <Col span={12}><Text type="secondary">联系电话：</Text><span>{detailRecord.phone}</span></Col>
+                  <Col span={12}><Text type="secondary">供应商联系人（互联用户）：</Text><span>{detailRecord.interContact}</span></Col>
+                  <Col span={12}><Text type="secondary">供应商联系人：</Text><span>{detailRecord.contact}</span></Col>
+                  <Col span={12}><Text type="secondary">经营方式：</Text><span>{detailRecord.bizMode}</span></Col>
+                  <Col span={12}><Text type="secondary">物资重要度：</Text><span>{detailRecord.materialLevel}</span></Col>
+                  <Col span={12}><Text type="secondary">供应商重要度：</Text><span>{detailRecord.supplierLevel}</span></Col>
+                  <Col span={12}><Text type="secondary">供应商状态：</Text><Tag color={detailRecord.status === '合格' ? 'success' : detailRecord.status === '淘汰' ? 'error' : 'processing'}>{detailRecord.status}</Tag></Col>
+                  <Col span={12}><Text type="secondary">供应商与企业关系：</Text><span>{detailRecord.relation}</span></Col>
+                </Row>
+
+                {/* 业务信息 */}
+                <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 12, paddingBottom: 8, borderBottom: '1px solid #f0f0f0' }}>业务信息</div>
+                <Row gutter={[16, 12]} style={{ marginBottom: 20 }}>
+                  <Col span={12}><Text type="secondary">其它附件：</Text><span>{detailRecord.attachment}</span></Col>
+                  <Col span={12}><Text type="secondary">采购协助人：</Text><span>{detailRecord.purchaseHelper}</span></Col>
+                  <Col span={24}><Text type="secondary">经营范围：</Text><span>{detailRecord.bizScope}</span></Col>
+                </Row>
+
+                {/* 财务信息 */}
+                <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 12, paddingBottom: 8, borderBottom: '1px solid #f0f0f0' }}>财务信息</div>
+                <Row gutter={[16, 12]} style={{ marginBottom: 20 }}>
+                  <Col span={12}><Text type="secondary">开户行：</Text><span>{detailRecord.bank}</span></Col>
+                  <Col span={12}><Text type="secondary">账户名称：</Text><span>{detailRecord.accountName}</span></Col>
+                  <Col span={12}><Text type="secondary">账号：</Text><span>{detailRecord.accountNo}</span></Col>
+                  <Col span={12}><Text type="secondary">电话：</Text><span>{detailRecord.tel}</span></Col>
+                  <Col span={24}><Text type="secondary">地址：</Text><span>{detailRecord.address}</span></Col>
+                </Row>
+
+                {/* 风险信息 */}
+                <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 12, paddingBottom: 8, borderBottom: '1px solid #f0f0f0' }}>风险信息</div>
+                <Row gutter={[16, 12]} style={{ marginBottom: 20 }}>
+                  <Col span={12}><Text type="secondary">风险等级：</Text><Tag color={detailRecord.riskLevel === '高' ? 'red' : detailRecord.riskLevel === '中' ? 'orange' : 'green'}>{detailRecord.riskLevel}</Tag></Col>
+                  <Col span={12}><Text type="secondary">自身风险条数：</Text><span>{detailRecord.selfRisk}</span></Col>
+                  <Col span={12}><Text type="secondary">周边风险条数：</Text><span>{detailRecord.aroundRisk}</span></Col>
+                  <Col span={12}><Text type="secondary">历史风险条数：</Text><span>{detailRecord.historyRisk}</span></Col>
+                  <Col span={12}><Text type="secondary">预警风险条数：</Text><span>{detailRecord.warnRisk}</span></Col>
+                </Row>
+
+                {/* 其它 */}
+                <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 12, paddingBottom: 8, borderBottom: '1px solid #f0f0f0' }}>其它</div>
+                <Row gutter={[16, 12]}>
+                  <Col span={12}><Text type="secondary">提交人：</Text><span>{detailRecord.submitter}</span></Col>
+                  <Col span={12}><Text type="secondary">提交时间：</Text><span>{detailRecord.submitTime}</span></Col>
+                  <Col span={12}><Text type="secondary">更新时间：</Text><span>{detailRecord.updateTime}</span></Col>
+                </Row>
+              </div>
+            )}
+          </Modal>
+
+          {/* 编辑弹窗 */}
+          <Modal
+            title="编辑供应商"
+            open={editVisible}
+            onCancel={() => setEditVisible(false)}
+            footer={
+              <Space>
+                <Button onClick={() => setEditVisible(false)}>取消</Button>
+                <Button type="primary" style={blueBtnStyle} onClick={handleEditSave}>保存</Button>
+              </Space>
+            }
+            width={900}
+          >
+            <div style={{ padding: '20px', maxHeight: '65vh', overflowY: 'auto', background: '#fafbfc', borderRadius: 8 }}>
+              {/* 基本信息 */}
+              <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 12, paddingBottom: 8, borderBottom: '1px solid #f0f0f0' }}>基本信息</div>
+              <Row gutter={[16, 16]} style={{ marginBottom: 20 }}>
+                <Col span={8}>
+                  <div style={{ marginBottom: 4, fontSize: 13, color: '#595959' }}>供应商编号</div>
+                  <Input disabled value={editFormData.code} />
+                </Col>
+                <Col span={8}>
+                  <div style={{ marginBottom: 4, fontSize: 13, color: '#595959' }}>协同类型</div>
+                  <Select style={{ width: '100%' }} value={editFormData.collabType} onChange={(v) => handleEditChange('collabType', v)}>
+                    <Option value="协同">协同</Option>
+                    <Option value="非协同">非协同</Option>
+                  </Select>
+                </Col>
+                <Col span={8}>
+                  <div style={{ marginBottom: 4, fontSize: 13, color: '#595959' }}>供应商类型</div>
+                  <Input value={editFormData.type} onChange={(e) => handleEditChange('type', e.target.value)} />
+                </Col>
+                <Col span={8}>
+                  <div style={{ marginBottom: 4, fontSize: 13, color: '#595959' }}>供应商名称</div>
+                  <Input value={editFormData.name} onChange={(e) => handleEditChange('name', e.target.value)} />
+                </Col>
+                <Col span={8}>
+                  <div style={{ marginBottom: 4, fontSize: 13, color: '#595959' }}>统一社会信用代码</div>
+                  <Input value={editFormData.creditCode} onChange={(e) => handleEditChange('creditCode', e.target.value)} />
+                </Col>
+                <Col span={8}>
+                  <div style={{ marginBottom: 4, fontSize: 13, color: '#595959' }}>营业执照副本</div>
+                  <Input value={editFormData.license} onChange={(e) => handleEditChange('license', e.target.value)} />
+                </Col>
+                <Col span={8}>
+                  <div style={{ marginBottom: 4, fontSize: 13, color: '#595959' }}>电子邮件</div>
+                  <Input value={editFormData.email} onChange={(e) => handleEditChange('email', e.target.value)} />
+                </Col>
+                <Col span={8}>
+                  <div style={{ marginBottom: 4, fontSize: 13, color: '#595959' }}>互联供应商</div>
+                  <Select style={{ width: '100%' }} value={editFormData.interSupplier} onChange={(v) => handleEditChange('interSupplier', v)}>
+                    <Option value="是">是</Option>
+                    <Option value="否">否</Option>
+                  </Select>
+                </Col>
+                <Col span={8}>
+                  <div style={{ marginBottom: 4, fontSize: 13, color: '#595959' }}>联系电话</div>
+                  <Input value={editFormData.phone} onChange={(e) => handleEditChange('phone', e.target.value)} />
+                </Col>
+                <Col span={8}>
+                  <div style={{ marginBottom: 4, fontSize: 13, color: '#595959' }}>供应商联系人（互联用户）</div>
+                  <Input value={editFormData.interContact} onChange={(e) => handleEditChange('interContact', e.target.value)} />
+                </Col>
+                <Col span={8}>
+                  <div style={{ marginBottom: 4, fontSize: 13, color: '#595959' }}>供应商联系人</div>
+                  <Input value={editFormData.contact} onChange={(e) => handleEditChange('contact', e.target.value)} />
+                </Col>
+                <Col span={8}>
+                  <div style={{ marginBottom: 4, fontSize: 13, color: '#595959' }}>经营方式</div>
+                  <Select style={{ width: '100%' }} value={editFormData.bizMode} onChange={(v) => handleEditChange('bizMode', v)}>
+                    <Option value="贸易商">贸易商</Option>
+                    <Option value="服务商">服务商</Option>
+                    <Option value="生产商">生产商</Option>
+                  </Select>
+                </Col>
+                <Col span={8}>
+                  <div style={{ marginBottom: 4, fontSize: 13, color: '#595959' }}>物资重要度</div>
+                  <Select style={{ width: '100%' }} value={editFormData.materialLevel} onChange={(v) => handleEditChange('materialLevel', v)}>
+                    <Option value="一般">一般</Option>
+                    <Option value="重要">重要</Option>
+                  </Select>
+                </Col>
+                <Col span={8}>
+                  <div style={{ marginBottom: 4, fontSize: 13, color: '#595959' }}>供应商重要度</div>
+                  <Select style={{ width: '100%' }} value={editFormData.supplierLevel} onChange={(v) => handleEditChange('supplierLevel', v)}>
+                    <Option value="一般供应商">一般供应商</Option>
+                    <Option value="重要供应商">重要供应商</Option>
+                  </Select>
+                </Col>
+                <Col span={8}>
+                  <div style={{ marginBottom: 4, fontSize: 13, color: '#595959' }}>供应商状态</div>
+                  <Select style={{ width: '100%' }} value={editFormData.status} onChange={(v) => handleEditChange('status', v)}>
+                    <Option value="合格">合格</Option>
+                    <Option value="潜在">潜在</Option>
+                    <Option value="淘汰">淘汰</Option>
+                  </Select>
+                </Col>
+                <Col span={8}>
+                  <div style={{ marginBottom: 4, fontSize: 13, color: '#595959' }}>供应商与企业关系</div>
+                  <Select style={{ width: '100%' }} value={editFormData.relation} onChange={(v) => handleEditChange('relation', v)}>
+                    <Option value="外部供应商">外部供应商</Option>
+                    <Option value="内部供应商">内部供应商</Option>
+                  </Select>
+                </Col>
+              </Row>
+
+              {/* 业务信息 */}
+              <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 12, paddingBottom: 8, borderBottom: '1px solid #f0f0f0' }}>业务信息</div>
+              <Row gutter={[16, 16]} style={{ marginBottom: 20 }}>
+                <Col span={8}>
+                  <div style={{ marginBottom: 4, fontSize: 13, color: '#595959' }}>其它附件</div>
+                  <Input value={editFormData.attachment} onChange={(e) => handleEditChange('attachment', e.target.value)} />
+                </Col>
+                <Col span={8}>
+                  <div style={{ marginBottom: 4, fontSize: 13, color: '#595959' }}>采购协助人</div>
+                  <Input value={editFormData.purchaseHelper} onChange={(e) => handleEditChange('purchaseHelper', e.target.value)} />
+                </Col>
+                <Col span={8}>
+                  <div style={{ marginBottom: 4, fontSize: 13, color: '#595959' }}>经营范围</div>
+                  <Input value={editFormData.bizScope} onChange={(e) => handleEditChange('bizScope', e.target.value)} />
+                </Col>
+              </Row>
+
+              {/* 财务信息 */}
+              <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 12, paddingBottom: 8, borderBottom: '1px solid #f0f0f0' }}>财务信息</div>
+              <Row gutter={[16, 16]} style={{ marginBottom: 20 }}>
+                <Col span={8}>
+                  <div style={{ marginBottom: 4, fontSize: 13, color: '#595959' }}>开户行</div>
+                  <Input value={editFormData.bank} onChange={(e) => handleEditChange('bank', e.target.value)} />
+                </Col>
+                <Col span={8}>
+                  <div style={{ marginBottom: 4, fontSize: 13, color: '#595959' }}>账户名称</div>
+                  <Input value={editFormData.accountName} onChange={(e) => handleEditChange('accountName', e.target.value)} />
+                </Col>
+                <Col span={8}>
+                  <div style={{ marginBottom: 4, fontSize: 13, color: '#595959' }}>账号</div>
+                  <Input value={editFormData.accountNo} onChange={(e) => handleEditChange('accountNo', e.target.value)} />
+                </Col>
+                <Col span={8}>
+                  <div style={{ marginBottom: 4, fontSize: 13, color: '#595959' }}>电话</div>
+                  <Input value={editFormData.tel} onChange={(e) => handleEditChange('tel', e.target.value)} />
+                </Col>
+                <Col span={16}>
+                  <div style={{ marginBottom: 4, fontSize: 13, color: '#595959' }}>地址</div>
+                  <Input value={editFormData.address} onChange={(e) => handleEditChange('address', e.target.value)} />
+                </Col>
+              </Row>
+
+              {/* 风险信息 */}
+              <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 12, paddingBottom: 8, borderBottom: '1px solid #f0f0f0' }}>风险信息</div>
+              <Row gutter={[16, 16]}>
+                <Col span={8}>
+                  <div style={{ marginBottom: 4, fontSize: 13, color: '#595959' }}>风险等级</div>
+                  <Select style={{ width: '100%' }} value={editFormData.riskLevel} onChange={(v) => handleEditChange('riskLevel', v)}>
+                    <Option value="低">低</Option>
+                    <Option value="中">中</Option>
+                    <Option value="高">高</Option>
+                  </Select>
+                </Col>
+                <Col span={8}>
+                  <div style={{ marginBottom: 4, fontSize: 13, color: '#595959' }}>自身风险条数</div>
+                  <Input type="number" value={editFormData.selfRisk} onChange={(e) => handleEditChange('selfRisk', Number(e.target.value))} />
+                </Col>
+                <Col span={8}>
+                  <div style={{ marginBottom: 4, fontSize: 13, color: '#595959' }}>周边风险条数</div>
+                  <Input type="number" value={editFormData.aroundRisk} onChange={(e) => handleEditChange('aroundRisk', Number(e.target.value))} />
+                </Col>
+                <Col span={8}>
+                  <div style={{ marginBottom: 4, fontSize: 13, color: '#595959' }}>历史风险条数</div>
+                  <Input type="number" value={editFormData.historyRisk} onChange={(e) => handleEditChange('historyRisk', Number(e.target.value))} />
+                </Col>
+                <Col span={8}>
+                  <div style={{ marginBottom: 4, fontSize: 13, color: '#595959' }}>预警风险条数</div>
+                  <Input type="number" value={editFormData.warnRisk} onChange={(e) => handleEditChange('warnRisk', Number(e.target.value))} />
+                </Col>
+              </Row>
+            </div>
+          </Modal>
+
+          {/* 新增供应商弹框 */}
+          <Modal
+            title={null}
+            open={addVisible}
+            onCancel={() => setAddVisible(false)}
+            footer={null}
+            width={1100}
+            closable={false}
+            bodyStyle={{ padding: 0 }}
+            style={{ top: 20 }}
+          >
+            {/* 弹框头部 */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 24px', borderBottom: '1px solid #f0f0f0' }}>
+              <span style={{ fontSize: 16, fontWeight: 600 }}>供应商档案</span>
+              <Space size={16} style={{ color: '#8c8c8c', fontSize: 16 }}>
+                {React.createElement(FileTextOutlined, { style: { cursor: 'pointer' } })}
+                {React.createElement(ExpandOutlined, { style: { cursor: 'pointer' } })}
+                {React.createElement(CloseOutlined, { style: { cursor: 'pointer' }, onClick: () => setAddVisible(false) })}
+              </Space>
+            </div>
+
+            {/* 弹框内容 */}
+            <div style={{ padding: '20px 24px', maxHeight: '70vh', overflowY: 'auto' }}>
+              {/* 第1行：协同类型、供应商类型、供应商名称 */}
+              <Row gutter={16} style={{ marginBottom: 16 }}>
+                <Col span={8}>
+                  <div style={{ marginBottom: 6, fontSize: 13, color: '#595959' }}>协同类型 <span style={{ color: '#ff4d4f' }}>*</span></div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span
+                      onClick={() => handleAddChange('collabType', '协同供应商')}
+                      style={{ cursor: 'pointer', padding: '4px 16px', borderRadius: 16, fontSize: 13, background: addFormData.collabType === '协同供应商' ? '#1677ff' : '#f0f0f0', color: addFormData.collabType === '协同供应商' ? '#fff' : '#595959', transition: 'all 0.2s' }}
+                    >协同供应商</span>
+                    <span
+                      onClick={() => handleAddChange('collabType', '非协同供应商')}
+                      style={{ cursor: 'pointer', padding: '4px 16px', borderRadius: 16, fontSize: 13, background: addFormData.collabType === '非协同供应商' ? '#1677ff' : '#f0f0f0', color: addFormData.collabType === '非协同供应商' ? '#fff' : '#595959', transition: 'all 0.2s' }}
+                    >非协同供应商</span>
+                  </div>
+                </Col>
+                <Col span={8}>
+                  <div style={{ marginBottom: 6, fontSize: 13, color: '#595959' }}>供应商类型</div>
+                  <Select style={{ width: '100%' }} value={addFormData.type || undefined} placeholder="" onChange={(v) => handleAddChange('type', v)} allowClear>
+                    <Option value="五金供应商">五金供应商</Option>
+                    <Option value="信息服务供应商">信息服务供应商</Option>
+                    <Option value="原材料供应商">原材料供应商</Option>
+                  </Select>
+                </Col>
+                <Col span={8}>
+                  <div style={{ marginBottom: 6, fontSize: 13, color: '#595959' }}>供应商名称 <span style={{ color: '#ff4d4f' }}>*</span></div>
+                  <Input value={addFormData.name} onChange={(e) => handleAddChange('name', e.target.value)} />
+                </Col>
+              </Row>
+
+              {/* 第2行：统一社会信用代码、营业执照副本、电子邮件 */}
+              <Row gutter={16} style={{ marginBottom: 16 }}>
+                <Col span={8}>
+                  <div style={{ marginBottom: 6, fontSize: 13, color: '#595959' }}>统一社会信用代码</div>
+                  <Input value={addFormData.creditCode} onChange={(e) => handleAddChange('creditCode', e.target.value)} />
+                </Col>
+                <Col span={8}>
+                  <div style={{ marginBottom: 6, fontSize: 13, color: '#595959' }}>营业执照副本</div>
+                  <Upload.Dragger style={{ padding: '4px 0', height: 32, background: '#fafafa', border: '1px dashed #d9d9d9', borderRadius: 4 }} showUploadList={false}>
+                    <span style={{ fontSize: 12, color: '#8c8c8c' }}>{React.createElement(UploadOutlined)} 将文件拖拽到此处 或点击上传</span>
+                  </Upload.Dragger>
+                </Col>
+                <Col span={8}>
+                  <div style={{ marginBottom: 6, fontSize: 13, color: '#595959' }}>电子邮件</div>
+                  <Input value={addFormData.email} onChange={(e) => handleAddChange('email', e.target.value)} />
+                </Col>
+              </Row>
+
+              {/* 第3行：互联供应商、联系电话、供应商联系人（互联用户） */}
+              <Row gutter={16} style={{ marginBottom: 16 }}>
+                <Col span={8}>
+                  <div style={{ marginBottom: 6, fontSize: 13, color: '#595959' }}>互联供应商</div>
+                  <Input.Group compact>
+                    <Input style={{ width: 'calc(100% - 60px)' }} value={addFormData.interSupplier} onChange={(e) => handleAddChange('interSupplier', e.target.value)} />
+                    <Button type="primary" style={{ ...blueBtnStyle, width: 60 }}>选择</Button>
+                  </Input.Group>
+                </Col>
+                <Col span={8}>
+                  <div style={{ marginBottom: 6, fontSize: 13, color: '#595959' }}>联系电话</div>
+                  <Input value={addFormData.phone} onChange={(e) => handleAddChange('phone', e.target.value)} />
+                </Col>
+                <Col span={8}>
+                  <div style={{ marginBottom: 6, fontSize: 13, color: '#595959' }}>供应商联系人（互联用户）</div>
+                  <Input.Group compact>
+                    <Input style={{ width: 'calc(100% - 60px)' }} placeholder="请选择" value={addFormData.interContact} onChange={(e) => handleAddChange('interContact', e.target.value)} />
+                    <Button type="primary" style={{ ...blueBtnStyle, width: 60 }}>选择</Button>
+                  </Input.Group>
+                </Col>
+              </Row>
+
+              {/* 第4行：供应商联系人、经营方式、物资重要度 */}
+              <Row gutter={16} style={{ marginBottom: 16 }}>
+                <Col span={8}>
+                  <div style={{ marginBottom: 6, fontSize: 13, color: '#595959' }}>供应商联系人</div>
+                  <Input value={addFormData.contact} onChange={(e) => handleAddChange('contact', e.target.value)} />
+                </Col>
+                <Col span={8}>
+                  <div style={{ marginBottom: 6, fontSize: 13, color: '#595959' }}>经营方式</div>
+                  <Select style={{ width: '100%' }} value={addFormData.bizMode || undefined} placeholder="" onChange={(v) => handleAddChange('bizMode', v)} allowClear>
+                    <Option value="贸易商">贸易商</Option>
+                    <Option value="服务商">服务商</Option>
+                    <Option value="生产商">生产商</Option>
+                  </Select>
+                </Col>
+                <Col span={8}>
+                  <div style={{ marginBottom: 6, fontSize: 13, color: '#595959' }}>物资重要度</div>
+                  <Select style={{ width: '100%' }} value={addFormData.materialLevel || undefined} placeholder="" onChange={(v) => handleAddChange('materialLevel', v)} allowClear>
+                    <Option value="一般">一般</Option>
+                    <Option value="重要">重要</Option>
+                  </Select>
+                </Col>
+              </Row>
+
+              {/* 第5行：供应商重要度、供应商状态、供应商与企业关系 */}
+              <Row gutter={16} style={{ marginBottom: 16 }}>
+                <Col span={8}>
+                  <div style={{ marginBottom: 6, fontSize: 13, color: '#595959' }}>供应商重要度</div>
+                  <Select style={{ width: '100%' }} value={addFormData.supplierLevel || undefined} placeholder="" onChange={(v) => handleAddChange('supplierLevel', v)} allowClear>
+                    <Option value="一般供应商">一般供应商</Option>
+                    <Option value="重要供应商">重要供应商</Option>
+                  </Select>
+                </Col>
+                <Col span={8}>
+                  <div style={{ marginBottom: 6, fontSize: 13, color: '#595959' }}>供应商状态</div>
+                  <Select style={{ width: '100%' }} value={addFormData.status || undefined} placeholder="" onChange={(v) => handleAddChange('status', v)} allowClear>
+                    <Option value="合格">合格</Option>
+                    <Option value="潜在">潜在</Option>
+                    <Option value="淘汰">淘汰</Option>
+                  </Select>
+                </Col>
+                <Col span={8}>
+                  <div style={{ marginBottom: 6, fontSize: 13, color: '#595959' }}>供应商与企业关系</div>
+                  <Select style={{ width: '100%' }} value={addFormData.relation || undefined} placeholder="" onChange={(v) => handleAddChange('relation', v)} allowClear>
+                    <Option value="外部供应商">外部供应商</Option>
+                    <Option value="内部供应商">内部供应商</Option>
+                  </Select>
+                </Col>
+              </Row>
+
+              {/* 第6行：其它附件、采购协助人 */}
+              <Row gutter={16} style={{ marginBottom: 16 }}>
+                <Col span={8}>
+                  <div style={{ marginBottom: 6, fontSize: 13, color: '#595959' }}>其它附件</div>
+                  <Upload.Dragger style={{ padding: '4px 0', height: 32, background: '#fafafa', border: '1px dashed #d9d9d9', borderRadius: 4 }} showUploadList={false}>
+                    <span style={{ fontSize: 12, color: '#8c8c8c' }}>{React.createElement(UploadOutlined)} 将文件拖拽到此处 或点击上传</span>
+                  </Upload.Dragger>
+                </Col>
+                <Col span={8}>
+                  <div style={{ marginBottom: 6, fontSize: 13, color: '#595959' }}>采购协助人</div>
+                  <Input.Group compact>
+                    <Input style={{ width: 'calc(100% - 60px)' }} placeholder="请选择" value={addFormData.purchaseHelper} onChange={(e) => handleAddChange('purchaseHelper', e.target.value)} />
+                    <Button type="primary" style={{ ...blueBtnStyle, width: 60 }}>选择</Button>
+                  </Input.Group>
+                </Col>
+              </Row>
+
+              {/* 第7行：经营范围 */}
+              <Row gutter={16}>
+                <Col span={24}>
+                  <div style={{ marginBottom: 6, fontSize: 13, color: '#595959' }}>经营范围</div>
+                  <TextArea rows={4} value={addFormData.bizScope} onChange={(e) => handleAddChange('bizScope', e.target.value)} />
+                </Col>
+              </Row>
+
+              {/* 收款信息 */}
+              <div style={{ fontSize: 14, fontWeight: 600, marginTop: 20, marginBottom: 12, paddingBottom: 8, borderBottom: '1px solid #f0f0f0' }}>收款信息</div>
+              <Row gutter={16} style={{ marginBottom: 16 }}>
+                <Col span={8}>
+                  <div style={{ marginBottom: 6, fontSize: 13, color: '#595959' }}>开户行</div>
+                  <Input value={addFormData.bank} onChange={(e) => handleAddChange('bank', e.target.value)} />
+                </Col>
+                <Col span={8}>
+                  <div style={{ marginBottom: 6, fontSize: 13, color: '#595959' }}>账户名称</div>
+                  <Input value={addFormData.accountName} onChange={(e) => handleAddChange('accountName', e.target.value)} />
+                </Col>
+                <Col span={8}>
+                  <div style={{ marginBottom: 6, fontSize: 13, color: '#595959' }}>账号</div>
+                  <Input value={addFormData.accountNo} onChange={(e) => handleAddChange('accountNo', e.target.value)} />
+                </Col>
+              </Row>
+              <Row gutter={16} style={{ marginBottom: 16 }}>
+                <Col span={8}>
+                  <div style={{ marginBottom: 6, fontSize: 13, color: '#595959' }}>电话</div>
+                  <Input value={addFormData.tel} onChange={(e) => handleAddChange('tel', e.target.value)} />
+                </Col>
+                <Col span={16}>
+                  <div style={{ marginBottom: 6, fontSize: 13, color: '#595959' }}>地址</div>
+                  <Input value={addFormData.address} onChange={(e) => handleAddChange('address', e.target.value)} />
+                </Col>
+              </Row>
+
+              {/* 风险等级 */}
+              <div style={{ fontSize: 14, fontWeight: 600, marginTop: 20, marginBottom: 12, paddingBottom: 8, borderBottom: '1px solid #f0f0f0' }}>风险等级</div>
+              <Row gutter={16} style={{ marginBottom: 16 }}>
+                <Col span={8}>
+                  <div style={{ marginBottom: 6, fontSize: 13, color: '#595959' }}>风险等级</div>
+                  <Select style={{ width: '100%' }} value={addFormData.riskLevel || undefined} placeholder="" onChange={(v) => handleAddChange('riskLevel', v)} allowClear>
+                    <Option value="低">低</Option>
+                    <Option value="中">中</Option>
+                    <Option value="高">高</Option>
+                  </Select>
+                </Col>
+                <Col span={8}>
+                  <div style={{ marginBottom: 6, fontSize: 13, color: '#595959' }}>自身风险条数</div>
+                  <Input type="number" value={addFormData.selfRisk} onChange={(e) => handleAddChange('selfRisk', Number(e.target.value))} />
+                </Col>
+                <Col span={8}>
+                  <div style={{ marginBottom: 6, fontSize: 13, color: '#595959' }}>周边风险条数</div>
+                  <Input type="number" value={addFormData.aroundRisk} onChange={(e) => handleAddChange('aroundRisk', Number(e.target.value))} />
+                </Col>
+              </Row>
+              <Row gutter={16}>
+                <Col span={8}>
+                  <div style={{ marginBottom: 6, fontSize: 13, color: '#595959' }}>历史风险条数</div>
+                  <Input type="number" value={addFormData.historyRisk} onChange={(e) => handleAddChange('historyRisk', Number(e.target.value))} />
+                </Col>
+                <Col span={8}>
+                  <div style={{ marginBottom: 6, fontSize: 13, color: '#595959' }}>预警风险条数</div>
+                  <Input type="number" value={addFormData.warnRisk} onChange={(e) => handleAddChange('warnRisk', Number(e.target.value))} />
+                </Col>
+              </Row>
+            </div>
+
+            {/* 弹框底部 */}
+            <div style={{ textAlign: 'center', padding: '12px 24px 20px', borderTop: '1px solid #f0f0f0' }}>
+              <Space size={16}>
+                <Button type="primary" style={{ ...blueBtnStyle, width: 100, height: 36 }} onClick={handleAddSubmit}>提交</Button>
+                <Button type="primary" style={{ background: '#52c41a', borderColor: '#52c41a', width: 100, height: 36 }} onClick={handleAddSaveDraft}>保存草稿</Button>
+              </Space>
+            </div>
+          </Modal>
+        </div>
+      );
+    }
+
+    // ===== 供应商注册组件 =====
+    function SupplierRegister() {
+      const [selectedRowKeys, setSelectedRowKeys] = useState([]);
+      const [detailVisible, setDetailVisible] = useState(false);
+      const [detailRecord, setDetailRecord] = useState(null);
+      const [editVisible, setEditVisible] = useState(false);
+      const [editRecord, setEditRecord] = useState(null);
+      const [editFormData, setEditFormData] = useState({});
+      const [addVisible, setAddVisible] = useState(false);
+      const [addFormData, setAddFormData] = useState({
+        type: '', name: '', creditCode: '', contact: '', phone: '', email: '',
+        bizMode: '', interSupplier: '', bizScope: '',
+        accountName: '', bank: '', accountNo: '', tel: '', address: '',
+        agreeProtocol: false
+      });
+      const [addActiveTab, setAddActiveTab] = useState('qual');
+      const [qualRows, setQualRows] = useState([{ key: 1, certName: '', certType: '', certExpire: '' }]);
+
+      const handleAddChange = (field, value) => { setAddFormData(prev => ({ ...prev, [field]: value })); };
+      const handleAddSubmit = () => {
+        if (!addFormData.agreeProtocol) { antd.message.warning('请先阅读并同意供应商协议'); return; }
+        antd.message.success('提交成功');
+        setAddVisible(false);
+      };
+      const handleAddSaveDraft = () => { antd.message.success('草稿已保存'); setAddVisible(false); };
+      const addQualRow = () => { setQualRows(prev => [...prev, { key: prev.length + 1, certName: '', certType: '', certExpire: '' }]); };
+
+      const [tableData, setTableData] = useState([
+        { key: '1', name: '天津海叶商贸', status: '已生效', serialNo: 'GYS000003', type: '五金供应商', creditCode: '91440604MA56789012', creditCodeDup: '通过', creditCodeQuery: '正常', verifyResult: '通过', license: '已上传', contact: '李四', phone: '022-88886666', email: 'haiye@163.com', bizMode: '贸易商', materialLevel: '一般', supplierLevel: '一般供应商', relation: '外部供应商', interSupplier: '是', supplierStatus: '合格', attachment: '-', bizScope: '五金工具、建材', accountName: '天津海叶商贸有限公司', bank: '中国工商银行天津分行', accountNo: '6222021234567890123', tel: '022-88886666', address: '天津市河西区解放南路', certName: 'ISO证书', certType: '行业资质', certAttachment: '已上传', certExpire: '2027-12-31', aiVerify: '通过', agreement: '已签署', submitter: '用户257522', submitTime: '2026-07-21 11:31:45', updateTime: '2026-07-21 14:20:33', currentNode: '审批完成', currentOwner: '-' },
+        { key: '2', name: '京东企业购', status: '已生效', serialNo: 'GYS000002', type: '五金供应商', creditCode: '91310101MA1F056789', creditCodeDup: '通过', creditCodeQuery: '正常', verifyResult: '通过', license: '已上传', contact: '孙七', phone: '400-606-5500', email: 'b2b@jd.com', bizMode: '服务商', materialLevel: '重要', supplierLevel: '重要供应商', relation: '外部供应商', interSupplier: '是', supplierStatus: '合格', attachment: '-', bizScope: '办公用品、IT设备', accountName: '北京京东世纪贸易有限公司', bank: '招商银行北京分行', accountNo: '6225880123456789', tel: '400-606-5500', address: '北京市亦庄经济开发区', certName: '营业执照', certType: '行业资质', certAttachment: '已上传', certExpire: '2028-06-30', aiVerify: '通过', agreement: '已签署', submitter: '用户257522', submitTime: '2026-07-21 11:31:42', updateTime: '2026-07-21 13:55:18', currentNode: '审批完成', currentOwner: '-' },
+        { key: '3', name: '上海易点科技有限公司', status: '审批中', serialNo: 'GYS000005', type: '信息服务供应商', creditCode: '91310000MA1FL8XX3T', creditCodeDup: '通过', creditCodeQuery: '正常', verifyResult: '待验证', license: '已上传', contact: '吴九', phone: '021-55667788', email: 'info@yidian.com', bizMode: '服务商', materialLevel: '一般', supplierLevel: '一般供应商', relation: '外部供应商', interSupplier: '否', supplierStatus: '潜在', attachment: '-', bizScope: '软件开发、信息技术', accountName: '上海易点科技有限公司', bank: '中国银行上海分行', accountNo: '6217001234567890', tel: '021-55667788', address: '上海市徐汇区宜山路700号', certName: '软件著作权', certType: '专利著作权', certAttachment: '已上传', certExpire: '2026-12-31', aiVerify: '待核验', agreement: '未签署', submitter: '用户257522', submitTime: '2026-07-20 09:15:30', updateTime: '2026-07-20 09:15:30', currentNode: '资质审核', currentOwner: '审核员A' },
+      ]);
+
+      const handleViewDetail = (record) => { setDetailRecord(record); setDetailVisible(true); };
+      const handleEdit = (record) => { setEditRecord(record); setEditFormData({ ...record }); setEditVisible(true); };
+      const handleEditChange = (field, value) => { setEditFormData(prev => ({ ...prev, [field]: value })); };
+      const handleEditSave = () => { setTableData(prev => prev.map(item => item.key === editRecord.key ? { ...editFormData } : item)); setEditVisible(false); antd.message.success('保存成功'); };
+      const handleDelete = (record) => {
+        Modal.confirm({ title: '确认删除', content: `确定要删除供应商「${record.name}」吗？此操作不可恢复。`, okText: '确定', cancelText: '取消', okButtonProps: { danger: true }, onOk: () => { setTableData(prev => prev.filter(item => item.key !== record.key)); antd.message.success('删除成功'); } });
+      };
+
+      const columns = [
+        { title: '供应商名称', dataIndex: 'name', width: 160, fixed: 'left' },
+        { title: '流程状态', dataIndex: 'status', width: 90, render: (v) => React.createElement(Tag, { color: v === '已生效' ? 'success' : v === '审批中' ? 'processing' : 'default' }, v) },
+        { title: '流水号', dataIndex: 'serialNo', width: 120, render: (v) => React.createElement('a', { style: { color: '#1677ff' } }, v) },
+        { title: '供应商类型', dataIndex: 'type', width: 130 },
+        { title: '统一社会信用代码', dataIndex: 'creditCode', width: 180 },
+        { title: '信用代码重复验证', dataIndex: 'creditCodeDup', width: 130, render: (v) => React.createElement(Tag, { color: v === '通过' ? 'success' : 'error' }, v) },
+        { title: '信用代码查询结果', dataIndex: 'creditCodeQuery', width: 140, render: (v) => React.createElement(Tag, { color: v === '正常' ? 'success' : 'warning' }, v) },
+        { title: '验证结果', dataIndex: 'verifyResult', width: 90, render: (v) => React.createElement(Tag, { color: v === '通过' ? 'success' : 'processing' }, v) },
+        { title: '营业执照副本', dataIndex: 'license', width: 110 },
+        { title: '供应商联系人', dataIndex: 'contact', width: 110 },
+        { title: '联系电话', dataIndex: 'phone', width: 130 },
+        { title: '电子邮件', dataIndex: 'email', width: 150 },
+        { title: '经营方式', dataIndex: 'bizMode', width: 90 },
+        { title: '物资重要度', dataIndex: 'materialLevel', width: 100 },
+        { title: '供应商重要度', dataIndex: 'supplierLevel', width: 110 },
+        { title: '供应商与企业关系', dataIndex: 'relation', width: 140 },
+        { title: '互联供应商', dataIndex: 'interSupplier', width: 90 },
+        { title: '供应商状态', dataIndex: 'supplierStatus', width: 100, render: (v) => React.createElement(Tag, { color: v === '合格' ? 'success' : v === '淘汰' ? 'error' : 'processing' }, v) },
+        { title: '其它附件', dataIndex: 'attachment', width: 80 },
+        { title: '经营范围', dataIndex: 'bizScope', width: 150 },
+        { title: '账户名称', dataIndex: 'accountName', width: 180 },
+        { title: '开户行', dataIndex: 'bank', width: 160 },
+        { title: '账号', dataIndex: 'accountNo', width: 180 },
+        { title: '电话', dataIndex: 'tel', width: 130 },
+        { title: '地址', dataIndex: 'address', width: 200 },
+        { title: '证书名称', dataIndex: 'certName', width: 110 },
+        { title: '证书类别', dataIndex: 'certType', width: 100 },
+        { title: '资质附件', dataIndex: 'certAttachment', width: 90 },
+        { title: '到期时间', dataIndex: 'certExpire', width: 110 },
+        { title: 'AI核验结果', dataIndex: 'aiVerify', width: 100, render: (v) => React.createElement(Tag, { color: v === '通过' ? 'success' : 'processing' }, v) },
+        { title: '供应商协议', dataIndex: 'agreement', width: 100, render: (v) => React.createElement(Tag, { color: v === '已签署' ? 'success' : 'default' }, v) },
+        { title: '提交人', dataIndex: 'submitter', width: 110, render: (v) => React.createElement('a', { style: { color: '#1677ff' } }, v) },
+        { title: '提交时间', dataIndex: 'submitTime', width: 170 },
+        { title: '更新时间', dataIndex: 'updateTime', width: 170 },
+        { title: '当前节点', dataIndex: 'currentNode', width: 100 },
+        { title: '当前负责人', dataIndex: 'currentOwner', width: 110 },
+        { title: '操作', key: 'action', width: 150, fixed: 'right', render: (_, record) => React.createElement(Space, { size: 8 }, React.createElement('a', { style: { color: '#1677ff' }, onClick: () => handleViewDetail(record) }, '详情'), React.createElement('a', { style: { color: '#1677ff' }, onClick: () => handleEdit(record) }, '编辑'), React.createElement('a', { style: { color: '#ff4d4f' }, onClick: () => handleDelete(record) }, '删除')) },
+      ];
+
+      const blueBtnStyle = { background: '#1677ff', borderColor: '#1677ff' };
+
+      return (
+        <div style={{ background: '#fff', borderRadius: 8, padding: '16px 24px' }}>
+          {/* 工具栏 */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+            <Space size={8}>
+              <Button type="primary" style={blueBtnStyle} icon={React.createElement(PlusOutlined)} onClick={() => { setAddFormData({ type: '', name: '', creditCode: '', contact: '', phone: '', email: '', bizMode: '', interSupplier: '', bizScope: '', accountName: '', bank: '', accountNo: '', tel: '', address: '', agreeProtocol: false }); setQualRows([{ key: 1, certName: '', certType: '', certExpire: '' }]); setAddActiveTab('qual'); setAddVisible(true); }}>新建</Button>
+              <Button icon={React.createElement(ImportOutlined)}>导入</Button>
+              <Button icon={React.createElement(ExportOutlined)}>导出</Button>
+            </Space>
+            <Space size={8}>
+              <Select defaultValue="all" size="middle" style={{ width: 110 }}>
+                <Option value="all">搜索范围</Option>
+              </Select>
+              <Input placeholder="请输入搜索内容" style={{ width: 220 }} suffix={React.createElement(SearchOutlined)} />
+            </Space>
+          </div>
+
+          {/* 数据表格 */}
+          <Table
+            columns={columns}
+            dataSource={tableData}
+            rowSelection={{ selectedRowKeys, onChange: setSelectedRowKeys }}
+            bordered
+            size="middle"
+            pagination={false}
+            scroll={{ x: 5200 }}
+          />
+
+          {/* 底部分页 */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 12, paddingTop: 12, padding: '12px 0 8px', borderTop: '1px solid #f0f0f0' }}>
+            <Space size={16}>
+              {React.createElement(ColumnWidthOutlined, { style: { color: '#8c8c8c' } })}
+              <Select defaultValue="20" size="small" style={{ width: 90 }}>
+                <Option value="20">20条/页</Option>
+                <Option value="50">50条/页</Option>
+                <Option value="100">100条/页</Option>
+              </Select>
+              <span style={{ color: '#595959', fontSize: 13 }}>共 {tableData.length} 条</span>
+            </Space>
+            <Pagination current={1} total={tableData.length} pageSize={20} size="small" showSizeChanger={false} />
+          </div>
+
+          {/* 详情弹窗 */}
+          <Modal title="供应商注册详情" open={detailVisible} onCancel={() => setDetailVisible(false)} footer={<Button onClick={() => setDetailVisible(false)}>关闭</Button>} width={900}>
+            {detailRecord && (
+              <div style={{ padding: '16px 20px', background: '#fafbfc', borderRadius: 8 }}>
+                <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 12, paddingBottom: 8, borderBottom: '1px solid #f0f0f0' }}>基本信息</div>
+                <Row gutter={[16, 12]} style={{ marginBottom: 20 }}>
+                  <Col span={12}><Text type="secondary">供应商名称：</Text><span>{detailRecord.name}</span></Col>
+                  <Col span={12}><Text type="secondary">流程状态：</Text><Tag color={detailRecord.status === '已生效' ? 'success' : 'processing'}>{detailRecord.status}</Tag></Col>
+                  <Col span={12}><Text type="secondary">流水号：</Text><span>{detailRecord.serialNo}</span></Col>
+                  <Col span={12}><Text type="secondary">供应商类型：</Text><span>{detailRecord.type}</span></Col>
+                  <Col span={12}><Text type="secondary">统一社会信用代码：</Text><span>{detailRecord.creditCode}</span></Col>
+                  <Col span={12}><Text type="secondary">信用代码重复验证：</Text><Tag color={detailRecord.creditCodeDup === '通过' ? 'success' : 'error'}>{detailRecord.creditCodeDup}</Tag></Col>
+                  <Col span={12}><Text type="secondary">信用代码查询结果：</Text><Tag color={detailRecord.creditCodeQuery === '正常' ? 'success' : 'warning'}>{detailRecord.creditCodeQuery}</Tag></Col>
+                  <Col span={12}><Text type="secondary">验证结果：</Text><Tag color={detailRecord.verifyResult === '通过' ? 'success' : 'processing'}>{detailRecord.verifyResult}</Tag></Col>
+                  <Col span={12}><Text type="secondary">营业执照副本：</Text><span>{detailRecord.license}</span></Col>
+                  <Col span={12}><Text type="secondary">供应商联系人：</Text><span>{detailRecord.contact}</span></Col>
+                  <Col span={12}><Text type="secondary">联系电话：</Text><span>{detailRecord.phone}</span></Col>
+                  <Col span={12}><Text type="secondary">电子邮件：</Text><span>{detailRecord.email}</span></Col>
+                  <Col span={12}><Text type="secondary">经营方式：</Text><span>{detailRecord.bizMode}</span></Col>
+                  <Col span={12}><Text type="secondary">物资重要度：</Text><span>{detailRecord.materialLevel}</span></Col>
+                  <Col span={12}><Text type="secondary">供应商重要度：</Text><span>{detailRecord.supplierLevel}</span></Col>
+                  <Col span={12}><Text type="secondary">供应商与企业关系：</Text><span>{detailRecord.relation}</span></Col>
+                  <Col span={12}><Text type="secondary">互联供应商：</Text><span>{detailRecord.interSupplier}</span></Col>
+                  <Col span={12}><Text type="secondary">供应商状态：</Text><Tag color={detailRecord.supplierStatus === '合格' ? 'success' : 'processing'}>{detailRecord.supplierStatus}</Tag></Col>
+                </Row>
+
+                <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 12, paddingBottom: 8, borderBottom: '1px solid #f0f0f0' }}>业务信息</div>
+                <Row gutter={[16, 12]} style={{ marginBottom: 20 }}>
+                  <Col span={12}><Text type="secondary">其它附件：</Text><span>{detailRecord.attachment}</span></Col>
+                  <Col span={24}><Text type="secondary">经营范围：</Text><span>{detailRecord.bizScope}</span></Col>
+                </Row>
+
+                <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 12, paddingBottom: 8, borderBottom: '1px solid #f0f0f0' }}>收款信息</div>
+                <Row gutter={[16, 12]} style={{ marginBottom: 20 }}>
+                  <Col span={12}><Text type="secondary">账户名称：</Text><span>{detailRecord.accountName}</span></Col>
+                  <Col span={12}><Text type="secondary">开户行：</Text><span>{detailRecord.bank}</span></Col>
+                  <Col span={12}><Text type="secondary">账号：</Text><span>{detailRecord.accountNo}</span></Col>
+                  <Col span={12}><Text type="secondary">电话：</Text><span>{detailRecord.tel}</span></Col>
+                  <Col span={24}><Text type="secondary">地址：</Text><span>{detailRecord.address}</span></Col>
+                </Row>
+
+                <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 12, paddingBottom: 8, borderBottom: '1px solid #f0f0f0' }}>资质明细</div>
+                <Row gutter={[16, 12]} style={{ marginBottom: 20 }}>
+                  <Col span={12}><Text type="secondary">证书名称：</Text><span>{detailRecord.certName}</span></Col>
+                  <Col span={12}><Text type="secondary">证书类别：</Text><span>{detailRecord.certType}</span></Col>
+                  <Col span={12}><Text type="secondary">附件：</Text><span>{detailRecord.certAttachment}</span></Col>
+                  <Col span={12}><Text type="secondary">到期时间：</Text><span>{detailRecord.certExpire}</span></Col>
+                  <Col span={12}><Text type="secondary">AI核验结果：</Text><Tag color={detailRecord.aiVerify === '通过' ? 'success' : 'processing'}>{detailRecord.aiVerify}</Tag></Col>
+                  <Col span={12}><Text type="secondary">供应商协议：</Text><Tag color={detailRecord.agreement === '已签署' ? 'success' : 'default'}>{detailRecord.agreement}</Tag></Col>
+                </Row>
+
+                <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 12, paddingBottom: 8, borderBottom: '1px solid #f0f0f0' }}>流程信息</div>
+                <Row gutter={[16, 12]}>
+                  <Col span={12}><Text type="secondary">提交人：</Text><span>{detailRecord.submitter}</span></Col>
+                  <Col span={12}><Text type="secondary">提交时间：</Text><span>{detailRecord.submitTime}</span></Col>
+                  <Col span={12}><Text type="secondary">更新时间：</Text><span>{detailRecord.updateTime}</span></Col>
+                  <Col span={12}><Text type="secondary">当前节点：</Text><span>{detailRecord.currentNode}</span></Col>
+                  <Col span={12}><Text type="secondary">当前负责人：</Text><span>{detailRecord.currentOwner}</span></Col>
+                </Row>
+              </div>
+            )}
+          </Modal>
+
+          {/* 编辑弹窗 */}
+          <Modal title="编辑供应商注册" open={editVisible} onCancel={() => setEditVisible(false)} footer={<Space><Button onClick={() => setEditVisible(false)}>取消</Button><Button type="primary" style={blueBtnStyle} onClick={handleEditSave}>保存</Button></Space>} width={900}>
+            <div style={{ padding: '20px', maxHeight: '65vh', overflowY: 'auto', background: '#fafbfc', borderRadius: 8 }}>
+              <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 12, paddingBottom: 8, borderBottom: '1px solid #f0f0f0' }}>基本信息</div>
+              <Row gutter={[16, 16]} style={{ marginBottom: 20 }}>
+                <Col span={8}><div style={{ marginBottom: 4, fontSize: 13, color: '#595959' }}>供应商名称</div><Input value={editFormData.name} onChange={(e) => handleEditChange('name', e.target.value)} /></Col>
+                <Col span={8}><div style={{ marginBottom: 4, fontSize: 13, color: '#595959' }}>供应商类型</div><Input value={editFormData.type} onChange={(e) => handleEditChange('type', e.target.value)} /></Col>
+                <Col span={8}><div style={{ marginBottom: 4, fontSize: 13, color: '#595959' }}>统一社会信用代码</div><Input value={editFormData.creditCode} onChange={(e) => handleEditChange('creditCode', e.target.value)} /></Col>
+                <Col span={8}><div style={{ marginBottom: 4, fontSize: 13, color: '#595959' }}>供应商联系人</div><Input value={editFormData.contact} onChange={(e) => handleEditChange('contact', e.target.value)} /></Col>
+                <Col span={8}><div style={{ marginBottom: 4, fontSize: 13, color: '#595959' }}>联系电话</div><Input value={editFormData.phone} onChange={(e) => handleEditChange('phone', e.target.value)} /></Col>
+                <Col span={8}><div style={{ marginBottom: 4, fontSize: 13, color: '#595959' }}>电子邮件</div><Input value={editFormData.email} onChange={(e) => handleEditChange('email', e.target.value)} /></Col>
+                <Col span={8}><div style={{ marginBottom: 4, fontSize: 13, color: '#595959' }}>经营方式</div><Select style={{ width: '100%' }} value={editFormData.bizMode} onChange={(v) => handleEditChange('bizMode', v)}><Option value="贸易商">贸易商</Option><Option value="服务商">服务商</Option><Option value="生产商">生产商</Option></Select></Col>
+                <Col span={8}><div style={{ marginBottom: 4, fontSize: 13, color: '#595959' }}>物资重要度</div><Select style={{ width: '100%' }} value={editFormData.materialLevel} onChange={(v) => handleEditChange('materialLevel', v)}><Option value="一般">一般</Option><Option value="重要">重要</Option></Select></Col>
+                <Col span={8}><div style={{ marginBottom: 4, fontSize: 13, color: '#595959' }}>供应商重要度</div><Select style={{ width: '100%' }} value={editFormData.supplierLevel} onChange={(v) => handleEditChange('supplierLevel', v)}><Option value="一般供应商">一般供应商</Option><Option value="重要供应商">重要供应商</Option></Select></Col>
+                <Col span={8}><div style={{ marginBottom: 4, fontSize: 13, color: '#595959' }}>供应商与企业关系</div><Select style={{ width: '100%' }} value={editFormData.relation} onChange={(v) => handleEditChange('relation', v)}><Option value="外部供应商">外部供应商</Option><Option value="内部供应商">内部供应商</Option></Select></Col>
+                <Col span={8}><div style={{ marginBottom: 4, fontSize: 13, color: '#595959' }}>互联供应商</div><Select style={{ width: '100%' }} value={editFormData.interSupplier} onChange={(v) => handleEditChange('interSupplier', v)}><Option value="是">是</Option><Option value="否">否</Option></Select></Col>
+                <Col span={8}><div style={{ marginBottom: 4, fontSize: 13, color: '#595959' }}>供应商状态</div><Select style={{ width: '100%' }} value={editFormData.supplierStatus} onChange={(v) => handleEditChange('supplierStatus', v)}><Option value="合格">合格</Option><Option value="潜在">潜在</Option><Option value="淘汰">淘汰</Option></Select></Col>
+              </Row>
+
+              <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 12, paddingBottom: 8, borderBottom: '1px solid #f0f0f0' }}>收款信息</div>
+              <Row gutter={[16, 16]} style={{ marginBottom: 20 }}>
+                <Col span={8}><div style={{ marginBottom: 4, fontSize: 13, color: '#595959' }}>账户名称</div><Input value={editFormData.accountName} onChange={(e) => handleEditChange('accountName', e.target.value)} /></Col>
+                <Col span={8}><div style={{ marginBottom: 4, fontSize: 13, color: '#595959' }}>开户行</div><Input value={editFormData.bank} onChange={(e) => handleEditChange('bank', e.target.value)} /></Col>
+                <Col span={8}><div style={{ marginBottom: 4, fontSize: 13, color: '#595959' }}>账号</div><Input value={editFormData.accountNo} onChange={(e) => handleEditChange('accountNo', e.target.value)} /></Col>
+                <Col span={8}><div style={{ marginBottom: 4, fontSize: 13, color: '#595959' }}>电话</div><Input value={editFormData.tel} onChange={(e) => handleEditChange('tel', e.target.value)} /></Col>
+                <Col span={16}><div style={{ marginBottom: 4, fontSize: 13, color: '#595959' }}>地址</div><Input value={editFormData.address} onChange={(e) => handleEditChange('address', e.target.value)} /></Col>
+              </Row>
+
+              <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 12, paddingBottom: 8, borderBottom: '1px solid #f0f0f0' }}>资质明细</div>
+              <Row gutter={[16, 16]} style={{ marginBottom: 20 }}>
+                <Col span={8}><div style={{ marginBottom: 4, fontSize: 13, color: '#595959' }}>证书名称</div><Input value={editFormData.certName} onChange={(e) => handleEditChange('certName', e.target.value)} /></Col>
+                <Col span={8}><div style={{ marginBottom: 4, fontSize: 13, color: '#595959' }}>证书类别</div><Select style={{ width: '100%' }} value={editFormData.certType} onChange={(v) => handleEditChange('certType', v)}><Option value="行业资质">行业资质</Option><Option value="安全证书">安全证书</Option><Option value="专利著作权">专利著作权</Option></Select></Col>
+                <Col span={8}><div style={{ marginBottom: 4, fontSize: 13, color: '#595959' }}>到期时间</div><Input value={editFormData.certExpire} onChange={(e) => handleEditChange('certExpire', e.target.value)} /></Col>
+              </Row>
+
+              <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 12, paddingBottom: 8, borderBottom: '1px solid #f0f0f0' }}>其它</div>
+              <Row gutter={[16, 16]}>
+                <Col span={24}><div style={{ marginBottom: 4, fontSize: 13, color: '#595959' }}>经营范围</div><TextArea rows={3} value={editFormData.bizScope} onChange={(e) => handleEditChange('bizScope', e.target.value)} /></Col>
+              </Row>
+            </div>
+          </Modal>
+
+          {/* 新增供应商注册弹框 */}
+          <Modal
+            title={null}
+            open={addVisible}
+            onCancel={() => setAddVisible(false)}
+            footer={null}
+            width={1100}
+            closable={false}
+            bodyStyle={{ padding: 0 }}
+            style={{ top: 20 }}
+          >
+            {/* 弹框头部 */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 24px', borderBottom: '1px solid #f0f0f0' }}>
+              <span style={{ fontSize: 16, fontWeight: 600 }}>供应商注册</span>
+              <Space size={16} style={{ color: '#8c8c8c', fontSize: 16 }}>
+                {React.createElement(FileTextOutlined, { style: { cursor: 'pointer' } })}
+                {React.createElement(ExpandOutlined, { style: { cursor: 'pointer' } })}
+                {React.createElement(CloseOutlined, { style: { cursor: 'pointer' }, onClick: () => setAddVisible(false) })}
+              </Space>
+            </div>
+
+            {/* 弹框内容 */}
+            <div style={{ padding: '20px 24px', maxHeight: '70vh', overflowY: 'auto' }}>
+              {/* 第1行：供应商类型、供应商名称、统一社会信用代码 */}
+              <Row gutter={16} style={{ marginBottom: 16 }}>
+                <Col span={8}>
+                  <div style={{ marginBottom: 6, fontSize: 13, color: '#595959' }}>供应商类型</div>
+                  <Select style={{ width: '100%' }} value={addFormData.type || undefined} placeholder="" onChange={(v) => handleAddChange('type', v)} allowClear>
+                    <Option value="五金供应商">五金供应商</Option>
+                    <Option value="信息服务供应商">信息服务供应商</Option>
+                    <Option value="原材料供应商">原材料供应商</Option>
+                  </Select>
+                </Col>
+                <Col span={8}>
+                  <div style={{ marginBottom: 6, fontSize: 13, color: '#595959' }}>供应商名称 <span style={{ color: '#ff4d4f' }}>*</span></div>
+                  <Input value={addFormData.name} onChange={(e) => handleAddChange('name', e.target.value)} />
+                </Col>
+                <Col span={8}>
+                  <div style={{ marginBottom: 6, fontSize: 13, color: '#595959' }}>统一社会信用代码</div>
+                  <Input value={addFormData.creditCode} onChange={(e) => handleAddChange('creditCode', e.target.value)} />
+                </Col>
+              </Row>
+
+              {/* 第2行：营业执照副本、供应商联系人、联系电话 */}
+              <Row gutter={16} style={{ marginBottom: 16 }}>
+                <Col span={8}>
+                  <div style={{ marginBottom: 6, fontSize: 13, color: '#595959' }}>营业执照副本</div>
+                  <Upload.Dragger style={{ padding: '4px 0', height: 32, background: '#fafafa', border: '1px dashed #d9d9d9', borderRadius: 4 }} showUploadList={false}>
+                    <span style={{ fontSize: 12, color: '#8c8c8c' }}>{React.createElement(UploadOutlined)} 将文件拖拽到此处 或点击上传</span>
+                  </Upload.Dragger>
+                </Col>
+                <Col span={8}>
+                  <div style={{ marginBottom: 6, fontSize: 13, color: '#595959' }}>供应商联系人</div>
+                  <Input value={addFormData.contact} onChange={(e) => handleAddChange('contact', e.target.value)} />
+                </Col>
+                <Col span={8}>
+                  <div style={{ marginBottom: 6, fontSize: 13, color: '#595959' }}>联系电话</div>
+                  <Input value={addFormData.phone} onChange={(e) => handleAddChange('phone', e.target.value)} />
+                </Col>
+              </Row>
+
+              {/* 第3行：电子邮件、经营方式、互联供应商 */}
+              <Row gutter={16} style={{ marginBottom: 16 }}>
+                <Col span={8}>
+                  <div style={{ marginBottom: 6, fontSize: 13, color: '#595959' }}>电子邮件</div>
+                  <Input value={addFormData.email} onChange={(e) => handleAddChange('email', e.target.value)} />
+                </Col>
+                <Col span={8}>
+                  <div style={{ marginBottom: 6, fontSize: 13, color: '#595959' }}>经营方式</div>
+                  <Select style={{ width: '100%' }} value={addFormData.bizMode || undefined} placeholder="" onChange={(v) => handleAddChange('bizMode', v)} allowClear>
+                    <Option value="贸易商">贸易商</Option>
+                    <Option value="服务商">服务商</Option>
+                    <Option value="生产商">生产商</Option>
+                  </Select>
+                </Col>
+                <Col span={8}>
+                  <div style={{ marginBottom: 6, fontSize: 13, color: '#595959' }}>互联供应商</div>
+                  <Input.Group compact>
+                    <Input style={{ width: 'calc(100% - 60px)' }} value={addFormData.interSupplier} onChange={(e) => handleAddChange('interSupplier', e.target.value)} />
+                    <Button type="primary" style={{ ...blueBtnStyle, width: 60 }}>选择</Button>
+                  </Input.Group>
+                </Col>
+              </Row>
+
+              {/* 第4行：经营范围 */}
+              <Row gutter={16} style={{ marginBottom: 20 }}>
+                <Col span={24}>
+                  <div style={{ marginBottom: 6, fontSize: 13, color: '#595959' }}>经营范围</div>
+                  <TextArea rows={3} value={addFormData.bizScope} onChange={(e) => handleAddChange('bizScope', e.target.value)} />
+                </Col>
+              </Row>
+
+              {/* Tab 切换区域 */}
+              <div style={{ display: 'flex', gap: 0, marginBottom: 16, borderBottom: '2px solid #f0f0f0' }}>
+                <span
+                  onClick={() => setAddActiveTab('payment')}
+                  style={{ cursor: 'pointer', padding: '8px 20px', fontSize: 14, fontWeight: 500, borderRadius: '4px 4px 0 0', background: addActiveTab === 'payment' ? '#1677ff' : 'transparent', color: addActiveTab === 'payment' ? '#fff' : '#595959', transition: 'all 0.2s', marginBottom: -2, borderBottom: addActiveTab === 'payment' ? '2px solid #1677ff' : '2px solid transparent' }}
+                >收款信息</span>
+                <span
+                  onClick={() => setAddActiveTab('qual')}
+                  style={{ cursor: 'pointer', padding: '8px 20px', fontSize: 14, fontWeight: 500, borderRadius: '4px 4px 0 0', background: addActiveTab === 'qual' ? '#1677ff' : 'transparent', color: addActiveTab === 'qual' ? '#fff' : '#595959', transition: 'all 0.2s', marginBottom: -2, borderBottom: addActiveTab === 'qual' ? '2px solid #1677ff' : '2px solid transparent' }}
+                >企业资质</span>
+              </div>
+
+              {/* Tab 内容：收款信息 */}
+              {addActiveTab === 'payment' && (
+                <div style={{ marginBottom: 20 }}>
+                  <Row gutter={16} style={{ marginBottom: 16 }}>
+                    <Col span={8}>
+                      <div style={{ marginBottom: 6, fontSize: 13, color: '#595959' }}>账户名称</div>
+                      <Input value={addFormData.accountName} onChange={(e) => handleAddChange('accountName', e.target.value)} />
+                    </Col>
+                    <Col span={8}>
+                      <div style={{ marginBottom: 6, fontSize: 13, color: '#595959' }}>开户行</div>
+                      <Input value={addFormData.bank} onChange={(e) => handleAddChange('bank', e.target.value)} />
+                    </Col>
+                    <Col span={8}>
+                      <div style={{ marginBottom: 6, fontSize: 13, color: '#595959' }}>账号</div>
+                      <Input value={addFormData.accountNo} onChange={(e) => handleAddChange('accountNo', e.target.value)} />
+                    </Col>
+                  </Row>
+                  <Row gutter={16}>
+                    <Col span={8}>
+                      <div style={{ marginBottom: 6, fontSize: 13, color: '#595959' }}>电话</div>
+                      <Input value={addFormData.tel} onChange={(e) => handleAddChange('tel', e.target.value)} />
+                    </Col>
+                    <Col span={16}>
+                      <div style={{ marginBottom: 6, fontSize: 13, color: '#595959' }}>地址</div>
+                      <Input value={addFormData.address} onChange={(e) => handleAddChange('address', e.target.value)} />
+                    </Col>
+                  </Row>
+                </div>
+              )}
+
+              {/* Tab 内容：企业资质 */}
+              {addActiveTab === 'qual' && (
+                <div style={{ marginBottom: 20 }}>
+                  <div style={{ fontSize: 14, fontWeight: 500, marginBottom: 8 }}>资质明细</div>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #f0f0f0', fontSize: 13 }}>
+                    <thead>
+                      <tr style={{ background: '#fafafa' }}>
+                        <th style={{ padding: '8px 12px', width: 50, textAlign: 'center', border: '1px solid #f0f0f0' }}>#</th>
+                        <th style={{ padding: '8px 12px', textAlign: 'center', border: '1px solid #f0f0f0' }}>证书名称</th>
+                        <th style={{ padding: '8px 12px', textAlign: 'center', border: '1px solid #f0f0f0' }}>证书类别</th>
+                        <th style={{ padding: '8px 12px', textAlign: 'center', border: '1px solid #f0f0f0' }}>附件 <span style={{ color: '#ff4d4f' }}>*</span></th>
+                        <th style={{ padding: '8px 12px', textAlign: 'center', border: '1px solid #f0f0f0' }}>到期时间 <span style={{ color: '#ff4d4f' }}>*</span></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {qualRows.map((row, idx) => (
+                        <tr key={row.key}>
+                          <td style={{ padding: '8px 12px', textAlign: 'center', border: '1px solid #f0f0f0' }}>{idx + 1}</td>
+                          <td style={{ padding: '4px 8px', border: '1px solid #f0f0f0' }}><Input size="small" value={row.certName} onChange={(e) => { const v = e.target.value; setQualRows(prev => prev.map(r => r.key === row.key ? { ...r, certName: v } : r)); }} /></td>
+                          <td style={{ padding: '4px 8px', border: '1px solid #f0f0f0' }}><Select size="small" style={{ width: '100%' }} value={row.certType || undefined} placeholder="" allowClear onChange={(v) => { setQualRows(prev => prev.map(r => r.key === row.key ? { ...r, certType: v } : r)); }}><Option value="行业资质">行业资质</Option><Option value="安全证书">安全证书</Option><Option value="专利著作权">专利著作权</Option></Select></td>
+                          <td style={{ padding: '4px 8px', textAlign: 'center', border: '1px solid #f0f0f0' }}>{React.createElement(UploadOutlined, { style: { cursor: 'pointer', color: '#8c8c8c' } })}</td>
+                          <td style={{ padding: '4px 8px', border: '1px solid #f0f0f0' }}><Input size="small" value={row.certExpire} onChange={(e) => { const v = e.target.value; setQualRows(prev => prev.map(r => r.key === row.key ? { ...r, certExpire: v } : r)); }} /></td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 8 }}>
+                    <Space size={16}>
+                      <a style={{ color: '#1677ff', fontSize: 13 }} onClick={addQualRow}>{React.createElement(PlusOutlined)} 添加</a>
+                      <a style={{ color: '#1677ff', fontSize: 13 }}>{React.createElement(ImportOutlined)} 导入</a>
+                      <a style={{ color: '#1677ff', fontSize: 13 }}>{React.createElement(EditOutlined)} 快速填报</a>
+                    </Space>
+                    <span style={{ color: '#8c8c8c', fontSize: 12 }}>{qualRows.length} / 200</span>
+                  </div>
+                </div>
+              )}
+
+              {/* 协议区域 */}
+              <div style={{ marginTop: 24, paddingTop: 16, borderTop: '1px solid #f0f0f0' }}>
+                <div style={{ marginBottom: 12, fontSize: 13, color: '#595959' }}>
+                  请您阅读 <a style={{ color: '#1677ff' }}>《供应商入驻协议》</a><a style={{ color: '#1677ff' }}>《阳光采购协议》</a>？<a style={{ color: '#1677ff' }}>《数据安全协议》</a> 协议
+                </div>
+                <Checkbox checked={addFormData.agreeProtocol} onChange={(e) => handleAddChange('agreeProtocol', e.target.checked)}>我已阅读并同意供应商协议</Checkbox>
+              </div>
+            </div>
+
+            {/* 弹框底部 */}
+            <div style={{ textAlign: 'center', padding: '12px 24px 20px', borderTop: '1px solid #f0f0f0' }}>
+              <Space size={16}>
+                <Button type="primary" style={{ ...blueBtnStyle, width: 100, height: 36 }} onClick={handleAddSubmit}>提交</Button>
+                <Button type="primary" style={{ background: '#52c41a', borderColor: '#52c41a', width: 100, height: 36 }} onClick={handleAddSaveDraft}>保存草稿</Button>
+              </Space>
+            </div>
+          </Modal>
+        </div>
+      );
+    }
+
+    // ===== 供应商绩效看板组件 =====
+    function QualityBoard() {
+      const chart1Ref = useRef(null);
+      const chart2Ref = useRef(null);
+      const chart3Ref = useRef(null);
+      const chartsRef = useRef([]);
+
+      useEffect(() => {
+        const charts = [];
+
+        // 供应商交货及时率 - 纵向柱状图
+        const c1 = echarts.init(chart1Ref.current);
+        c1.setOption({
+          tooltip: { trigger: 'axis', formatter: '{b}<br/>{a}: {c}%' },
+          legend: { bottom: 0, data: ['及时率'] },
+          grid: { left: 60, right: 20, top: 20, bottom: 40 },
+          xAxis: { type: 'category', data: ['上海易点科技有限公司', '天津海叶商贸'], axisLabel: { fontSize: 11 } },
+          yAxis: { type: 'value', max: 50, axisLabel: { formatter: '{value}.00%' } },
+          series: [{
+            name: '及时率', type: 'bar', barWidth: '40%',
+            label: { show: true, position: 'top', formatter: '{c}%', fontSize: 12 },
+            data: [
+              { value: 33.33, itemStyle: { color: '#e87c3e' } },
+              { value: 42.86, itemStyle: { color: '#c5a84a' } }
+            ]
+          }]
+        });
+        charts.push(c1);
+
+        // 供应商质检合格率 - 横向柱状图
+        const c2 = echarts.init(chart2Ref.current);
+        c2.setOption({
+          tooltip: { trigger: 'axis', formatter: '{b}<br/>{a}: {c}%' },
+          legend: { bottom: 0, data: ['质检合格率'] },
+          grid: { left: 180, right: 60, top: 10, bottom: 40 },
+          xAxis: { type: 'value', max: 100, axisLabel: { formatter: '{value}.00%' } },
+          yAxis: { type: 'category', data: ['制动盘采购', '汽车轮胎260123采购合同', '固定资产采购合同', '260123制动盘采购合同'].reverse(), axisLabel: { fontSize: 11 } },
+          series: [{
+            name: '质检合格率', type: 'bar', barWidth: '50%',
+            label: { show: true, position: 'right', formatter: '{c}%', fontSize: 11 },
+            itemStyle: { color: '#e87c3e' },
+            data: [94.2979, 0, 0, 0].reverse()
+          }]
+        });
+        charts.push(c2);
+
+        // 商品合格率 - 横向柱状图（多色）
+        const c3 = echarts.init(chart3Ref.current);
+        c3.setOption({
+          tooltip: { trigger: 'axis', formatter: '{b}<br/>{a}: {c}%' },
+          legend: { bottom: 0, data: ['质检合格率'] },
+          grid: { left: 80, right: 50, top: 10, bottom: 40 },
+          xAxis: { type: 'value', max: 100, axisLabel: { formatter: '{value}.00%' } },
+          yAxis: { type: 'category', data: ['刹车片', '汽车轮胎', '雷达传感器', '火花塞'], axisLabel: { fontSize: 11 } },
+          series: [{
+            name: '质检合格率', type: 'bar', barWidth: '50%',
+            label: { show: true, position: 'right', formatter: '{c}', fontSize: 11 },
+            data: [
+              { value: 100, itemStyle: { color: '#c0392b' } },
+              { value: 100, itemStyle: { color: '#c0392b' } },
+              { value: 99.7, itemStyle: { color: '#e87c3e' } },
+              { value: 99.8, itemStyle: { color: '#f0c040' } }
+            ]
+          }]
+        });
+        charts.push(c3);
+
+        chartsRef.current = charts;
+        const handleResize = () => charts.forEach(c => c.resize());
+        window.addEventListener('resize', handleResize);
+        return () => { window.removeEventListener('resize', handleResize); charts.forEach(c => c.dispose()); };
+      }, []);
+
+      const statCards = [
+        { label: '考核供应商数', value: '2' },
+        { label: '考核平均得分', value: '93.5' },
+        { label: '质检合格率', value: '99.92%' },
+        { label: '及时到货率', value: '38.46%' },
+      ];
+
+      const recordData = [
+        { key: '1', date: '2025-12-01', code: 'GYS000008', name: '天津海叶商贸', plan: '供应商年度绩效考核', startDate: '2025-01-01', endDate: '2025-11-30', score: 87, level: 'B', status: '合格供应商' },
+        { key: '2', date: '2025-12-02', code: 'GYS000005', name: '上海易点科技有限公司', plan: '供应商年度绩效考核', startDate: '2025-10-01', endDate: '2025-11-30', score: 100, level: 'A', status: '合格供应商' },
+      ];
+
+      const recordColumns = [
+        { title: '考核日期', dataIndex: 'date', width: 110 },
+        { title: '供应商编号', dataIndex: 'code', width: 120 },
+        { title: '供应商名称', dataIndex: 'name', width: 160 },
+        { title: '考核方案', dataIndex: 'plan', width: 160 },
+        { title: '考核开始日期', dataIndex: 'startDate', width: 120 },
+        { title: '考核结束日期', dataIndex: 'endDate', width: 120 },
+        { title: '考核得分', dataIndex: 'score', width: 90, align: 'center' },
+        { title: '考核等级', dataIndex: 'level', width: 90, align: 'center', render: (v) => React.createElement(Tag, { color: v === 'A' ? 'success' : v === 'B' ? 'processing' : 'default' }, v) },
+        { title: '供应商状态', dataIndex: 'status', width: 110, render: (v) => React.createElement(Tag, { color: 'success' }, v) },
+      ];
+
+      const cardStyle = { background: '#fff', borderRadius: 8, padding: '16px 20px', boxShadow: '0 1px 3px rgba(0,0,0,0.06)', border: '1px solid #f0f0f0' };
+
+      return (
+        <div style={{ background: '#f0f2f5', padding: 16, borderRadius: 8 }}>
+          {/* 区域1：统计卡片 */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 16 }}>
+            {statCards.map((item, idx) => (
+              <div key={idx} style={cardStyle}>
+                <div style={{ fontSize: 13, color: '#8c8c8c', marginBottom: 8 }}>{item.label}</div>
+                <div style={{ fontSize: 36, fontWeight: 600, color: '#262626', letterSpacing: '-1px' }}>{item.value}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* 区域2：三个图表 */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 16 }}>
+            <div style={{ ...cardStyle, minHeight: 320 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                <span style={{ fontSize: 14, fontWeight: 500 }}>供应商交货及时率</span>
+                {React.createElement(ReloadOutlined, { style: { color: '#52c41a', cursor: 'pointer', fontSize: 14 } })}
+              </div>
+              <div ref={chart1Ref} style={{ width: '100%', height: 260 }}></div>
+            </div>
+            <div style={{ ...cardStyle, minHeight: 320 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                <span style={{ fontSize: 14, fontWeight: 500 }}>供应商质检合格率</span>
+                <Space size={8} style={{ color: '#8c8c8c' }}>
+                  {React.createElement(ReloadOutlined, { style: { cursor: 'pointer' } })}
+                  {React.createElement(UnorderedListOutlined, { style: { cursor: 'pointer' } })}
+                  {React.createElement(ExpandOutlined, { style: { cursor: 'pointer' } })}
+                </Space>
+              </div>
+              <div ref={chart2Ref} style={{ width: '100%', height: 260 }}></div>
+            </div>
+            <div style={{ ...cardStyle, minHeight: 320 }}>
+              <div style={{ fontSize: 14, fontWeight: 500, marginBottom: 8 }}>商品合格率</div>
+              <div ref={chart3Ref} style={{ width: '100%', height: 260 }}></div>
+            </div>
+          </div>
+
+          {/* 区域3：绩效考核记录 */}
+          <div style={cardStyle}>
+            <div style={{ fontSize: 14, fontWeight: 500, marginBottom: 12, paddingBottom: 12, borderBottom: '1px solid #f0f0f0' }}>绩效考核记录</div>
+            <Table columns={recordColumns} dataSource={recordData} bordered size="small" pagination={false} scroll={{ x: 1080 }} />
+          </div>
+        </div>
+      );
+    }
+
+    // ===== App 根组件 =====
+    function App() {
+      const [collapsed, setCollapsed] = useState(false);
+      const [selectedKeys, setSelectedKeys] = useState([getHashKey()]);
+      const [openKeys, setOpenKeys] = useState([]);
+
+      // 面包屑路径
+      const breadcrumb = useMemo(() => {
+        return findBreadcrumb(menuData, selectedKeys[0]) || [];
+      }, [selectedKeys]);
+
+      // 当前选中的菜单项数据
+      const currentMenuItem = useMemo(() => {
+        return findMenuItem(menuData, selectedKeys[0]);
+      }, [selectedKeys]);
+
+      // 菜单选中回调
+      const handleMenuSelect = useCallback(({ key }) => {
+        setSelectedKeys([key]);
+        setHashKey(key);
+        // 自动展开所有父级菜单
+        const parentKeys = findAllParentKeys(menuData, key) || [];
+        setOpenKeys((prev) => {
+          const newKeys = [...prev];
+          parentKeys.forEach((pk) => {
+            if (!newKeys.includes(pk)) newKeys.push(pk);
+          });
+          return newKeys;
+        });
+      }, []);
+
+      // 菜单展开/收起回调
+      const handleOpenChange = useCallback((keys) => {
+        setOpenKeys(keys);
+      }, []);
+
+      // 监听浏览器前进/后退（hashchange）
+      useEffect(() => {
+        const onHashChange = () => {
+          const key = getHashKey();
+          setSelectedKeys([key]);
+          const parentKeys = findAllParentKeys(menuData, key) || [];
+          setOpenKeys(parentKeys);
+        };
+        window.addEventListener('hashchange', onHashChange);
+        return () => window.removeEventListener('hashchange', onHashChange);
+      }, []);
+
+      // 初始化时自动展开当前页面对应的父级菜单
+      useEffect(() => {
+        const key = getHashKey();
+        const parentKeys = findAllParentKeys(menuData, key) || [];
+        if (parentKeys.length) setOpenKeys(parentKeys);
+      }, []);
+
+      // 构建 Menu 的 items 属性（递归处理）
+      function buildMenuItems(data) {
+        return data.map((item) => {
+          const menuItem = {
+            key: item.key,
+            label: item.label,
+            icon: item.icon || null,
+          };
+          if (item.children && item.children.length > 0) {
+            menuItem.children = buildMenuItems(item.children);
+          }
+          return menuItem;
+        });
+      }
+
+      const menuItems = useMemo(() => buildMenuItems(menuData), []);
+
+      // 是否显示欢迎页
+      const isHomePage = selectedKeys[0] === "home";
+      // 是否显示供应商看板
+      const isSupplierBoard = selectedKeys[0] === "supplier/board";
+      // 是否显示供应商准入
+      const isSupplierAccess = selectedKeys[0] === "supplier/access";
+      // 是否显示供应商类型
+      const isSupplierType = selectedKeys[0] === "supplier/type";
+      // 是否显示供应商档案
+      const isSupplierArchive = selectedKeys[0] === "supplier/archive";
+      // 是否显示供应商注册
+      const isSupplierRegister = selectedKeys[0] === "supplier/register";
+      // 是否显示供应商绩效看板
+      const isQualityBoard = selectedKeys[0] === "quality/board";
+
+      return (
+        <Layout style={{ minHeight: "100vh" }}>
+          {/* ===== 侧边栏 ===== */}
+          <Sider
+            collapsible
+            collapsed={collapsed}
+            onCollapse={setCollapsed}
+            width={250}
+            theme="dark"
+            trigger={null}
+            style={{
+              overflow: "hidden",
+              display: "flex",
+              flexDirection: "column",
+              height: "100vh",
+              boxShadow: "2px 0 8px rgba(0,0,0,0.08)",
+            }}
+          >
+            {/* Logo */}
+            <div className={"logo-wrapper" + (collapsed ? " logo-collapsed" : "")}>
+              <div className="logo-icon">S</div>
+              <span className="logo-text">SRM 采购管理系统</span>
+            </div>
+
+            {/* 菜单 */}
+            <Menu
+              className="sider-menu"
+              theme="dark"
+              mode="inline"
+              selectedKeys={selectedKeys}
+              openKeys={openKeys}
+              onSelect={handleMenuSelect}
+              onOpenChange={handleOpenChange}
+              items={menuItems}
+              inlineCollapsed={collapsed}
+            />
+
+            {/* 折叠触发器 */}
+            <div
+              onClick={() => setCollapsed(!collapsed)}
+              style={{
+                height: 40,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                cursor: "pointer",
+                borderTop: "1px solid rgba(255, 255, 255, 0.1)",
+                color: "rgba(255, 255, 255, 0.65)",
+                transition: "color 0.3s",
+              }}
+              onMouseEnter={(e) => (e.target.style.color = "#fff")}
+              onMouseLeave={(e) => (e.target.style.color = "rgba(255, 255, 255, 0.65)")}
+            >
+              {collapsed
+                ? React.createElement(MenuUnfoldOutlined, { style: { fontSize: 16 } })
+                : React.createElement(MenuFoldOutlined, { style: { fontSize: 16 } })}
+            </div>
+          </Sider>
+
+          {/* ===== 右侧主体 ===== */}
+          <Layout>
+            {/* Header */}
+            <Header className="site-header">
+              <div className="header-left">
+                <span className="trigger" onClick={() => setCollapsed(!collapsed)}>
+                  {collapsed
+                    ? React.createElement(MenuUnfoldOutlined)
+                    : React.createElement(MenuFoldOutlined)}
+                </span>
+              </div>
+              <div className="header-right">
+                <Space size={24}>
+                  {/* 消息通知 */}
+                  <Badge count={8} size="small">
+                    {React.createElement(BellOutlined, {
+                      style: { fontSize: 18, color: "#595959", cursor: "pointer" },
+                    })}
+                  </Badge>
+                  {/* 用户头像下拉 */}
+                  <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">
+                    <div className="user-avatar-dropdown">
+                      <Avatar
+                        size={32}
+                        style={{ backgroundColor: "#1677ff" }}
+                        icon={React.createElement(UserOutlined)}
+                      />
+                      <span className="user-name">管理员</span>
+                    </div>
+                  </Dropdown>
+                </Space>
+              </div>
+            </Header>
+
+            {/* Content */}
+            <Content className="site-content">
+              {/* 面包屑 */}
+              {!isHomePage && !isSupplierBoard && !isSupplierAccess && !isSupplierType && !isSupplierArchive && !isSupplierRegister && !isQualityBoard && <Breadcrumb
+                items={breadcrumb}
+                style={{ marginBottom: 16 }}
+              />}
+
+              {/* 主内容卡片 */}
+              <div className="content-card" style={(isHomePage || isSupplierBoard || isSupplierAccess || isSupplierType || isSupplierArchive || isSupplierRegister || isQualityBoard) ? { padding: 0, background: 'transparent', boxShadow: 'none' } : {}}>
+                {isHomePage ? (
+                  <HomeDashboard />
+                ) : isSupplierBoard ? (
+                  <SupplierBoard />
+                ) : isSupplierAccess ? (
+                  <SupplierAccess />
+                ) : isSupplierType ? (
+                  <SupplierType />
+                ) : isSupplierArchive ? (
+                  <SupplierArchive />
+                ) : isSupplierRegister ? (
+                  <SupplierRegister />
+                ) : isQualityBoard ? (
+                  <QualityBoard />
+                ) : (
+                  <div>
+                    <div className="page-header">
+                      <div className="page-icon">
+                        {currentMenuItem && currentMenuItem.icon}
+                      </div>
+                      <div>
+                        <h1 className="page-title">
+                          {currentMenuItem ? currentMenuItem.label : "未知页面"}
+                        </h1>
+                        <p className="page-subtitle">
+                          当前位置：
+                          {breadcrumb.map((b) => b.title).join(" / ")}
+                        </p>
+                      </div>
+                    </div>
+                    <div style={{ padding: "0 8px" }}>
+                      <Card
+                        bordered={false}
+                        style={{
+                          background: "#fafafa",
+                          borderRadius: 8,
+                        }}
+                      >
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            minHeight: 200,
+                            color: "#bfbfbf",
+                            fontSize: 14,
+                            flexDirection: "column",
+                          }}
+                        >
+                          <Text type="secondary" style={{ fontSize: 16, marginBottom: 8 }}>
+                            {currentMenuItem ? currentMenuItem.label : ""} - 内容区域
+                          </Text>
+                          <Text type="secondary" style={{ fontSize: 13 }}>
+                            此页面为原型占位，可根据实际需求在此区域放置具体功能内容
+                          </Text>
+                        </div>
+                      </Card>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </Content>
+          </Layout>
+        </Layout>
+      );
+    }
+
+    // ===== 渲染到 DOM =====
+    const root = ReactDOM.createRoot(document.getElementById("root"));
+    root.render(React.createElement(App));
+  </script>
+</body>
+</html>
