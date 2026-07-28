@@ -249,7 +249,7 @@
       Layout, Menu, Breadcrumb, Space, Badge, Avatar,
       Dropdown, Card, Typography, Row, Col, Input, Button,
       Modal, Tag, Table, Select, Checkbox, Popover, Upload,
-      Tooltip, Pagination, Divider, Form
+      Tooltip, Pagination, Divider, Form, Radio, DatePicker, Tabs
     } = antd;
     const { Header, Sider, Content } = Layout;
     const { Text } = Typography;
@@ -328,6 +328,7 @@
       ReloadOutlined,
       ExpandOutlined,
       MessageOutlined,
+      InfoCircleOutlined,
     } = icons;
 
     // ===== 菜单数据定义 =====
@@ -2633,6 +2634,1506 @@
       );
     }
 
+    // ===== 绩效考核方案组件 =====
+    function QualityPlan() {
+      const [selectedRowKeys, setSelectedRowKeys] = useState([]);
+      const [detailVisible, setDetailVisible] = useState(false);
+      const [detailRecord, setDetailRecord] = useState(null);
+      const [addVisible, setAddVisible] = useState(false);
+      const [editRecord, setEditRecord] = useState(null);
+      const [addFormData, setAddFormData] = useState({ planName: '', fullScore: '', enabled: true, description: '', qualityDeviation: [], timeDeviation: [], scoreRules: [] });
+
+      const [tableData, setTableData] = useState([
+        { key: '1', flowStatus: '进行中', serialNo: 'JXKH-2026-001', supplierName: '天津海叶商贸', supplierCode: 'GYS000008', interSupplier: '是', evalStartTime: '2026-01-01', evalEndTime: '2026-06-30', qualification: 90, orderExec: 85, siteInspect: 88, rectification8d: 92, qualificationContent: '营业执照/ISO认证齐全', orderExecContent: '交货及时率95%', siteInspectContent: '生产环境达标', rectification8dContent: '已闭环', reviewRequirement: '季度评审', supplierPerformance: 'A', submitter: '用户257522', submitTime: '2026-07-01 09:00:00', updateTime: '2026-07-15 14:30:00', currentNode: '部门审核', currentOwner: '张经理', planName: '供应商年度绩效考核', fullScore: 100, enabled: true, description: '' },
+        { key: '2', flowStatus: '已完成', serialNo: 'JXKH-2026-002', supplierName: '上海易点科技有限公司', supplierCode: 'GYS000005', interSupplier: '否', evalStartTime: '2026-01-01', evalEndTime: '2026-06-30', qualification: 95, orderExec: 98, siteInspect: 90, rectification8d: 100, qualificationContent: '资质完备', orderExecContent: '交货及时率100%', siteInspectContent: '现场管理规范', rectification8dContent: '无整改项', reviewRequirement: '年度评审', supplierPerformance: 'A', submitter: '用户257522', submitTime: '2026-07-02 10:00:00', updateTime: '2026-07-20 16:00:00', currentNode: '已完成', currentOwner: '-', planName: '供应商年度绩效考核', fullScore: 100, enabled: true, description: '' },
+        { key: '3', flowStatus: '草稿', serialNo: 'JXKH-2026-003', supplierName: '京东企业购', supplierCode: 'GYS000002', interSupplier: '是', evalStartTime: '2026-07-01', evalEndTime: '2026-12-31', qualification: '-', orderExec: '-', siteInspect: '-', rectification8d: '-', qualificationContent: '-', orderExecContent: '-', siteInspectContent: '-', rectification8dContent: '-', reviewRequirement: '半年度评审', supplierPerformance: '-', submitter: '用户257522', submitTime: '-', updateTime: '2026-07-25 11:00:00', currentNode: '草稿', currentOwner: '用户257522', planName: '供应商半年度考核', fullScore: 100, enabled: false, description: '' },
+      ]);
+
+      // 详情弹框 Mock 数据
+      const detailQualityDeviation = [
+        { key: '1', idx: 1, lower: '1%', upper: '2%', score: 1 },
+        { key: '2', idx: 2, lower: '2%', upper: '5%', score: 3 },
+        { key: '3', idx: 3, lower: '6%', upper: '10%', score: 5 },
+        { key: '4', idx: 4, lower: '11%', upper: '100%', score: 60 },
+      ];
+      const detailTimeDeviation = [
+        { key: '1', idx: 1, lower: 1, upper: 2, score: 1 },
+        { key: '2', idx: 2, lower: 2, upper: 5, score: 5 },
+        { key: '3', idx: 3, lower: 6, upper: 99, score: 60 },
+      ];
+      const detailScoreRules = [
+        { key: '1', idx: 1, scoreMin: 0, scoreMax: 60, level: 'D', status: '淘汰供应商' },
+        { key: '2', idx: 2, scoreMin: 61, scoreMax: 80, level: 'C', status: '合格供应商' },
+        { key: '3', idx: 3, scoreMin: 81, scoreMax: 90, level: 'B', status: '合格供应商' },
+        { key: '4', idx: 4, scoreMin: 91, scoreMax: 100, level: 'A', status: '合格供应商' },
+      ];
+
+      const handleViewDetail = (record) => { setDetailRecord(record); setDetailVisible(true); };
+      const handleEdit = (record) => {
+        setEditRecord(record);
+        setAddFormData({ planName: record.planName || '', fullScore: String(record.fullScore || ''), enabled: record.enabled !== false, description: record.description || '', qualityDeviation: [], timeDeviation: [], scoreRules: [] });
+        setAddVisible(true);
+      };
+      const handleDelete = (record) => {
+        Modal.confirm({ title: '确认删除', content: `确定要删除「${record.supplierName}」的考核方案吗？`, okText: '确定', cancelText: '取消', okButtonProps: { danger: true }, onOk: () => { setTableData(prev => prev.filter(item => item.key !== record.key)); antd.message.success('删除成功'); } });
+      };
+      const handleAddSubmit = () => {
+        if (editRecord) {
+          setTableData(prev => prev.map(item => item.key === editRecord.key ? { ...item, planName: addFormData.planName, fullScore: Number(addFormData.fullScore) || 100, enabled: addFormData.enabled, description: addFormData.description } : item));
+          antd.message.success('编辑成功');
+        } else {
+          antd.message.success('提交成功');
+        }
+        setAddVisible(false);
+        setEditRecord(null);
+      };
+      const handleAddSaveDraft = () => { antd.message.success('草稿已保存'); setAddVisible(false); setEditRecord(null); };
+
+      const columns = [
+        { title: '供应商名称', dataIndex: 'supplierName', width: 160, fixed: 'left' },
+        { title: '流程状态', dataIndex: 'flowStatus', width: 100, render: (v) => { const color = v === '进行中' ? 'processing' : v === '已完成' ? 'success' : 'default'; return React.createElement(Tag, { color }, v); } },
+        { title: '流水号', dataIndex: 'serialNo', width: 140 },
+        { title: '供应商编号', dataIndex: 'supplierCode', width: 120 },
+        { title: '互联供应商', dataIndex: 'interSupplier', width: 100 },
+        { title: '评价开始时间', dataIndex: 'evalStartTime', width: 130 },
+        { title: '评价截止时间', dataIndex: 'evalEndTime', width: 130 },
+        { title: '供应商资质', dataIndex: 'qualification', width: 100, align: 'center' },
+        { title: '订单执行', dataIndex: 'orderExec', width: 90, align: 'center' },
+        { title: '现场考察', dataIndex: 'siteInspect', width: 90, align: 'center' },
+        { title: '8D整改', dataIndex: 'rectification8d', width: 90, align: 'center' },
+        { title: '供应商资质考核内容', dataIndex: 'qualificationContent', width: 180 },
+        { title: '订单执行考核内容', dataIndex: 'orderExecContent', width: 160 },
+        { title: '现场考察情况考核内容', dataIndex: 'siteInspectContent', width: 180 },
+        { title: '8D整改情况', dataIndex: 'rectification8dContent', width: 120 },
+        { title: '评审要求', dataIndex: 'reviewRequirement', width: 110 },
+        { title: '供应商绩效', dataIndex: 'supplierPerformance', width: 100, align: 'center', render: (v) => { if (v === '-') return '-'; const color = v === 'A' ? 'success' : v === 'B' ? 'processing' : 'default'; return React.createElement(Tag, { color }, v); } },
+        { title: '提交人', dataIndex: 'submitter', width: 100, render: (v) => React.createElement('a', { style: { color: '#1677ff' } }, v) },
+        { title: '提交时间', dataIndex: 'submitTime', width: 170 },
+        { title: '更新时间', dataIndex: 'updateTime', width: 170 },
+        { title: '当前节点', dataIndex: 'currentNode', width: 100 },
+        { title: '当前负责人', dataIndex: 'currentOwner', width: 110 },
+        { title: '操作', key: 'action', width: 150, fixed: 'right', render: (_, record) => React.createElement(Space, { size: 8 }, React.createElement('a', { style: { color: '#1677ff' }, onClick: () => handleViewDetail(record) }, '详情'), React.createElement('a', { style: { color: '#1677ff' }, onClick: () => handleEdit(record) }, '编辑'), React.createElement('a', { style: { color: '#ff4d4f' }, onClick: () => handleDelete(record) }, '删除')) },
+      ];
+
+      const blueBtnStyle = { background: '#1677ff', borderColor: '#1677ff' };
+
+      // 分区标题渲染函数
+      function renderSectionTitle(title) {
+        return React.createElement('div', { style: { marginBottom: 20 } },
+          React.createElement('div', { style: { display: 'flex', alignItems: 'center', marginBottom: 8 } },
+            React.createElement('div', { style: { background: 'linear-gradient(90deg, #4a7cf7 0%, #6c9cff 100%)', color: '#fff', padding: '6px 16px', borderRadius: 4, display: 'inline-flex', alignItems: 'center', fontSize: 14, fontWeight: 600, position: 'relative', overflow: 'hidden' } },
+              title,
+              React.createElement('span', { style: { position: 'absolute', right: 0, top: 0, width: 24, height: '100%', background: 'repeating-linear-gradient(135deg, transparent, transparent 2px, rgba(255,255,255,0.3) 2px, rgba(255,255,255,0.3) 4px)' } })
+            )
+          ),
+          React.createElement('div', { style: { height: 2, background: '#4a7cf7' } })
+        );
+      }
+
+      return (
+        <div style={{ background: '#fff', borderRadius: 8, padding: '16px 24px' }}>
+          {/* 工具栏 */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+            <Space size={8}>
+              <Button type="primary" style={blueBtnStyle} icon={React.createElement(PlusOutlined)} onClick={() => { setEditRecord(null); setAddFormData({ planName: '', fullScore: '', enabled: true, description: '', qualityDeviation: [], timeDeviation: [], scoreRules: [] }); setAddVisible(true); }}>新建</Button>
+              <Button icon={React.createElement(ImportOutlined)}>导入</Button>
+              <Button icon={React.createElement(ExportOutlined)}>导出</Button>
+            </Space>
+            <Space size={8}>
+              <Select defaultValue="all" size="middle" style={{ width: 110 }}>
+                <Option value="all">搜索范围</Option>
+              </Select>
+              <Input placeholder="请输入搜索内容" style={{ width: 220 }} suffix={React.createElement(SearchOutlined)} />
+            </Space>
+          </div>
+
+          {/* 数据表格 */}
+          <Table
+            columns={columns}
+            dataSource={tableData}
+            rowSelection={{ selectedRowKeys, onChange: setSelectedRowKeys }}
+            bordered
+            size="middle"
+            pagination={false}
+            scroll={{ x: 3200 }}
+          />
+
+          {/* 底部分页 */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 12, paddingTop: 12, padding: '12px 0 8px', borderTop: '1px solid #f0f0f0' }}>
+            <Space size={16}>
+              {React.createElement(ColumnWidthOutlined, { style: { color: '#8c8c8c' } })}
+              <Select defaultValue="20" size="small" style={{ width: 90 }}>
+                <Option value="20">20条/页</Option>
+                <Option value="50">50条/页</Option>
+                <Option value="100">100条/页</Option>
+              </Select>
+              <span style={{ color: '#595959', fontSize: 13 }}>共 {tableData.length} 条</span>
+            </Space>
+            <Pagination current={1} total={tableData.length} pageSize={20} size="small" showSizeChanger={false} />
+          </div>
+
+          {/* 详情弹框 */}
+          <Modal title="绩效考核方案详情" open={detailVisible} onCancel={() => setDetailVisible(false)} footer={<Button onClick={() => setDetailVisible(false)}>关闭</Button>} width={900}>
+            {detailRecord && (
+              <div style={{ padding: '16px 20px', maxHeight: '70vh', overflowY: 'auto' }}>
+                {/* 分区1：基本信息 */}
+                {renderSectionTitle('基本信息')}
+                <Row gutter={[16, 12]} style={{ marginBottom: 16 }}>
+                  <Col span={8}><div style={{ fontSize: 13, color: '#8c8c8c', marginBottom: 4 }}>方案名称</div><div style={{ padding: '6px 12px', background: '#f5f5f5', borderRadius: 4 }}>{detailRecord.planName || '供应商年度绩效考核'}</div></Col>
+                  <Col span={8}><div style={{ fontSize: 13, color: '#8c8c8c', marginBottom: 4 }}>满分</div><div style={{ padding: '6px 12px', background: '#f5f5f5', borderRadius: 4 }}>{detailRecord.fullScore || 100}</div></Col>
+                  <Col span={8}><div style={{ fontSize: 13, color: '#8c8c8c', marginBottom: 4 }}>是否启用</div><div>{detailRecord.enabled !== false ? React.createElement(Tag, { color: 'success' }, '启用') : React.createElement(Tag, { color: 'error' }, '禁用')}</div></Col>
+                </Row>
+                <div style={{ marginBottom: 20 }}>
+                  <div style={{ fontSize: 13, color: '#8c8c8c', marginBottom: 4 }}>考核说明</div>
+                  <div style={{ padding: '12px', background: '#f5f5f5', borderRadius: 4, minHeight: 60, color: '#595959' }}>{detailRecord.description || '-'}</div>
+                </div>
+
+                {/* 分区2：质检数量偏差 */}
+                {renderSectionTitle('质检数量偏差')}
+                <div style={{ marginBottom: 8, fontWeight: 500 }}>质检数量偏差明细 <span style={{ color: '#ff4d4f' }}>*</span></div>
+                <div style={{ color: '#8c8c8c', fontSize: 12, marginBottom: 4 }}>系统会根据质检不合格率，按每笔发货单进行扣分。</div>
+                <div style={{ color: '#8c8c8c', fontSize: 12, marginBottom: 8 }}>请从低到高填写</div>
+                <Table dataSource={detailQualityDeviation} columns={[
+                  { title: '#', dataIndex: 'idx', width: 60, align: 'center' },
+                  { title: '偏差率下限(>=)', dataIndex: 'lower', align: 'right' },
+                  { title: '偏差率上限(＜)', dataIndex: 'upper', align: 'right' },
+                  { title: '扣分分数', dataIndex: 'score', align: 'right' },
+                ]} bordered size="small" pagination={false} style={{ marginBottom: 24 }} />
+
+                {/* 分区3：到货时间偏差 */}
+                {renderSectionTitle('到货时间偏差')}
+                <div style={{ marginBottom: 8, fontWeight: 500 }}>时间偏差明细</div>
+                <div style={{ color: '#8c8c8c', fontSize: 12, marginBottom: 8 }}>系统会根据计划交货时间和实际收货时间差，按每笔发货单进行扣分</div>
+                <Table dataSource={detailTimeDeviation} columns={[
+                  { title: '#', dataIndex: 'idx', width: 60, align: 'center' },
+                  { title: '偏差天数下限(>=)', dataIndex: 'lower', align: 'right' },
+                  { title: '偏差天数上限(＜)', dataIndex: 'upper', align: 'right' },
+                  { title: '扣分分数', dataIndex: 'score', align: 'right' },
+                ]} bordered size="small" pagination={false} style={{ marginBottom: 24 }} />
+
+                {/* 分区4：评分细则 */}
+                {renderSectionTitle('评分细则')}
+                <div style={{ marginBottom: 8, fontWeight: 500 }}>评分细则</div>
+                <div style={{ color: '#8c8c8c', fontSize: 12, marginBottom: 8 }}>请从低到高填写</div>
+                <Table dataSource={detailScoreRules} columns={[
+                  { title: '#', dataIndex: 'idx', width: 60, align: 'center' },
+                  { title: '得分下限', dataIndex: 'scoreMin', align: 'right' },
+                  { title: '得分上限', dataIndex: 'scoreMax', align: 'right' },
+                  { title: '绩效等级', dataIndex: 'level', align: 'center' },
+                  { title: '对应供应商状态', dataIndex: 'status' },
+                ]} bordered size="small" pagination={false} scroll={{ x: 600 }} style={{ marginBottom: 24 }} />
+
+                {/* 底部信息 */}
+                <div style={{ borderTop: '1px solid #f0f0f0', paddingTop: 12, display: 'flex', gap: 40, fontSize: 13, color: '#595959' }}>
+                  <span>提交人 <a style={{ color: '#1677ff' }}>{detailRecord.submitter}</a></span>
+                  <span>提交时间 {detailRecord.submitTime}</span>
+                </div>
+                <div style={{ fontSize: 13, color: '#595959', marginTop: 8 }}>更新时间 {detailRecord.updateTime}</div>
+              </div>
+            )}
+          </Modal>
+
+          {/* 新增弹框 */}
+          <Modal title={editRecord ? '编辑绩效考核方案' : '新增绩效考核方案'} open={addVisible} onCancel={() => { setAddVisible(false); setEditRecord(null); }} footer={null} width={900}>
+            <div style={{ padding: '16px 20px', maxHeight: '70vh', overflowY: 'auto' }}>
+              {/* 分区1：基本信息 */}
+              {renderSectionTitle('基本信息')}
+              <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
+                <Col span={8}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>方案名称 <span style={{ color: '#ff4d4f' }}>*</span></div><Input value={addFormData.planName} onChange={(e) => setAddFormData(prev => ({ ...prev, planName: e.target.value }))} placeholder="请输入方案名称" /></Col>
+                <Col span={8}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>满分 <span style={{ color: '#ff4d4f' }}>*</span></div><Input value={addFormData.fullScore} onChange={(e) => setAddFormData(prev => ({ ...prev, fullScore: e.target.value }))} placeholder="请输入满分" /></Col>
+                <Col span={8}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>是否启用</div><div style={{ display: 'flex', alignItems: 'center', gap: 8, height: 32 }}><Radio checked={addFormData.enabled} onChange={() => setAddFormData(prev => ({ ...prev, enabled: true }))} /><Tag color="success" style={{ cursor: 'pointer' }} onClick={() => setAddFormData(prev => ({ ...prev, enabled: true }))}>启用</Tag><Radio checked={!addFormData.enabled} onChange={() => setAddFormData(prev => ({ ...prev, enabled: false }))} /><Tag color="error" style={{ cursor: 'pointer' }} onClick={() => setAddFormData(prev => ({ ...prev, enabled: false }))}>禁用</Tag></div></Col>
+              </Row>
+              <div style={{ marginBottom: 24 }}>
+                <div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>考核说明</div>
+                <TextArea value={addFormData.description} onChange={(e) => setAddFormData(prev => ({ ...prev, description: e.target.value }))} rows={4} placeholder="请输入考核说明" />
+              </div>
+
+              {/* 分区2：质检数量偏差 */}
+              {renderSectionTitle('质检数量偏差')}
+              <div style={{ marginBottom: 8, fontWeight: 500 }}>质检数量偏差明细 <span style={{ color: '#ff4d4f' }}>*</span></div>
+              <div style={{ color: '#8c8c8c', fontSize: 12, marginBottom: 4 }}>系统会根据质检不合格率，按每笔发货单进行扣分。</div>
+              <div style={{ color: '#8c8c8c', fontSize: 12, marginBottom: 8 }}>请从低到高填写</div>
+              <Table dataSource={addFormData.qualityDeviation} columns={[
+                { title: '#', width: 50, align: 'center', render: (_, __, idx) => idx + 1 },
+                { title: '偏差率下限(>=) *', dataIndex: 'lower', render: (v, _, idx) => React.createElement(Input, { size: 'small', value: v, onChange: (e) => { const arr = [...addFormData.qualityDeviation]; arr[idx] = { ...arr[idx], lower: e.target.value }; setAddFormData(prev => ({ ...prev, qualityDeviation: arr })); } }) },
+                { title: '偏差率上限(＜) *', dataIndex: 'upper', render: (v, _, idx) => React.createElement(Input, { size: 'small', value: v, onChange: (e) => { const arr = [...addFormData.qualityDeviation]; arr[idx] = { ...arr[idx], upper: e.target.value }; setAddFormData(prev => ({ ...prev, qualityDeviation: arr })); } }) },
+                { title: '扣分分数 *', dataIndex: 'score', render: (v, _, idx) => React.createElement(Input, { size: 'small', value: v, onChange: (e) => { const arr = [...addFormData.qualityDeviation]; arr[idx] = { ...arr[idx], score: e.target.value }; setAddFormData(prev => ({ ...prev, qualityDeviation: arr })); } }) },
+                { title: '辅助校验', width: 80, align: 'center', render: () => '-' },
+              ]} bordered size="small" pagination={false} style={{ marginBottom: 8 }} />
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+                <Space size={16}>
+                  <a style={{ color: '#1677ff' }} onClick={() => setAddFormData(prev => ({ ...prev, qualityDeviation: [...prev.qualityDeviation, { key: Date.now().toString(), lower: '', upper: '', score: '' }] }))}>+ 添加</a>
+                  <a style={{ color: '#1677ff' }}>导入</a>
+                  <a style={{ color: '#1677ff' }}>快速填报</a>
+                </Space>
+                <span style={{ color: '#8c8c8c', fontSize: 12 }}>{addFormData.qualityDeviation.length} / 200</span>
+              </div>
+
+              {/* 分区3：到货时间偏差 */}
+              {renderSectionTitle('到货时间偏差')}
+              <div style={{ marginBottom: 8, fontWeight: 500 }}>时间偏差明细</div>
+              <div style={{ color: '#8c8c8c', fontSize: 12, marginBottom: 4 }}>系统会根据计划交货时间和实际收货时间差，按每笔发货单进行扣分</div>
+              <Table dataSource={addFormData.timeDeviation} columns={[
+                { title: '#', width: 50, align: 'center', render: (_, __, idx) => idx + 1 },
+                { title: '偏差天数下限(>=) *', dataIndex: 'lower', render: (v, _, idx) => React.createElement(Input, { size: 'small', value: v, onChange: (e) => { const arr = [...addFormData.timeDeviation]; arr[idx] = { ...arr[idx], lower: e.target.value }; setAddFormData(prev => ({ ...prev, timeDeviation: arr })); } }) },
+                { title: '偏差天数上限(＜) *', dataIndex: 'upper', render: (v, _, idx) => React.createElement(Input, { size: 'small', value: v, onChange: (e) => { const arr = [...addFormData.timeDeviation]; arr[idx] = { ...arr[idx], upper: e.target.value }; setAddFormData(prev => ({ ...prev, timeDeviation: arr })); } }) },
+                { title: '扣分分数 *', dataIndex: 'score', render: (v, _, idx) => React.createElement(Input, { size: 'small', value: v, onChange: (e) => { const arr = [...addFormData.timeDeviation]; arr[idx] = { ...arr[idx], score: e.target.value }; setAddFormData(prev => ({ ...prev, timeDeviation: arr })); } }) },
+                { title: '时间辅助校验', width: 100, align: 'center', render: () => '-' },
+              ]} bordered size="small" pagination={false} style={{ marginBottom: 8 }} />
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+                <Space size={16}>
+                  <a style={{ color: '#1677ff' }} onClick={() => setAddFormData(prev => ({ ...prev, timeDeviation: [...prev.timeDeviation, { key: Date.now().toString(), lower: '', upper: '', score: '' }] }))}>+ 添加</a>
+                  <a style={{ color: '#1677ff' }}>导入</a>
+                  <a style={{ color: '#1677ff' }}>快速填报</a>
+                </Space>
+                <span style={{ color: '#8c8c8c', fontSize: 12 }}>{addFormData.timeDeviation.length} / 200</span>
+              </div>
+
+              {/* 分区4：评分细则 */}
+              {renderSectionTitle('评分细则')}
+              <div style={{ marginBottom: 8, fontWeight: 500 }}>评分细则</div>
+              <div style={{ color: '#8c8c8c', fontSize: 12, marginBottom: 8 }}>请从低到高填写</div>
+              <Table dataSource={addFormData.scoreRules} columns={[
+                { title: '#', width: 50, align: 'center', render: (_, __, idx) => idx + 1 },
+                { title: '得分下限 *', dataIndex: 'scoreMin', render: (v, _, idx) => React.createElement(Input, { size: 'small', value: v, onChange: (e) => { const arr = [...addFormData.scoreRules]; arr[idx] = { ...arr[idx], scoreMin: e.target.value }; setAddFormData(prev => ({ ...prev, scoreRules: arr })); } }) },
+                { title: '得分上限 *', dataIndex: 'scoreMax', render: (v, _, idx) => React.createElement(Input, { size: 'small', value: v, onChange: (e) => { const arr = [...addFormData.scoreRules]; arr[idx] = { ...arr[idx], scoreMax: e.target.value }; setAddFormData(prev => ({ ...prev, scoreRules: arr })); } }) },
+                { title: '绩效等级 *', dataIndex: 'level', render: (v, _, idx) => React.createElement(Input, { size: 'small', value: v, onChange: (e) => { const arr = [...addFormData.scoreRules]; arr[idx] = { ...arr[idx], level: e.target.value }; setAddFormData(prev => ({ ...prev, scoreRules: arr })); } }) },
+                { title: '对应供应商状态 *', dataIndex: 'status', render: (v, _, idx) => React.createElement(Input, { size: 'small', value: v, onChange: (e) => { const arr = [...addFormData.scoreRules]; arr[idx] = { ...arr[idx], status: e.target.value }; setAddFormData(prev => ({ ...prev, scoreRules: arr })); } }) },
+                { title: '评分校验', width: 80, align: 'center', render: () => '-' },
+              ]} bordered size="small" pagination={false} scroll={{ x: 700 }} style={{ marginBottom: 8 }} />
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+                <Space size={16}>
+                  <a style={{ color: '#1677ff' }} onClick={() => setAddFormData(prev => ({ ...prev, scoreRules: [...prev.scoreRules, { key: Date.now().toString(), scoreMin: '', scoreMax: '', level: '', status: '' }] }))}>+ 添加</a>
+                  <a style={{ color: '#1677ff' }}>导入</a>
+                  <a style={{ color: '#1677ff' }}>快速填报</a>
+                </Space>
+                <span style={{ color: '#8c8c8c', fontSize: 12 }}>{addFormData.scoreRules.length} / 200</span>
+              </div>
+
+              {/* 弹框底部按钮 */}
+              <div style={{ textAlign: 'center', padding: '12px 0 4px', borderTop: '1px solid #f0f0f0' }}>
+                <Space size={16}>
+                  <Button type="primary" style={{ ...blueBtnStyle, width: 100, height: 36 }} onClick={handleAddSubmit}>提交</Button>
+                  <Button type="primary" style={{ background: '#52c41a', borderColor: '#52c41a', width: 100, height: 36 }} onClick={handleAddSaveDraft}>保存草稿</Button>
+                </Space>
+              </div>
+            </div>
+          </Modal>
+        </div>
+      );
+    }
+
+    // ===== 绩效考核评价组件 =====
+    function QualityEvaluation() {
+      const [selectedRowKeys, setSelectedRowKeys] = useState([]);
+      const [addVisible, setAddVisible] = useState(false);
+      const [addForm, setAddForm] = useState({ supplierCode: '', supplierName: '', evalStart: null, evalEnd: null, checks: { qualification: false, orderExec: false, siteInspect: false, rectification8d: false }, checkContent: { qualification: '资质合规性：同类企业资质情况对比\n负面舆情：供应商是否有负面消息舆情', orderExec: '准时交付率：考核每单发货数量和质检合格数量\n交付周期达标率：考核每单计划交货时间和实际收货时间的偏差', siteInspect: '现场考察得分：考评时间内现场考察的得分结果\n整改情况：是否需要整改，以及整改结果', rectification8d: '事件发生次数\n沟通及时率\n是否重复整改' }, reviewRequirement: '' });
+
+      const [tableData, setTableData] = useState([
+        { key: '1', supplierName: '天津海叶商贸', supplierCode: 'GYS000008', interSupplier: '是', evalStartTime: '2026-01-01', evalEndTime: '2026-06-30', qualification: 90, orderExec: 85, siteInspect: 88, rectification8d: 92, qualificationContent: '资质合规性达标', orderExecContent: '准时交付率95%', siteInspectContent: '现场管理规范', rectification8dContent: '已闭环', reviewRequirement: '优势项：交付及时；待改进：质检合格率需提升', supplierPerformance: 'B', submitter: '用户257522', submitTime: '2026-07-01 09:00:00', updateTime: '2026-07-15 14:30:00', currentNode: '部门审核', currentOwner: '张经理' },
+        { key: '2', supplierName: '上海易点科技有限公司', supplierCode: 'GYS000005', interSupplier: '否', evalStartTime: '2026-01-01', evalEndTime: '2026-06-30', qualification: 95, orderExec: 98, siteInspect: 90, rectification8d: 100, qualificationContent: '资质完备', orderExecContent: '交货及时率100%', siteInspectContent: '现场管理规范', rectification8dContent: '无整改项', reviewRequirement: '全面优秀', supplierPerformance: 'A', submitter: '用户257522', submitTime: '2026-07-02 10:00:00', updateTime: '2026-07-20 16:00:00', currentNode: '已完成', currentOwner: '-' },
+        { key: '3', supplierName: '京东企业购', supplierCode: 'GYS000002', interSupplier: '是', evalStartTime: '2026-07-01', evalEndTime: '2026-12-31', qualification: '-', orderExec: '-', siteInspect: '-', rectification8d: '-', qualificationContent: '-', orderExecContent: '-', siteInspectContent: '-', rectification8dContent: '-', reviewRequirement: '-', supplierPerformance: '-', submitter: '用户257522', submitTime: '-', updateTime: '2026-07-25 11:00:00', currentNode: '草稿', currentOwner: '用户257522' },
+      ]);
+
+      const handleSelectSupplier = () => {
+        setAddForm(prev => ({ ...prev, supplierCode: 'GYS000008', supplierName: '天津海叶商贸' }));
+        antd.message.success('已选择供应商：天津海叶商贸');
+      };
+
+      const handleCheckChange = (field, checked) => {
+        setAddForm(prev => ({ ...prev, checks: { ...prev.checks, [field]: checked } }));
+      };
+
+      const handleCheckContentChange = (field, value) => {
+        setAddForm(prev => ({ ...prev, checkContent: { ...prev.checkContent, [field]: value } }));
+      };
+
+      const handleAddSubmit = () => { antd.message.success('提交成功'); setAddVisible(false); };
+      const handleAddSaveDraft = () => { antd.message.success('草稿已保存'); setAddVisible(false); };
+      const handleDelete = (record) => {
+        Modal.confirm({ title: '确认删除', content: '确定要删除该评价记录吗？', okText: '确定', cancelText: '取消', okButtonProps: { danger: true }, onOk: () => { setTableData(prev => prev.filter(item => item.key !== record.key)); antd.message.success('删除成功'); } });
+      };
+
+      const columns = [
+        { title: '供应商名称', dataIndex: 'supplierName', width: 160, fixed: 'left' },
+        { title: '供应商编号', dataIndex: 'supplierCode', width: 120 },
+        { title: '互联供应商', dataIndex: 'interSupplier', width: 100 },
+        { title: '评价开始时间', dataIndex: 'evalStartTime', width: 130 },
+        { title: '评价截止时间', dataIndex: 'evalEndTime', width: 130 },
+        { title: '供应商资质', dataIndex: 'qualification', width: 100, align: 'center' },
+        { title: '订单执行', dataIndex: 'orderExec', width: 90, align: 'center' },
+        { title: '现场考察', dataIndex: 'siteInspect', width: 90, align: 'center' },
+        { title: '8D整改', dataIndex: 'rectification8d', width: 90, align: 'center' },
+        { title: '供应商资质考核内容', dataIndex: 'qualificationContent', width: 180 },
+        { title: '订单执行考核内容', dataIndex: 'orderExecContent', width: 160 },
+        { title: '现场考察情况考核内容', dataIndex: 'siteInspectContent', width: 180 },
+        { title: '8D整改情况', dataIndex: 'rectification8dContent', width: 120 },
+        { title: '评审要求', dataIndex: 'reviewRequirement', width: 200, ellipsis: true },
+        { title: '供应商绩效', dataIndex: 'supplierPerformance', width: 100, align: 'center', render: (v) => { if (v === '-') return '-'; const color = v === 'A' ? 'success' : v === 'B' ? 'processing' : 'default'; return React.createElement(Tag, { color }, v); } },
+        { title: '提交人', dataIndex: 'submitter', width: 100, render: (v) => React.createElement('a', { style: { color: '#1677ff' } }, v) },
+        { title: '提交时间', dataIndex: 'submitTime', width: 170 },
+        { title: '更新时间', dataIndex: 'updateTime', width: 170 },
+        { title: '当前节点', dataIndex: 'currentNode', width: 100 },
+        { title: '当前负责人', dataIndex: 'currentOwner', width: 110 },
+        { title: '操作', key: 'action', width: 150, fixed: 'right', render: (_, record) => React.createElement(Space, { size: 8 }, React.createElement('a', { style: { color: '#1677ff' } }, '详情'), React.createElement('a', { style: { color: '#1677ff' } }, '编辑'), React.createElement('a', { style: { color: '#ff4d4f' }, onClick: () => handleDelete(record) }, '删除')) },
+      ];
+
+      const blueBtnStyle = { background: '#1677ff', borderColor: '#1677ff' };
+
+      const checkItems = [
+        { key: 'qualification', label: '供应商资质' },
+        { key: 'orderExec', label: '订单执行' },
+        { key: 'siteInspect', label: '现场考察' },
+        { key: 'rectification8d', label: '8D整改' },
+      ];
+
+      return (
+        <div style={{ background: '#fff', borderRadius: 8, padding: '16px 24px' }}>
+          {/* 工具栏 */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+            <Space size={8}>
+              <Button type="primary" style={blueBtnStyle} icon={React.createElement(PlusOutlined)} onClick={() => { setAddForm({ supplierCode: '', supplierName: '', evalStart: null, evalEnd: null, checks: { qualification: false, orderExec: false, siteInspect: false, rectification8d: false }, checkContent: { qualification: '资质合规性：同类企业资质情况对比\n负面舆情：供应商是否有负面消息舆情', orderExec: '准时交付率：考核每单发货数量和质检合格数量\n交付周期达标率：考核每单计划交货时间和实际收货时间的偏差', siteInspect: '现场考察得分：考评时间内现场考察的得分结果\n整改情况：是否需要整改，以及整改结果', rectification8d: '事件发生次数\n沟通及时率\n是否重复整改' }, reviewRequirement: '' }); setAddVisible(true); }}>新建</Button>
+              <Button icon={React.createElement(ImportOutlined)}>导入</Button>
+              <Button icon={React.createElement(ExportOutlined)}>导出</Button>
+            </Space>
+            <Space size={8}>
+              <Select defaultValue="all" size="middle" style={{ width: 110 }}>
+                <Option value="all">搜索范围</Option>
+              </Select>
+              <Input placeholder="请输入搜索内容" style={{ width: 220 }} suffix={React.createElement(SearchOutlined)} />
+            </Space>
+          </div>
+
+          {/* 数据表格 */}
+          <Table columns={columns} dataSource={tableData} rowSelection={{ selectedRowKeys, onChange: setSelectedRowKeys }} bordered size="middle" pagination={false} scroll={{ x: 3000 }} />
+
+          {/* 底部分页 */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 12, paddingTop: 12, padding: '12px 0 8px', borderTop: '1px solid #f0f0f0' }}>
+            <Space size={16}>
+              {React.createElement(ColumnWidthOutlined, { style: { color: '#8c8c8c' } })}
+              <Select defaultValue="20" size="small" style={{ width: 90 }}>
+                <Option value="20">20条/页</Option>
+                <Option value="50">50条/页</Option>
+                <Option value="100">100条/页</Option>
+              </Select>
+              <span style={{ color: '#595959', fontSize: 13 }}>共 {tableData.length} 条</span>
+            </Space>
+            <Pagination current={1} total={tableData.length} pageSize={20} size="small" showSizeChanger={false} />
+          </div>
+
+          {/* 新增弹框 */}
+          <Modal title="新增绩效考核评价" open={addVisible} onCancel={() => setAddVisible(false)} footer={null} width={1000}>
+            <div style={{ padding: '16px 20px', maxHeight: '70vh', overflowY: 'auto' }}>
+              {/* 第一行：选择供应商 + 名称 + 日期 */}
+              <Row gutter={[16, 16]} style={{ marginBottom: 20 }}>
+                <Col span={6}>
+                  <div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>选择评价供应商</div>
+                  <Input value={addForm.supplierCode} readOnly placeholder="请选择" suffix={React.createElement(Button, { type: 'link', size: 'small', icon: React.createElement(SearchOutlined), onClick: handleSelectSupplier, style: { padding: 0 } }, '选择数据')} />
+                </Col>
+                <Col span={6}>
+                  <div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>供应商名称</div>
+                  <Input value={addForm.supplierName} readOnly />
+                </Col>
+                <Col span={6}>
+                  <div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>评价开始时间</div>
+                  <DatePicker style={{ width: '100%' }} value={addForm.evalStart} onChange={(d) => setAddForm(prev => ({ ...prev, evalStart: d }))} />
+                </Col>
+                <Col span={6}>
+                  <div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>评价截止时间</div>
+                  <DatePicker style={{ width: '100%' }} value={addForm.evalEnd} onChange={(d) => setAddForm(prev => ({ ...prev, evalEnd: d }))} />
+                </Col>
+              </Row>
+
+              {/* 选择本次绩效考评内容 */}
+              <div style={{ fontSize: 14, fontWeight: 500, marginBottom: 12 }}>选择本次绩效考评内容 <span style={{ color: '#ff4d4f' }}>*</span></div>
+              <Row gutter={[16, 16]} style={{ marginBottom: 20 }}>
+                {checkItems.map(item => (
+                  <Col span={6} key={item.key}>
+                    <Checkbox checked={addForm.checks[item.key]} onChange={(e) => handleCheckChange(item.key, e.target.checked)} style={{ marginBottom: 8 }}>{item.label}</Checkbox>
+                    <TextArea rows={4} value={addForm.checkContent[item.key]} disabled={!addForm.checks[item.key]} onChange={(e) => handleCheckContentChange(item.key, e.target.value)} style={{ background: addForm.checks[item.key] ? '#fff' : '#f5f5f5' }} />
+                  </Col>
+                ))}
+              </Row>
+
+              {/* 评审要求 */}
+              <div style={{ fontSize: 14, fontWeight: 500, marginBottom: 8 }}>评审要求</div>
+              <TextArea rows={6} value={addForm.reviewRequirement} onChange={(e) => setAddForm(prev => ({ ...prev, reviewRequirement: e.target.value }))} placeholder={'优势项（Strengths）：明确供应商表现突出的维度（如“准时交付率 99.8%，行业领先”）\n待改进项（Areas for Improvement）：具体问题描述（如“来料合格率 98.2%，低于约定标准 1.3%，主要为外观瑕疵”）\n整改要求（Corrective Actions）：明确整改目标、责任人、完成时限（需关联 SRM 系统“整改跟踪”模块）\n后续合作建议（Cooperation Suggestions）：如“维持现有合作规模，建议 Q4 启动质量专项培训”'} style={{ marginBottom: 24 }} />
+
+              {/* 底部按钮 */}
+              <div style={{ textAlign: 'center', padding: '12px 0 4px', borderTop: '1px solid #f0f0f0' }}>
+                <Space size={16}>
+                  <Button type="primary" style={{ ...blueBtnStyle, width: 100, height: 36 }} onClick={handleAddSubmit}>提交</Button>
+                  <Button type="primary" style={{ background: '#52c41a', borderColor: '#52c41a', width: 100, height: 36 }} onClick={handleAddSaveDraft}>保存草稿</Button>
+                </Space>
+              </div>
+            </div>
+          </Modal>
+        </div>
+      );
+    }
+
+    // ===== 采购需求看板组件 =====
+    function DemandBoard() {
+      const chart1Ref = useRef(null);
+      const chart2Ref = useRef(null);
+      const chart3Ref = useRef(null);
+      const chartsRef = useRef([]);
+
+      useEffect(() => {
+        const charts = [];
+        // 采购商品占比 - 饼图
+        const c1 = echarts.init(chart1Ref.current);
+        c1.setOption({
+          tooltip: { trigger: 'item', formatter: '{b}: {c}' },
+          legend: { bottom: 0, type: 'scroll' },
+          series: [{ type: 'pie', radius: ['0%', '65%'], center: ['50%', '45%'], label: { show: true, formatter: '{b} {c}' }, data: [
+            { value: 2, name: '办公环境绿植', itemStyle: { color: '#e87c3e' } },
+            { value: 6, name: '联想笔记本电脑小新Pro 14', itemStyle: { color: '#c5a84a' } },
+            { value: 6, name: '服务器机房运维服务', itemStyle: { color: '#8fb8a0' } },
+            { value: 3, name: '固定资产管理系统', itemStyle: { color: '#a0c4e8' } },
+            { value: 25, name: '火花塞', itemStyle: { color: '#d4a0a0' } },
+            { value: 21, name: '雷达传感器', itemStyle: { color: '#c8b0d4' } },
+            { value: 13, name: '汽车轮胎', itemStyle: { color: '#b8d4a0' } },
+            { value: 7, name: '刹车片', itemStyle: { color: '#e8c8a0' } },
+            { value: 2, name: '移动硬盘', itemStyle: { color: '#a0d4d4' } },
+            { value: 14, name: '制动盘', itemStyle: { color: '#d4d4a0' } },
+          ] }]
+        });
+        charts.push(c1);
+        // 需求增长曲线（按数量）
+        const c2 = echarts.init(chart2Ref.current);
+        c2.setOption({
+          tooltip: { trigger: 'axis' },
+          legend: { bottom: 0, data: ['申请数量'] },
+          grid: { left: 60, right: 20, top: 30, bottom: 40 },
+          xAxis: { type: 'category', data: ['2025年01月', '2025年04月', '2025年08月', '2025年12月', '2026年01月'] },
+          yAxis: { type: 'value' },
+          series: [{ name: '申请数量', type: 'line', smooth: false, areaStyle: { color: 'rgba(232,124,62,0.3)' }, lineStyle: { color: '#e87c3e' }, itemStyle: { color: '#e87c3e' }, label: { show: true, position: 'top' }, data: [13034, 1, 11, 52046, 10142] }]
+        });
+        charts.push(c2);
+        // 需求增长曲线（按金额）
+        const c3 = echarts.init(chart3Ref.current);
+        c3.setOption({
+          tooltip: { trigger: 'axis' },
+          legend: { bottom: 0, data: ['不含税金额'] },
+          grid: { left: 100, right: 20, top: 30, bottom: 40 },
+          xAxis: { type: 'category', data: ['2025年01月', '2025年04月', '2025年08月', '2025年12月', '2026年01月'] },
+          yAxis: { type: 'value', axisLabel: { formatter: (v) => v >= 1000000 ? (v/1000000).toFixed(0)+',000,000' : v.toLocaleString() } },
+          series: [{ name: '不含税金额', type: 'line', smooth: false, areaStyle: { color: 'rgba(232,124,62,0.3)' }, lineStyle: { color: '#e87c3e' }, itemStyle: { color: '#e87c3e' }, label: { show: true, position: 'top', formatter: (p) => p.value.toLocaleString(undefined, {minimumFractionDigits:2}) }, data: [7715456.15, 200000.00, 45300.00, 35394028.00, 2126967.00] }]
+        });
+        charts.push(c3);
+        chartsRef.current = charts;
+        const handleResize = () => charts.forEach(c => c.resize());
+        window.addEventListener('resize', handleResize);
+        return () => { window.removeEventListener('resize', handleResize); charts.forEach(c => c.dispose()); };
+      }, []);
+
+      const statCards = [
+        { label: '采购需求总数量', value: '100' },
+        { label: '寻源中', value: '32' },
+        { label: '完成寻源', value: '52' },
+        { label: '已签合同', value: '100' },
+        { label: '已下订单', value: '1' },
+      ];
+
+      const tableData = [
+        { key: '1', progress: '未开始', method: '询比价', date: '', source: '采购申请', name: '雷达传感器', spec: '奔驰 A0009059117', qty: 1, price: '0.00' },
+        { key: '2', progress: '未开始', method: '竞价', date: '2025-12-27', source: '采购申请', name: '服务器机房运维服务', spec: '服务', qty: 1, price: '3,000.00' },
+        { key: '3', progress: '未开始', method: '竞价', date: '2025-12-27', source: '采购申请', name: '服务器机房运维服务', spec: '服务', qty: 2, price: '3,000.00' },
+        { key: '4', progress: '未开始', method: '竞价', date: '2025-12-27', source: '采购申请', name: '服务器机房运维服务', spec: '服务', qty: 2, price: '3,000.00' },
+        { key: '5', progress: '未开始', method: '招投标', date: '2025-12-27', source: '采购申请', name: '固定资产管理系统', spec: '1', qty: 5, price: '10,000.00' },
+        { key: '6', progress: '未开始', method: '已拆分', date: '2025-12-29', source: '采购申请', name: '雷达传感器', spec: '奔驰 A0009059117', qty: 5, price: '1,219.00' },
+        { key: '7', progress: '未开始', method: '招投标', date: '2025-12-29', source: '采购申请', name: '火花塞', spec: 'NGK LZKAR6AP - 11', qty: 3, price: '50.00' },
+        { key: '8', progress: '未开始', method: '单一来源采购', date: '2026-01-23', source: '采购申请', name: '雷达传感器', spec: '奔驰 A0009059117', qty: 1, price: '1,219.00' },
+      ];
+
+      const columns = [
+        { title: '寻源进度', dataIndex: 'progress', width: 100 },
+        { title: '寻源方式', dataIndex: 'method', width: 120 },
+        { title: '申请日期', dataIndex: 'date', width: 120 },
+        { title: '需求来源', dataIndex: 'source', width: 100 },
+        { title: '物品名称', dataIndex: 'name', width: 160 },
+        { title: '规格型号', dataIndex: 'spec', width: 200 },
+        { title: '申请数量', dataIndex: 'qty', width: 90, align: 'center' },
+        { title: '预算单价（不含税）', dataIndex: 'price', width: 150, align: 'right' },
+      ];
+
+      const cardStyle = { background: '#fff', borderRadius: 8, padding: '16px 20px', boxShadow: '0 1px 3px rgba(0,0,0,0.06)', border: '1px solid #f0f0f0' };
+
+      return (
+        <div style={{ background: '#f0f2f5', padding: 16, borderRadius: 8 }}>
+          {/* 页面标题栏 */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+            <span style={{ fontSize: 16, fontWeight: 600, color: '#e87c3e' }}>采购需求看板</span>
+            <Space size={16} style={{ color: '#8c8c8c', fontSize: 13 }}>
+              <span style={{ cursor: 'pointer' }}>下载</span>
+              <span style={{ cursor: 'pointer' }}>全屏</span>
+              <span style={{ cursor: 'pointer' }}>编辑</span>
+            </Space>
+          </div>
+          {/* 统计卡片 */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 12, marginBottom: 16 }}>
+            {statCards.map((item, idx) => (
+              <div key={idx} style={cardStyle}>
+                <div style={{ fontSize: 13, color: '#8c8c8c', marginBottom: 8 }}>{item.label}</div>
+                <div style={{ fontSize: 36, fontWeight: 600, color: '#262626', letterSpacing: '-1px' }}>{item.value}</div>
+              </div>
+            ))}
+          </div>
+          {/* 图表区域 */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12, marginBottom: 16 }}>
+            <div style={{ ...cardStyle, minHeight: 340 }}>
+              <div style={{ fontSize: 14, fontWeight: 500, marginBottom: 8 }}>采购商品占比</div>
+              <div ref={chart1Ref} style={{ width: '100%', height: 290 }}></div>
+            </div>
+            <div style={{ ...cardStyle, minHeight: 340 }}>
+              <div style={{ fontSize: 14, fontWeight: 500, marginBottom: 8 }}>需求增长曲线（按数量）</div>
+              <div ref={chart2Ref} style={{ width: '100%', height: 290 }}></div>
+            </div>
+            <div style={{ ...cardStyle, minHeight: 340 }}>
+              <div style={{ fontSize: 14, fontWeight: 500, marginBottom: 8 }}>需求增长曲线（按金额）</div>
+              <div ref={chart3Ref} style={{ width: '100%', height: 290 }}></div>
+            </div>
+          </div>
+          {/* 表格区域 */}
+          <div style={cardStyle}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+              <span style={{ fontSize: 14, fontWeight: 500 }}>未开始寻源需求明细</span>
+              <Space size={12} style={{ color: '#8c8c8c' }}>
+                {React.createElement(ReloadOutlined, { style: { cursor: 'pointer' } })}
+                {React.createElement(UnorderedListOutlined, { style: { cursor: 'pointer' } })}
+                {React.createElement(ExpandOutlined, { style: { cursor: 'pointer' } })}
+              </Space>
+            </div>
+            <Table columns={columns} dataSource={tableData} bordered size="small" pagination={false} scroll={{ x: 1000 }} />
+            <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', marginTop: 12, gap: 12 }}>
+              <Select defaultValue="auto" size="small" style={{ width: 80 }}><Option value="auto">自适应</Option></Select>
+              <Select defaultValue="15" size="small" style={{ width: 80 }}><Option value="15">15条/页</Option></Select>
+              <Pagination current={1} total={14} pageSize={15} size="small" showSizeChanger={false} />
+              <span style={{ color: '#595959', fontSize: 12 }}>共 14 条记录</span>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // ===== 需求跟踪看板组件 =====
+    function TrackBoard() {
+      const tableData = [
+        { key: '1', serialNo: 'XQC202601290016', date: '', progress: '已完成', applicant: '李里', dept: '采购部', desc: '', method: '询比价', name: '火花塞', spec: 'NGK LZKAR6AP - 11', unit: '个', qty: 1, ordered: '' },
+        { key: '2', serialNo: 'XQC202601290015', date: '', progress: '已完成', applicant: '李里', dept: '采购部', desc: '', method: '询比价', name: '雷达传感器', spec: '奔驰 A0009059117', unit: '个', qty: 5, ordered: '' },
+        { key: '3', serialNo: 'XQC202601290014', date: '', progress: '已完成', applicant: '李里', dept: '采购部', desc: '', method: '询比价', name: '汽车轮胎', spec: '米其林 205/55R16 Energy XM2 韧悦 91V', unit: '条', qty: 4000, ordered: '' },
+        { key: '4', serialNo: 'XQC202601290013', date: '', progress: '已完成', applicant: '李里', dept: '采购部', desc: '', method: '询比价', name: '制动盘', spec: '萨瓦尼尼 282X23', unit: '组', qty: 2000, ordered: '' },
+        { key: '5', serialNo: 'XQC202601290012', date: '2026-01-29', progress: '进行中', applicant: '李里', dept: '采购部', desc: '', method: '询比价', name: '服务器机房运维服务', spec: '服务', unit: '次', qty: 2, ordered: '' },
+        { key: '6', serialNo: 'XQC202601290011', date: '2026-01-29', progress: '进行中', applicant: '李里', dept: '采购部', desc: '', method: '询比价', name: '联想笔记本电脑小新Pro 14', spec: '14寸', unit: '台', qty: 5, ordered: '' },
+        { key: '7', serialNo: 'XQC202601290010', date: '2026-01-29', progress: '进行中', applicant: '李里', dept: '采购部', desc: '', method: '询比价', name: '刹车片', spec: '博世 0986AB2805（前片）', unit: '个', qty: 5, ordered: '' },
+        { key: '8', serialNo: 'XQC202601290009', date: '2026-01-29', progress: '进行中', applicant: '李里', dept: '采购部', desc: '', method: '询比价', name: '制动盘', spec: '萨瓦尼尼 282X23', unit: '组', qty: 5, ordered: '' },
+        { key: '9', serialNo: 'XQC202601290008', date: '2026-01-29', progress: '进行中', applicant: '李里', dept: '采购部', desc: '', method: '询比价', name: '汽车轮胎', spec: '米其林 205/55R16 Energy XM2 韧悦 91V', unit: '条', qty: 5, ordered: '' },
+        { key: '10', serialNo: 'XQC202601290007', date: '2026-01-29', progress: '未开始', applicant: '李里', dept: '采购部', desc: '', method: '询比价', name: '火花塞', spec: 'NGK LZKAR6AP - 11', unit: '个', qty: 5, ordered: '' },
+        { key: '11', serialNo: 'XQC202601290006', date: '2026-01-29', progress: '未开始', applicant: '李里', dept: '采购部', desc: '', method: '询比价', name: '雷达传感器', spec: '奔驰 A0009059117', unit: '个', qty: 5, ordered: '' },
+        { key: '12', serialNo: 'XQC202601290003', date: '2026-01-29', progress: '进行中', applicant: '李里', dept: '采购部', desc: '', method: '询比价', name: '刹车片', spec: '博世 0986AB2805（前片）', unit: '个', qty: 2000, ordered: '' },
+        { key: '13', serialNo: 'XQC202601290002', date: '2026-01-29', progress: '进行中', applicant: '李里', dept: '采购部', desc: '', method: '询比价', name: '火花塞', spec: 'NGK LZKAR6AP - 11', unit: '个', qty: 1000, ordered: '' },
+        { key: '14', serialNo: 'XQC202601290001', date: '2026-01-29', progress: '进行中', applicant: '李里', dept: '采购部', desc: '', method: '询比价', name: '雷达传感器', spec: '奔驰 A0009059117', unit: '个', qty: 1000, ordered: '' },
+        { key: '15', serialNo: 'XQC202601230017', date: '', progress: '未开始', applicant: '李里', dept: '采购部', desc: '', method: '询比价', name: '雷达传感器', spec: '奔驰 A0009059117', unit: '个', qty: 1, ordered: '' },
+      ];
+
+      const columns = [
+        { title: '需求池流水号', dataIndex: 'serialNo', width: 160 },
+        { title: '申请日期', dataIndex: 'date', width: 110 },
+        { title: '寻源进度', dataIndex: 'progress', width: 90, render: (v) => { const color = v === '已完成' ? 'success' : v === '进行中' ? 'processing' : 'default'; return React.createElement(Tag, { color }, v); } },
+        { title: '申请人', dataIndex: 'applicant', width: 80 },
+        { title: '所属部门', dataIndex: 'dept', width: 90 },
+        { title: '采购申请说明', dataIndex: 'desc', width: 120 },
+        { title: '寻源方式', dataIndex: 'method', width: 90 },
+        { title: '物品名称', dataIndex: 'name', width: 180 },
+        { title: '规格型号', dataIndex: 'spec', width: 220 },
+        { title: '单位', dataIndex: 'unit', width: 60, align: 'center' },
+        { title: '申请数量', dataIndex: 'qty', width: 90, align: 'right' },
+        { title: '已下单数', dataIndex: 'ordered', width: 90, align: 'right' },
+      ];
+
+      const cardStyle = { background: '#fff', borderRadius: 8, padding: '16px 20px', boxShadow: '0 1px 3px rgba(0,0,0,0.06)', border: '1px solid #f0f0f0' };
+
+      return (
+        <div style={{ background: '#f0f2f5', padding: 16, borderRadius: 8 }}>
+          {/* 页面标题栏 */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+            <span style={{ fontSize: 16, fontWeight: 600, color: '#e87c3e' }}>需求跟踪看板</span>
+            <Space size={16} style={{ color: '#8c8c8c', fontSize: 13 }}>
+              <span style={{ cursor: 'pointer' }}>下载</span>
+              <span style={{ cursor: 'pointer' }}>全屏</span>
+              <span style={{ cursor: 'pointer' }}>编辑</span>
+            </Space>
+          </div>
+          {/* 筛选区域 */}
+          <div style={{ ...cardStyle, marginBottom: 16 }}>
+            <Row gutter={[16, 16]}>
+              <Col span={6}><div style={{ fontSize: 13, marginBottom: 4 }}><span style={{ fontWeight: 500 }}>寻源进度</span> <span style={{ color: '#e87c3e', fontSize: 12 }}>等于任意一个</span></div><Select placeholder="请选择" style={{ width: '100%' }} allowClear /></Col>
+              <Col span={6}><div style={{ fontSize: 13, marginBottom: 4 }}><span style={{ fontWeight: 500 }}>需求部门</span> <span style={{ color: '#e87c3e', fontSize: 12 }}>等于任意一个</span></div><Select placeholder="请选择" style={{ width: '100%' }} allowClear /></Col>
+              <Col span={6}><div style={{ fontSize: 13, marginBottom: 4 }}><span style={{ fontWeight: 500 }}>寻源方式</span> <span style={{ color: '#e87c3e', fontSize: 12 }}>等于任意一个</span></div><Select placeholder="请选择" style={{ width: '100%' }} allowClear /></Col>
+              <Col span={6}><div style={{ fontSize: 13, marginBottom: 4 }}><span style={{ fontWeight: 500 }}>物品名称</span> <span style={{ color: '#e87c3e', fontSize: 12 }}>等于任意一个</span></div><Select placeholder="请选择" style={{ width: '100%' }} allowClear /></Col>
+            </Row>
+          </div>
+          {/* 表格区域 */}
+          <div style={cardStyle}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+              <span style={{ fontSize: 14, fontWeight: 500 }}>需求跟踪</span>
+              {React.createElement(InfoCircleOutlined, { style: { color: '#52c41a', cursor: 'pointer' } })}
+            </div>
+            <Table columns={columns} dataSource={tableData} bordered size="small" pagination={false} scroll={{ x: 1400 }} />
+            <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', marginTop: 12, gap: 12 }}>
+              <Select defaultValue="auto" size="small" style={{ width: 80 }}><Option value="auto">自适应</Option></Select>
+              <Select defaultValue="15" size="small" style={{ width: 80 }}><Option value="15">15条/页</Option></Select>
+              <Pagination current={1} total={88} pageSize={15} size="small" />
+              <span style={{ color: '#595959', fontSize: 12 }}>共 88 条记录</span>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // ===== 寻源统计看板组件 =====
+    function SourceBoard() {
+      const chart1Ref = useRef(null);
+      const chart2Ref = useRef(null);
+      const chart3Ref = useRef(null);
+      const chart4Ref = useRef(null);
+      const chart5Ref = useRef(null);
+      const chartsRef = useRef([]);
+
+      useEffect(() => {
+        const charts = [];
+        // 寻源进度 - 饼图
+        const c1 = echarts.init(chart1Ref.current);
+        c1.setOption({
+          tooltip: { trigger: 'item' },
+          legend: { bottom: 0 },
+          series: [{ type: 'pie', radius: ['0%', '65%'], center: ['50%', '45%'], label: { show: true, formatter: '{b} {c}' }, data: [
+            { value: 32, name: '进行中', itemStyle: { color: '#e87c3e' } },
+            { value: 14, name: '未开始', itemStyle: { color: '#f5c6a0' } },
+            { value: 2, name: '已拆分', itemStyle: { color: '#fde8d0' } },
+            { value: 40, name: '已完成', itemStyle: { color: '#c8a0a0' } },
+            { value: 1, name: '转订单', itemStyle: { color: '#8b5e5e' } },
+            { value: 11, name: '转合同', itemStyle: { color: '#d4b896' } },
+          ] }]
+        });
+        charts.push(c1);
+        // 月度寻源数 - 面积图
+        const c2 = echarts.init(chart2Ref.current);
+        c2.setOption({
+          tooltip: { trigger: 'axis' },
+          legend: { bottom: 0, data: ['需求池流水号'] },
+          grid: { left: 40, right: 20, top: 30, bottom: 40 },
+          xAxis: { type: 'category', data: ['2025年01月', '2025年03月', '2025年04月', '2025年06月', '2025年12月', '2026年01月'] },
+          yAxis: { type: 'value' },
+          series: [{ name: '需求池流水号', type: 'line', smooth: false, areaStyle: { color: 'rgba(232,124,62,0.3)' }, lineStyle: { color: '#e87c3e' }, itemStyle: { color: '#e87c3e' }, label: { show: true, position: 'top' }, data: [13, 1, 4, 5, 34, 43] }]
+        });
+        charts.push(c2);
+        // 寻源方式 - 饼图
+        const c3 = echarts.init(chart3Ref.current);
+        c3.setOption({
+          tooltip: { trigger: 'item' },
+          legend: { bottom: 0 },
+          series: [{ type: 'pie', radius: ['0%', '65%'], center: ['50%', '45%'], label: { show: true, formatter: '{b} {c}' }, data: [
+            { value: 22, name: '单一来源采购', itemStyle: { color: '#e87c3e' } },
+            { value: 14, name: '竞价', itemStyle: { color: '#f5c6a0' } },
+            { value: 30, name: '询比价', itemStyle: { color: '#fde8d0' } },
+            { value: 12, name: '已拆分', itemStyle: { color: '#c8a0a0' } },
+            { value: 22, name: '招投标', itemStyle: { color: '#8b5e5e' } },
+          ] }]
+        });
+        charts.push(c3);
+        // 月度寻源金额 - 面积图
+        const c4 = echarts.init(chart4Ref.current);
+        c4.setOption({
+          tooltip: { trigger: 'axis' },
+          legend: { bottom: 0, data: ['含税金额'] },
+          grid: { left: 100, right: 20, top: 30, bottom: 40 },
+          xAxis: { type: 'category', data: ['2025年01月', '2025年03月', '2025年04月', '2025年06月', '2025年12月', '2026年01月'] },
+          yAxis: { type: 'value', axisLabel: { formatter: (v) => v >= 1000000 ? (v/1000000).toFixed(0)+',000,000' : v.toLocaleString() } },
+          series: [{ name: '含税金额', type: 'line', smooth: false, areaStyle: { color: 'rgba(232,124,62,0.3)' }, lineStyle: { color: '#e87c3e' }, itemStyle: { color: '#e87c3e' }, label: { show: true, position: 'top', formatter: (p) => p.value.toLocaleString(undefined, {minimumFractionDigits:2}) }, data: [8717045.64, 212000.00, 48018.00, 17677720.00, 39876201.64, 2346852.71] }]
+        });
+        charts.push(c4);
+        // 寻源状态月度分析 - 折线图
+        const c5 = echarts.init(chart5Ref.current);
+        c5.setOption({
+          tooltip: { trigger: 'axis' },
+          legend: { bottom: 0, data: ['寻源发起'] },
+          grid: { left: 40, right: 20, top: 30, bottom: 40 },
+          xAxis: { type: 'category', data: ['2025年03月03日', '2025年06月09日', '2025年12月17日', '2025年12月23日', '2025年12月26日', '2025年12月28日', '2025年12月30日', '2026年01月06日', '2026年01月22日', '2026年01月29日'], axisLabel: { fontSize: 10 } },
+          yAxis: { type: 'value' },
+          series: [{ name: '寻源发起', type: 'line', smooth: true, lineStyle: { color: '#e87c3e' }, itemStyle: { color: '#e87c3e' }, label: { show: true, position: 'top' }, data: [13, 1, 4, 5, 0, 5, 5, 0, 5, 1, 7, 1, 2, 8, 8, 3, 5, 3, 12, 12].slice(0, 10) }]
+        });
+        charts.push(c5);
+        chartsRef.current = charts;
+        const handleResize = () => charts.forEach(c => c.resize());
+        window.addEventListener('resize', handleResize);
+        return () => { window.removeEventListener('resize', handleResize); charts.forEach(c => c.dispose()); };
+      }, []);
+
+      const cardStyle = { background: '#fff', borderRadius: 8, padding: '16px 20px', boxShadow: '0 1px 3px rgba(0,0,0,0.06)', border: '1px solid #f0f0f0' };
+
+      return (
+        <div style={{ background: '#f0f2f5', padding: 16, borderRadius: 8 }}>
+          {/* 页面标题栏 */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+            <span style={{ fontSize: 16, fontWeight: 600, color: '#e87c3e' }}>寻源统计看板</span>
+            <Space size={16} style={{ color: '#8c8c8c', fontSize: 13 }}>
+              <span style={{ cursor: 'pointer' }}>下载</span>
+              <span style={{ cursor: 'pointer' }}>全屏</span>
+              <span style={{ cursor: 'pointer' }}>编辑</span>
+            </Space>
+          </div>
+          {/* 第一行图表 */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 12, marginBottom: 16 }}>
+            <div style={{ ...cardStyle, minHeight: 340 }}>
+              <div style={{ fontSize: 14, fontWeight: 500, marginBottom: 8 }}>寻源进度</div>
+              <div ref={chart1Ref} style={{ width: '100%', height: 290 }}></div>
+            </div>
+            <div style={{ ...cardStyle, minHeight: 340 }}>
+              <div style={{ fontSize: 14, fontWeight: 500, marginBottom: 8 }}>月度寻源数</div>
+              <div ref={chart2Ref} style={{ width: '100%', height: 290 }}></div>
+            </div>
+          </div>
+          {/* 第二行图表 */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 12, marginBottom: 16 }}>
+            <div style={{ ...cardStyle, minHeight: 340 }}>
+              <div style={{ fontSize: 14, fontWeight: 500, marginBottom: 8 }}>寻源方式</div>
+              <div ref={chart3Ref} style={{ width: '100%', height: 290 }}></div>
+            </div>
+            <div style={{ ...cardStyle, minHeight: 340 }}>
+              <div style={{ fontSize: 14, fontWeight: 500, marginBottom: 8 }}>月度寻源金额</div>
+              <div ref={chart4Ref} style={{ width: '100%', height: 290 }}></div>
+            </div>
+          </div>
+          {/* 第三行图表 */}
+          <div style={cardStyle}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+              <span style={{ fontSize: 14, fontWeight: 500 }}>寻源状态月度分析</span>
+              {React.createElement(InfoCircleOutlined, { style: { color: '#52c41a', cursor: 'pointer' } })}
+            </div>
+            <div ref={chart5Ref} style={{ width: '100%', height: 260 }}></div>
+          </div>
+        </div>
+      );
+    }
+
+    // ===== 项目管理组件 =====
+    function ProjectManagement() {
+      const [selectedRowKeys, setSelectedRowKeys] = useState([]);
+      const [detailVisible, setDetailVisible] = useState(false);
+      const [detailRecord, setDetailRecord] = useState(null);
+      const [addVisible, setAddVisible] = useState(false);
+      const [addForm, setAddForm] = useState({ projectName: '', projectDate: null, manager: '', department: '', budget: '', status: '进行中', description: '' });
+
+      const [tableData, setTableData] = useState([
+        { key: '1', flowStatus: '已生效', projectCode: 'XM20240715001', projectName: '厂房建设项目', projectDate: '2024-07-15', manager: '李里', department: '新部门', budget: '800,000.00', status: '进行中', description: '', submitter: '用户257522', submitTime: '2026-07-21 11:31:49', updateTime: '2026-07-21 14:20:33', currentNode: '普通审批', currentOwner: '李里' },
+        { key: '2', flowStatus: '已生效', projectCode: 'XM20250103002', projectName: 'ERP系统升级项目', projectDate: '2025-01-03', manager: '张经理', department: '采购部', budget: '500,000.00', status: '进行中', description: '升级现有ERP系统至最新版本', submitter: '用户257522', submitTime: '2026-07-20 09:00:00', updateTime: '2026-07-22 10:00:00', currentNode: '已完成', currentOwner: '-' },
+        { key: '3', flowStatus: '草稿', projectCode: 'XM20260728003', projectName: '办公设备采购项目', projectDate: '2026-07-28', manager: '用户257522', department: '', budget: '50,000.00', status: '进行中', description: '采购笔记本电脑和显示器', submitter: '用户257522', submitTime: '-', updateTime: '2026-07-28 08:00:00', currentNode: '草稿', currentOwner: '用户257522' },
+      ]);
+
+      const handleViewDetail = (record) => { setDetailRecord(record); setDetailVisible(true); };
+      const handleEdit = (record) => { antd.message.info('编辑功能开发中'); };
+      const handleDelete = (record) => {
+        Modal.confirm({ title: '确认删除', content: '确定要删除该项目吗？', okText: '确定', cancelText: '取消', okButtonProps: { danger: true }, onOk: () => { setTableData(prev => prev.filter(item => item.key !== record.key)); antd.message.success('删除成功'); } });
+      };
+      const handleAddSubmit = () => { antd.message.success('提交成功'); setAddVisible(false); };
+      const handleAddSaveDraft = () => { antd.message.success('草稿已保存'); setAddVisible(false); };
+      const handleSelectManager = () => { setAddForm(prev => ({ ...prev, manager: '用户257522' })); };
+      const handleSelectDept = () => { setAddForm(prev => ({ ...prev, department: '采购部' })); };
+
+      const columns = [
+        { title: '流程状态', dataIndex: 'flowStatus', width: 100, fixed: 'left', render: (v) => { const color = v === '已生效' ? 'success' : v === '草稿' ? 'default' : 'processing'; return React.createElement(Tag, { color }, v); } },
+        { title: '项目编码', dataIndex: 'projectCode', width: 140 },
+        { title: '项目名称', dataIndex: 'projectName', width: 160 },
+        { title: '立项日期', dataIndex: 'projectDate', width: 120 },
+        { title: '项目负责人', dataIndex: 'manager', width: 110 },
+        { title: '所属部门', dataIndex: 'department', width: 100 },
+        { title: '预算金额', dataIndex: 'budget', width: 120, align: 'right' },
+        { title: '项目状态', dataIndex: 'status', width: 90, render: (v) => { const color = v === '进行中' ? 'processing' : 'default'; return React.createElement(Tag, { color }, v); } },
+        { title: '立项申请说明', dataIndex: 'description', width: 200, ellipsis: true },
+        { title: '提交人', dataIndex: 'submitter', width: 100, render: (v) => React.createElement('a', { style: { color: '#1677ff' } }, v) },
+        { title: '提交时间', dataIndex: 'submitTime', width: 170 },
+        { title: '更新时间', dataIndex: 'updateTime', width: 170 },
+        { title: '当前节点', dataIndex: 'currentNode', width: 100 },
+        { title: '当前负责人', dataIndex: 'currentOwner', width: 110 },
+        { title: '操作', key: 'action', width: 150, fixed: 'right', render: (_, record) => React.createElement(Space, { size: 8 }, React.createElement('a', { style: { color: '#1677ff' }, onClick: () => handleViewDetail(record) }, '详情'), React.createElement('a', { style: { color: '#1677ff' }, onClick: () => handleEdit(record) }, '编辑'), React.createElement('a', { style: { color: '#ff4d4f' }, onClick: () => handleDelete(record) }, '删除')) },
+      ];
+
+      const blueBtnStyle = { background: '#1677ff', borderColor: '#1677ff' };
+      const purpleBtnStyle = { background: '#7c5cfc', borderColor: '#7c5cfc' };
+
+      return (
+        <div style={{ background: '#fff', borderRadius: 8, padding: '16px 24px' }}>
+          {/* 工具栏 */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+            <Space size={8}>
+              <Button type="primary" style={blueBtnStyle} icon={React.createElement(PlusOutlined)} onClick={() => { setAddForm({ projectName: '', projectDate: null, manager: '', department: '', budget: '', status: '进行中', description: '' }); setAddVisible(true); }}>新建</Button>
+              <Button icon={React.createElement(ImportOutlined)}>导入</Button>
+              <Button icon={React.createElement(ExportOutlined)}>导出</Button>
+            </Space>
+            <Space size={8}>
+              <Select defaultValue="all" size="middle" style={{ width: 110 }}>
+                <Option value="all">搜索范围</Option>
+              </Select>
+              <Input placeholder="请输入搜索内容" style={{ width: 220 }} suffix={React.createElement(SearchOutlined)} />
+            </Space>
+          </div>
+
+          {/* 数据表格 */}
+          <Table columns={columns} dataSource={tableData} rowSelection={{ selectedRowKeys, onChange: setSelectedRowKeys }} bordered size="middle" pagination={false} scroll={{ x: 2200 }} />
+
+          {/* 底部分页 */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 12, paddingTop: 12, padding: '12px 0 8px', borderTop: '1px solid #f0f0f0' }}>
+            <Space size={16}>
+              {React.createElement(ColumnWidthOutlined, { style: { color: '#8c8c8c' } })}
+              <Select defaultValue="20" size="small" style={{ width: 90 }}>
+                <Option value="20">20条/页</Option>
+                <Option value="50">50条/页</Option>
+                <Option value="100">100条/页</Option>
+              </Select>
+              <span style={{ color: '#595959', fontSize: 13 }}>共 {tableData.length} 条</span>
+            </Space>
+            <Pagination current={1} total={tableData.length} pageSize={20} size="small" showSizeChanger={false} />
+          </div>
+
+          {/* 详情弹框 */}
+          <Modal title="项目详情" open={detailVisible} onCancel={() => setDetailVisible(false)} footer={<Button onClick={() => setDetailVisible(false)}>关闭</Button>} width={800}>
+            {detailRecord && (
+              <div style={{ padding: '16px 20px' }}>
+                <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
+                  <Col span={12}>
+                    <div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>项目名称 <span style={{ color: '#ff4d4f' }}>*</span></div>
+                    <div style={{ padding: '8px 12px', background: '#f5f5f5', borderRadius: 4 }}>{detailRecord.projectName}</div>
+                  </Col>
+                  <Col span={12}>
+                    <div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>立项日期 <span style={{ color: '#ff4d4f' }}>*</span></div>
+                    <div style={{ padding: '8px 12px', background: '#f5f5f5', borderRadius: 4 }}>{detailRecord.projectDate}</div>
+                  </Col>
+                </Row>
+                <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
+                  <Col span={12}>
+                    <div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>项目负责人 <span style={{ color: '#ff4d4f' }}>*</span></div>
+                    <div style={{ padding: '6px 12px', background: '#f5f5f5', borderRadius: 4, display: 'flex', alignItems: 'center', gap: 6 }}>
+                      {React.createElement(Avatar, { size: 20, style: { backgroundColor: '#52c41a', fontSize: 11 } }, detailRecord.manager ? detailRecord.manager[0] : '')}
+                      <span>{detailRecord.manager}</span>
+                    </div>
+                  </Col>
+                  <Col span={12}>
+                    <div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>所属部门</div>
+                    <div style={{ padding: '6px 12px', background: '#f5f5f5', borderRadius: 4, display: 'flex', alignItems: 'center', gap: 6 }}>
+                      {detailRecord.department && React.createElement(Tag, { icon: React.createElement(TeamOutlined), color: 'blue' }, detailRecord.department)}
+                      {!detailRecord.department && <span style={{ color: '#bfbfbf' }}>-</span>}
+                    </div>
+                  </Col>
+                </Row>
+                <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
+                  <Col span={12}>
+                    <div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>预算金额 <span style={{ color: '#ff4d4f' }}>*</span></div>
+                    <div style={{ padding: '8px 12px', background: '#f5f5f5', borderRadius: 4 }}>{detailRecord.budget}</div>
+                  </Col>
+                  <Col span={12}>
+                    <div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>项目状态</div>
+                    <div style={{ padding: '8px 0' }}>
+                      <Radio checked={detailRecord.status === '进行中'} disabled>进行中</Radio>
+                      <Radio checked={detailRecord.status === '已结束'} disabled>已结束</Radio>
+                    </div>
+                  </Col>
+                </Row>
+                <Row style={{ marginBottom: 20 }}>
+                  <Col span={24}>
+                    <div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>立项申请说明 <span style={{ color: '#ff4d4f' }}>*</span></div>
+                    <div style={{ padding: '12px', background: '#f5f5f5', borderRadius: 4, minHeight: 80, color: '#595959' }}>{detailRecord.description || '-'}</div>
+                  </Col>
+                </Row>
+                {/* 底部流程信息 */}
+                <div style={{ borderTop: '1px solid #f0f0f0', paddingTop: 16 }}>
+                  <Row gutter={[16, 12]}>
+                    <Col span={12}><span style={{ color: '#8c8c8c' }}>提交人</span> <a style={{ color: '#1677ff', marginLeft: 16 }}>{detailRecord.submitter}</a></Col>
+                    <Col span={12}><span style={{ color: '#8c8c8c' }}>提交时间</span> <span style={{ marginLeft: 16 }}>{detailRecord.submitTime}</span></Col>
+                    <Col span={12}><span style={{ color: '#8c8c8c' }}>更新时间</span> <span style={{ marginLeft: 16 }}>{detailRecord.updateTime}</span></Col>
+                    <Col span={12}><span style={{ color: '#8c8c8c' }}>流程状态</span> <span style={{ marginLeft: 16 }}>{React.createElement(Tag, { color: 'success' }, detailRecord.flowStatus)}</span></Col>
+                    <Col span={12}><span style={{ color: '#8c8c8c' }}>当前节点</span> <span style={{ marginLeft: 16 }}>{detailRecord.currentNode}</span></Col>
+                    <Col span={12}><span style={{ color: '#8c8c8c' }}>当前负责人</span> <a style={{ color: '#1677ff', marginLeft: 16 }}>{detailRecord.currentOwner}</a></Col>
+                  </Row>
+                </div>
+              </div>
+            )}
+          </Modal>
+
+          {/* 新增弹框 */}
+          <Modal title="新增项目" open={addVisible} onCancel={() => setAddVisible(false)} footer={null} width={800}>
+            <div style={{ padding: '16px 20px' }}>
+              <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
+                <Col span={12}>
+                  <div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>项目名称 <span style={{ color: '#ff4d4f' }}>*</span></div>
+                  <Input value={addForm.projectName} onChange={(e) => setAddForm(prev => ({ ...prev, projectName: e.target.value }))} placeholder="请输入项目名称" />
+                </Col>
+                <Col span={12}>
+                  <div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>立项日期 <span style={{ color: '#ff4d4f' }}>*</span></div>
+                  <DatePicker style={{ width: '100%' }} value={addForm.projectDate} onChange={(d) => setAddForm(prev => ({ ...prev, projectDate: d }))} />
+                </Col>
+              </Row>
+              <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
+                <Col span={12}>
+                  <div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>项目负责人 <span style={{ color: '#ff4d4f' }}>*</span></div>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <div style={{ flex: 1, display: 'flex', alignItems: 'center', border: '1px solid #d9d9d9', borderRadius: 4, padding: '4px 8px', background: '#fff', minHeight: 32 }}>
+                      {addForm.manager ? (
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: '#f0f0f0', borderRadius: 4, padding: '2px 8px' }}>
+                          {React.createElement(Avatar, { size: 18, style: { backgroundColor: '#52c41a', fontSize: 10 } }, addForm.manager[0])}
+                          <span style={{ fontSize: 13 }}>{addForm.manager}</span>
+                          {React.createElement(CloseOutlined, { style: { fontSize: 10, color: '#8c8c8c', cursor: 'pointer', marginLeft: 4 }, onClick: () => setAddForm(prev => ({ ...prev, manager: '' })) })}
+                        </span>
+                      ) : <span style={{ color: '#bfbfbf' }}>请选择</span>}
+                    </div>
+                    <Button type="primary" style={purpleBtnStyle} onClick={handleSelectManager}>选择</Button>
+                  </div>
+                </Col>
+                <Col span={12}>
+                  <div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>所属部门</div>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <Input value={addForm.department} readOnly style={{ flex: 1 }} placeholder="请选择" />
+                    <Button type="primary" style={purpleBtnStyle} onClick={handleSelectDept}>选择</Button>
+                  </div>
+                </Col>
+              </Row>
+              <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
+                <Col span={12}>
+                  <div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>预算金额 <span style={{ color: '#ff4d4f' }}>*</span></div>
+                  <Input value={addForm.budget} onChange={(e) => setAddForm(prev => ({ ...prev, budget: e.target.value }))} placeholder="请输入预算金额" />
+                </Col>
+                <Col span={12}>
+                  <div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>项目状态</div>
+                  <div style={{ paddingTop: 4 }}>
+                    <Radio checked={addForm.status === '进行中'} onChange={() => setAddForm(prev => ({ ...prev, status: '进行中' }))}>进行中</Radio>
+                    <Radio checked={addForm.status === '已结束'} onChange={() => setAddForm(prev => ({ ...prev, status: '已结束' }))}>已结束</Radio>
+                  </div>
+                </Col>
+              </Row>
+              <Row style={{ marginBottom: 20 }}>
+                <Col span={24}>
+                  <div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>立项申请说明 <span style={{ color: '#ff4d4f' }}>*</span></div>
+                  <TextArea rows={5} value={addForm.description} onChange={(e) => setAddForm(prev => ({ ...prev, description: e.target.value }))} placeholder="请输入立项申请说明" />
+                </Col>
+              </Row>
+              {/* 底部按钮 */}
+              <div style={{ textAlign: 'center', padding: '12px 0 4px', borderTop: '1px solid #f0f0f0' }}>
+                <Space size={16}>
+                  <Button type="primary" style={{ ...blueBtnStyle, width: 100, height: 36 }} onClick={handleAddSubmit}>提交</Button>
+                  <Button type="primary" style={{ background: '#52c41a', borderColor: '#52c41a', width: 100, height: 36 }} onClick={handleAddSaveDraft}>保存草稿</Button>
+                </Space>
+              </div>
+            </div>
+          </Modal>
+        </div>
+      );
+    }
+
+    // ===== 采购申请组件 =====
+    function PurchaseApply() {
+      const [selectedRowKeys, setSelectedRowKeys] = useState([]);
+      const [detailVisible, setDetailVisible] = useState(false);
+      const [detailRecord, setDetailRecord] = useState(null);
+      const [addVisible, setAddVisible] = useState(false);
+      const [addForm, setAddForm] = useState({ applyDate: null, applicant: '', dept: '', company: '', amount: '0.00', project: '', projectCode: '', projectName: '', budget: '', shipAddress: '', receiver: '', phone: '', receiverAddr: '', description: '', fromBom: false, details: [] });
+
+
+      const [tableData, setTableData] = useState([
+        { key: '1', flowStatus: '已生效', applyNo: 'CGSQ20251217001', applyDate: '2025-12-17', applicant: '李里', dept: '采购部', company: '北京鲸采云', amount: '5,879,390.00', projectCode: '', projectName: '', budget: '', receiver: '', phone: '', address: '', description: '', fromBom: '否', applyQty: 14000, inquiryProgress: '', purchaseProgress: '未采购', applySource: '手工创建', submitter: '用户257522', submitTime: '2026-07-21 11:31:49', updateTime: '2026-07-21 14:20:33', currentNode: '', currentOwner: '' },
+        { key: '2', flowStatus: '已生效', applyNo: 'CGSQ20260129002', applyDate: '2026-01-29', applicant: '李里', dept: '采购部', company: '北京鲸采云', amount: '12,500.00', projectCode: 'XM20240715001', projectName: '厂房建设项目', budget: '800,000.00', receiver: '张三', phone: '010-12345678', address: '北京市海淀区', description: '紧急采购办公用品', fromBom: '否', applyQty: 50, inquiryProgress: '已完成', purchaseProgress: '已采购', applySource: '手工创建', submitter: '用户257522', submitTime: '2026-07-20 09:00:00', updateTime: '2026-07-22 10:00:00', currentNode: '已完成', currentOwner: '-' },
+        { key: '3', flowStatus: '草稿', applyNo: 'CGSQ20260728003', applyDate: '2026-07-28', applicant: '用户257522', dept: '', company: '', amount: '0.00', projectCode: '', projectName: '', budget: '', receiver: '', phone: '', address: '', description: '', fromBom: '否', applyQty: 0, inquiryProgress: '', purchaseProgress: '', applySource: '手工创建', submitter: '用户257522', submitTime: '-', updateTime: '2026-07-28 08:00:00', currentNode: '草稿', currentOwner: '用户257522' },
+      ]);
+
+      const detailItems = [
+        { key: '1', idx: 1, code: 'WP2025110005', name: '雷达传感器', spec: '奔驰 A0009...', unit: '个', qty: 1000, expectDate: '2025-03-31' },
+        { key: '2', idx: 2, code: 'WP2025110004', name: '火花塞', spec: 'NGK LZKAR...', unit: '个', qty: 1000, expectDate: '2025-03-31' },
+        { key: '3', idx: 3, code: 'WP2025110003', name: '汽车轮胎', spec: '米其林 205/...', unit: '条', qty: 4000, expectDate: '2025-03-31' },
+        { key: '4', idx: 4, code: 'WP2025110002', name: '制动盘', spec: '萨瓦尼尼 2...', unit: '组', qty: 2000, expectDate: '2025-03-31' },
+        { key: '5', idx: 5, code: 'WP2025110001', name: '刹车片', spec: '博世 0986A...', unit: '个', qty: 2000, expectDate: '2025-03-31' },
+      ];
+
+      const handleViewDetail = (record) => { setDetailRecord(record); setDetailVisible(true); };
+      const handleEdit = (record) => { antd.message.info('编辑功能开发中'); };
+      const handleDelete = (record) => { Modal.confirm({ title: '确认删除', content: '确定要删除该采购申请吗？', okText: '确定', cancelText: '取消', okButtonProps: { danger: true }, onOk: () => { setTableData(prev => prev.filter(item => item.key !== record.key)); antd.message.success('删除成功'); } }); };
+      const handleAddSubmit = () => { antd.message.success('提交成功'); setAddVisible(false); };
+      const handleAddSaveDraft = () => { antd.message.success('草稿已保存'); setAddVisible(false); };
+
+      const detailColDefs = {
+        goodsCode: { title: '商品编码', dataIndex: 'goodsCode', width: 120 },
+        goodsName: { title: '采购商品', dataIndex: 'goodsName', width: 120 },
+        spec: { title: '规格型号', dataIndex: 'spec', width: 140 },
+        unit: { title: '单位', dataIndex: 'unit', width: 60, align: 'center' },
+        applyQty: { title: '申请数量', dataIndex: 'detailQty', width: 90, align: 'right' },
+        bomQty: { title: 'BOM标准用量', dataIndex: 'bomQty', width: 110, align: 'right' },
+        expectDate: { title: '期望到货时间', dataIndex: 'expectDate', width: 120 },
+        quotaNo: { title: '配额编号', dataIndex: 'quotaNo', width: 100 },
+        sourceMethod: { title: '寻源方式', dataIndex: 'sourceMethod', width: 90 },
+        supplierCode: { title: '供应商编号', dataIndex: 'supplierCode', width: 120 },
+        supplierName: { title: '供应商名称', dataIndex: 'supplierName', width: 120 },
+        currency: { title: '币种', dataIndex: 'currency', width: 60 },
+        rate: { title: '汇率', dataIndex: 'rate', width: 70, align: 'right' },
+        origPrice: { title: '原币单价', dataIndex: 'origPrice', width: 90, align: 'right' },
+        budgetPriceExTax: { title: '预算单价（不含税）', dataIndex: 'budgetPriceExTax', width: 140, align: 'right' },
+        taxRate: { title: '税率', dataIndex: 'taxRate', width: 70, align: 'right' },
+        budgetPriceInTax: { title: '预算单价（含税）', dataIndex: 'budgetPriceInTax', width: 130, align: 'right' },
+        budgetAmtExTax: { title: '预算金额（不含税）', dataIndex: 'budgetAmtExTax', width: 140, align: 'right' },
+        budgetAmtInTax: { title: '预算金额（含税）', dataIndex: 'budgetAmtInTax', width: 130, align: 'right' },
+      };
+
+      const mainColumns = [
+        { title: '流程状态', dataIndex: 'flowStatus', width: 90, fixed: 'left', render: (v) => { const color = v === '已生效' ? 'success' : v === '草稿' ? 'default' : 'processing'; return React.createElement(Tag, { color }, v); } },
+        { title: '申请单号', dataIndex: 'applyNo', width: 160 },
+        { title: '申请日期', dataIndex: 'applyDate', width: 110 },
+        { title: '申请人', dataIndex: 'applicant', width: 80 },
+        { title: '所属部门', dataIndex: 'dept', width: 90 },
+        { title: '申请公司', dataIndex: 'company', width: 120 },
+        { title: '申请金额', dataIndex: 'amount', width: 130, align: 'right' },
+        { title: '项目编码', dataIndex: 'projectCode', width: 140 },
+        { title: '项目名称', dataIndex: 'projectName', width: 140 },
+        { title: '可用预算', dataIndex: 'budget', width: 120, align: 'right' },
+        { title: '收件人', dataIndex: 'receiver', width: 80 },
+        { title: '电话', dataIndex: 'phone', width: 120 },
+        { title: '收件地址', dataIndex: 'address', width: 140 },
+        { title: '采购申请说明', dataIndex: 'description', width: 150, ellipsis: true },
+        { title: '从BOM中选择', dataIndex: 'fromBom', width: 110 },
+        { title: '申请数量', dataIndex: 'applyQty', width: 90, align: 'right' },
+        { title: '询价进度', dataIndex: 'inquiryProgress', width: 90 },
+        { title: '采购进度', dataIndex: 'purchaseProgress', width: 90 },
+        { title: '申请来源', dataIndex: 'applySource', width: 90 },
+        { title: '提交人', dataIndex: 'submitter', width: 100, render: (v) => React.createElement('a', { style: { color: '#1677ff' } }, v) },
+        { title: '提交时间', dataIndex: 'submitTime', width: 170 },
+        { title: '更新时间', dataIndex: 'updateTime', width: 170 },
+        { title: '当前节点', dataIndex: 'currentNode', width: 90 },
+        { title: '当前负责人', dataIndex: 'currentOwner', width: 100 },
+        { title: '操作', key: 'action', width: 150, fixed: 'right', render: (_, record) => React.createElement(Space, { size: 8 }, React.createElement('a', { style: { color: '#1677ff' }, onClick: () => handleViewDetail(record) }, '详情'), React.createElement('a', { style: { color: '#1677ff' }, onClick: () => handleEdit(record) }, '编辑'), React.createElement('a', { style: { color: '#ff4d4f' }, onClick: () => handleDelete(record) }, '删除')) },
+      ];
+
+      const allDetailColumns = Object.values(detailColDefs);
+      const allColumns = [...mainColumns.slice(0, 16), ...allDetailColumns, ...mainColumns.slice(16)];
+
+      const blueBtnStyle = { background: '#1677ff', borderColor: '#1677ff' };
+      const purpleBtnStyle = { background: '#7c5cfc', borderColor: '#7c5cfc' };
+
+      return (
+        <div style={{ background: '#fff', borderRadius: 8, padding: '16px 24px' }}>
+
+          {/* 工具栏 */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+            <Space size={8}>
+              <Button type="primary" style={blueBtnStyle} icon={React.createElement(PlusOutlined)} onClick={() => { setAddForm({ applyDate: null, applicant: '', dept: '', company: '', amount: '0.00', project: '', projectCode: '', projectName: '', budget: '', shipAddress: '', receiver: '', phone: '', receiverAddr: '', description: '', fromBom: false, details: [] }); setAddVisible(true); }}>新建</Button>
+              <Button icon={React.createElement(ImportOutlined)}>导入</Button>
+              <Button icon={React.createElement(ExportOutlined)}>导出</Button>
+            </Space>
+            <Space size={8}>
+              <Select defaultValue="all" size="middle" style={{ width: 110 }}><Option value="all">搜索范围</Option></Select>
+              <Input placeholder="请输入搜索内容" style={{ width: 220 }} suffix={React.createElement(SearchOutlined)} />
+            </Space>
+          </div>
+          {/* 表格 */}
+          <Table columns={allColumns} dataSource={tableData} rowSelection={{ selectedRowKeys, onChange: setSelectedRowKeys }} bordered size="small" pagination={false} scroll={{ x: 4000 }} />
+          {/* 分页 */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 12, padding: '12px 0 8px', borderTop: '1px solid #f0f0f0' }}>
+            <Space size={16}>
+              {React.createElement(ColumnWidthOutlined, { style: { color: '#8c8c8c' } })}
+              <Select defaultValue="20" size="small" style={{ width: 90 }}><Option value="20">20条/页</Option><Option value="50">50条/页</Option></Select>
+              <span style={{ color: '#595959', fontSize: 13 }}>共 {tableData.length} 条</span>
+            </Space>
+            <Pagination current={1} total={tableData.length} pageSize={20} size="small" showSizeChanger={false} />
+          </div>
+
+          {/* 详情弹框 */}
+          <Modal title="采购申请详情" open={detailVisible} onCancel={() => setDetailVisible(false)} footer={<Button onClick={() => setDetailVisible(false)}>关闭</Button>} width={1000}>
+            {detailRecord && (
+              <div style={{ padding: '16px 20px', maxHeight: '70vh', overflowY: 'auto' }}>
+                <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
+                  <Col span={8}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>申请日期</div><div style={{ padding: '8px 12px', background: '#f5f5f5', borderRadius: 4 }}>{detailRecord.applyDate}</div></Col>
+                  <Col span={8}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>申请人 <span style={{ color: '#ff4d4f' }}>*</span></div><div style={{ padding: '6px 12px', background: '#f5f5f5', borderRadius: 4, display: 'flex', alignItems: 'center', gap: 6 }}>{React.createElement(Avatar, { size: 20, style: { backgroundColor: '#52c41a', fontSize: 11 } }, detailRecord.applicant ? detailRecord.applicant[0] : '')}<span>{detailRecord.applicant}</span></div></Col>
+                  <Col span={8}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>所属部门</div><div style={{ padding: '6px 12px', background: '#f5f5f5', borderRadius: 4 }}>{detailRecord.dept ? React.createElement(Tag, { icon: React.createElement(TeamOutlined), color: 'blue' }, detailRecord.dept) : '-'}</div></Col>
+                </Row>
+                <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
+                  <Col span={8}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>申请公司</div><div style={{ padding: '6px 12px', background: '#f5f5f5', borderRadius: 4 }}>{detailRecord.company ? React.createElement(Tag, { icon: React.createElement(TeamOutlined), color: 'blue' }, detailRecord.company) : '-'}</div></Col>
+                  <Col span={8}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>申请金额</div><div style={{ padding: '8px 12px', background: '#f5f5f5', borderRadius: 4 }}>{detailRecord.amount}</div></Col>
+                  <Col span={8}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>项目编码</div><div style={{ padding: '8px 12px', background: '#f5f5f5', borderRadius: 4 }}>{detailRecord.projectCode || '-'}</div></Col>
+                </Row>
+                <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
+                  <Col span={8}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>项目名称</div><div style={{ padding: '8px 12px', background: '#f5f5f5', borderRadius: 4 }}>{detailRecord.projectName || '-'}</div></Col>
+                  <Col span={8}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>可用预算</div><div style={{ padding: '8px 12px', background: '#f5f5f5', borderRadius: 4 }}>{detailRecord.budget || '-'}</div></Col>
+                  <Col span={8}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>选择收货地址</div><div style={{ padding: '8px 12px', background: '#f5f5f5', borderRadius: 4 }}>{detailRecord.address || '-'}</div></Col>
+                </Row>
+                <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
+                  <Col span={8}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>收件人</div><div style={{ padding: '8px 12px', background: '#f5f5f5', borderRadius: 4 }}>{detailRecord.receiver || '-'}</div></Col>
+                  <Col span={8}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>电话</div><div style={{ padding: '8px 12px', background: '#f5f5f5', borderRadius: 4 }}>{detailRecord.phone || '-'}</div></Col>
+                  <Col span={8}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>收件地址</div><div style={{ padding: '8px 12px', background: '#f5f5f5', borderRadius: 4 }}>{detailRecord.address || '-'}</div></Col>
+                </Row>
+                <div style={{ marginBottom: 16 }}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>采购申请说明</div><div style={{ padding: '12px', background: '#f5f5f5', borderRadius: 4, minHeight: 60 }}>{detailRecord.description || '-'}</div></div>
+                <div style={{ marginBottom: 16 }}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>从BOM中选择</div><div><Radio checked={detailRecord.fromBom === '是'} disabled>是</Radio><Radio checked={detailRecord.fromBom === '否'} disabled>否</Radio></div></div>
+                <div style={{ marginBottom: 16 }}>
+                  <div style={{ fontSize: 14, fontWeight: 500, marginBottom: 8 }}>采购明细内容 <span style={{ color: '#ff4d4f' }}>*</span></div>
+                  <Table dataSource={detailItems} columns={[
+                    { title: '#', dataIndex: 'idx', width: 50, align: 'center' },
+                    { title: '商品编码', dataIndex: 'code', width: 130 },
+                    { title: '采购商品', dataIndex: 'name', width: 120 },
+                    { title: '规格型号', dataIndex: 'spec', width: 130 },
+                    { title: '单位', dataIndex: 'unit', width: 50, align: 'center' },
+                    { title: '申请数量', dataIndex: 'qty', width: 90, align: 'right' },
+                    { title: '期望到货时间', dataIndex: 'expectDate', width: 120 },
+                  ]} bordered size="small" pagination={false} scroll={{ x: 700 }} />
+                </div>
+                {/* 辅助字段分区 */}
+                <div style={{ marginBottom: 16 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', marginBottom: 8 }}><div style={{ background: 'linear-gradient(90deg, #4a7cf7 0%, #6c9cff 100%)', color: '#fff', padding: '6px 16px', borderRadius: 4, fontSize: 14, fontWeight: 600, position: 'relative', overflow: 'hidden', display: 'inline-flex' }}>辅助字段{React.createElement('span', { style: { position: 'absolute', right: 0, top: 0, width: 24, height: '100%', background: 'repeating-linear-gradient(135deg, transparent, transparent 2px, rgba(255,255,255,0.3) 2px, rgba(255,255,255,0.3) 4px)' } })}</div></div>
+                  <div style={{ height: 2, background: '#4a7cf7', marginBottom: 16 }}></div>
+                  <Row gutter={[16, 16]}>
+                    <Col span={8}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>询价进度</div><div style={{ padding: '8px 12px', background: '#f5f5f5', borderRadius: 4 }}>{detailRecord.inquiryProgress || '-'}</div></Col>
+                    <Col span={8}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>采购进度</div><div style={{ padding: '8px 12px', background: '#f5f5f5', borderRadius: 4 }}>{detailRecord.purchaseProgress || '-'}</div></Col>
+                    <Col span={8}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>申请来源</div><div style={{ padding: '8px 0' }}><Radio checked={detailRecord.applySource === '手工创建'} disabled>手工创建</Radio><Radio checked={detailRecord.applySource === '商城订单'} disabled>商城订单</Radio></div></Col>
+                  </Row>
+                </div>
+                {/* 底部流程信息 */}
+                <div style={{ borderTop: '1px solid #f0f0f0', paddingTop: 16 }}>
+                  <Row gutter={[16, 12]}>
+                    <Col span={12}><span style={{ color: '#8c8c8c' }}>提交人</span><a style={{ color: '#1677ff', marginLeft: 16 }}>{detailRecord.submitter}</a></Col>
+                    <Col span={12}><span style={{ color: '#8c8c8c' }}>提交时间</span><span style={{ marginLeft: 16 }}>{detailRecord.submitTime}</span></Col>
+                    <Col span={12}><span style={{ color: '#8c8c8c' }}>更新时间</span><span style={{ marginLeft: 16 }}>{detailRecord.updateTime}</span></Col>
+                    <Col span={12}><span style={{ color: '#8c8c8c' }}>流程状态</span><span style={{ marginLeft: 16 }}>{React.createElement(Tag, { color: 'success' }, detailRecord.flowStatus)}</span></Col>
+                    <Col span={12}><span style={{ color: '#8c8c8c' }}>当前节点</span><span style={{ marginLeft: 16 }}>{detailRecord.currentNode || '-'}</span></Col>
+                    <Col span={12}><span style={{ color: '#8c8c8c' }}>当前负责人</span><a style={{ color: '#1677ff', marginLeft: 16 }}>{detailRecord.currentOwner || '-'}</a></Col>
+                  </Row>
+                </div>
+              </div>
+            )}
+          </Modal>
+
+          {/* 新增弹框 */}
+          <Modal title="新增采购申请" open={addVisible} onCancel={() => setAddVisible(false)} footer={null} width={1000}>
+            <div style={{ padding: '16px 20px', maxHeight: '70vh', overflowY: 'auto' }}>
+              <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
+                <Col span={8}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>申请日期</div><DatePicker style={{ width: '100%' }} value={addForm.applyDate} onChange={(d) => setAddForm(prev => ({ ...prev, applyDate: d }))} /></Col>
+                <Col span={8}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>申请人 <span style={{ color: '#ff4d4f' }}>*</span></div><div style={{ display: 'flex', gap: 8 }}><div style={{ flex: 1, display: 'flex', alignItems: 'center', border: '1px solid #d9d9d9', borderRadius: 4, padding: '4px 8px', minHeight: 32 }}>{addForm.applicant ? React.createElement('span', { style: { display: 'inline-flex', alignItems: 'center', gap: 4, background: '#f0f0f0', borderRadius: 4, padding: '2px 8px' } }, React.createElement(Avatar, { size: 18, style: { backgroundColor: '#7c5cfc', fontSize: 10 } }, addForm.applicant[0]), React.createElement('span', { style: { fontSize: 13 } }, addForm.applicant), React.createElement(CloseOutlined, { style: { fontSize: 10, color: '#8c8c8c', cursor: 'pointer', marginLeft: 4 }, onClick: () => setAddForm(prev => ({ ...prev, applicant: '' })) })) : React.createElement('span', { style: { color: '#bfbfbf' } }, '请选择')}</div><Button type="primary" style={purpleBtnStyle} onClick={() => setAddForm(prev => ({ ...prev, applicant: '用户257522' }))}>选择</Button></div></Col>
+                <Col span={8}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>所属部门</div><div style={{ display: 'flex', gap: 8 }}><Input value={addForm.dept} readOnly style={{ flex: 1 }} placeholder="请选择" /><Button type="primary" style={purpleBtnStyle} onClick={() => setAddForm(prev => ({ ...prev, dept: '采购部' }))}>选择</Button></div></Col>
+              </Row>
+              <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
+                <Col span={8}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>申请公司</div><div style={{ display: 'flex', gap: 8 }}><div style={{ flex: 1, display: 'flex', alignItems: 'center', border: '1px solid #d9d9d9', borderRadius: 4, padding: '4px 8px', minHeight: 32 }}>{addForm.company ? React.createElement(Tag, { icon: React.createElement(TeamOutlined), color: 'blue' }, addForm.company) : React.createElement('span', { style: { color: '#bfbfbf' } }, '请选择')}</div><Button type="primary" style={purpleBtnStyle} onClick={() => setAddForm(prev => ({ ...prev, company: '1aa513c379579c90' }))}>选择</Button></div></Col>
+                <Col span={8}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>申请金额</div><Input value={addForm.amount} onChange={(e) => setAddForm(prev => ({ ...prev, amount: e.target.value }))} /></Col>
+                <Col span={8}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>选择项目</div><Input value={addForm.project} readOnly placeholder="请选择" suffix={React.createElement(Button, { type: 'link', size: 'small', icon: React.createElement(SearchOutlined), style: { padding: 0 } }, '选择数据')} /></Col>
+              </Row>
+              <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
+                <Col span={8}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>项目编码</div><Input value={addForm.projectCode} onChange={(e) => setAddForm(prev => ({ ...prev, projectCode: e.target.value }))} /></Col>
+                <Col span={8}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>项目名称</div><Input value={addForm.projectName} onChange={(e) => setAddForm(prev => ({ ...prev, projectName: e.target.value }))} /></Col>
+                <Col span={8}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>可用预算</div><Input value={addForm.budget} onChange={(e) => setAddForm(prev => ({ ...prev, budget: e.target.value }))} /></Col>
+              </Row>
+              <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
+                <Col span={8}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>选择收货地址</div><Input value={addForm.shipAddress} readOnly placeholder="请选择" suffix={React.createElement(Button, { type: 'link', size: 'small', icon: React.createElement(SearchOutlined), style: { padding: 0 } }, '选择数据')} /></Col>
+                <Col span={8}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>收件人</div><div style={{ display: 'flex', gap: 8 }}><Input value={addForm.receiver} readOnly style={{ flex: 1 }} placeholder="请选择" /><Button type="primary" style={purpleBtnStyle} onClick={() => setAddForm(prev => ({ ...prev, receiver: '张三' }))}>选择</Button></div></Col>
+                <Col span={8}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>电话</div><Input value={addForm.phone} onChange={(e) => setAddForm(prev => ({ ...prev, phone: e.target.value }))} /></Col>
+              </Row>
+              <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
+                <Col span={8}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>收件地址</div><Input value={addForm.receiverAddr} onChange={(e) => setAddForm(prev => ({ ...prev, receiverAddr: e.target.value }))} /></Col>
+              </Row>
+              <div style={{ marginBottom: 16 }}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>采购申请说明</div><TextArea rows={4} value={addForm.description} onChange={(e) => setAddForm(prev => ({ ...prev, description: e.target.value }))} placeholder="请输入采购申请说明" /></div>
+              <div style={{ marginBottom: 16 }}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>从BOM中选择</div><div><Radio checked={addForm.fromBom === true} onChange={() => setAddForm(prev => ({ ...prev, fromBom: true }))}>是</Radio><Radio checked={addForm.fromBom === false} onChange={() => setAddForm(prev => ({ ...prev, fromBom: false }))}>否</Radio></div></div>
+              <div style={{ marginBottom: 16 }}>
+                <div style={{ fontSize: 14, fontWeight: 500, marginBottom: 8 }}>采购明细内容 <span style={{ color: '#ff4d4f' }}>*</span></div>
+                <Table dataSource={addForm.details} columns={[
+                  { title: '#', width: 50, align: 'center', render: (_, __, idx) => idx + 1 },
+                  { title: '选择物品', width: 80, render: () => React.createElement(Button, { type: 'link', size: 'small' }, '选择') },
+                  { title: '采购商品 *', dataIndex: 'name', render: (v, _, idx) => React.createElement(Input, { size: 'small', value: v, onChange: (e) => { const arr = [...addForm.details]; arr[idx] = { ...arr[idx], name: e.target.value }; setAddForm(prev => ({ ...prev, details: arr })); } }) },
+                  { title: '规格型号', dataIndex: 'spec', render: (v, _, idx) => React.createElement(Input, { size: 'small', value: v, onChange: (e) => { const arr = [...addForm.details]; arr[idx] = { ...arr[idx], spec: e.target.value }; setAddForm(prev => ({ ...prev, details: arr })); } }) },
+                  { title: '单位', dataIndex: 'unit', width: 60, render: (v, _, idx) => React.createElement(Input, { size: 'small', value: v, onChange: (e) => { const arr = [...addForm.details]; arr[idx] = { ...arr[idx], unit: e.target.value }; setAddForm(prev => ({ ...prev, details: arr })); } }) },
+                  { title: '申请数量 *', dataIndex: 'qty', width: 90, render: (v, _, idx) => React.createElement(Input, { size: 'small', value: v, onChange: (e) => { const arr = [...addForm.details]; arr[idx] = { ...arr[idx], qty: e.target.value }; setAddForm(prev => ({ ...prev, details: arr })); } }) },
+                  { title: '期望到货时间 *', dataIndex: 'expectDate', width: 130, render: (v, _, idx) => React.createElement(Input, { size: 'small', value: v, onChange: (e) => { const arr = [...addForm.details]; arr[idx] = { ...arr[idx], expectDate: e.target.value }; setAddForm(prev => ({ ...prev, details: arr })); } }) },
+                  { title: '预算单价（不含税）', dataIndex: 'priceExTax', width: 130, render: (v, _, idx) => React.createElement(Input, { size: 'small', value: v, onChange: (e) => { const arr = [...addForm.details]; arr[idx] = { ...arr[idx], priceExTax: e.target.value }; setAddForm(prev => ({ ...prev, details: arr })); } }) },
+                  { title: '税率', dataIndex: 'taxRate', width: 70, render: (v, _, idx) => React.createElement(Input, { size: 'small', value: v, onChange: (e) => { const arr = [...addForm.details]; arr[idx] = { ...arr[idx], taxRate: e.target.value }; setAddForm(prev => ({ ...prev, details: arr })); } }) },
+                  { title: '预算金额（含税）', dataIndex: 'amtInTax', width: 130, render: (v, _, idx) => React.createElement(Input, { size: 'small', value: v, onChange: (e) => { const arr = [...addForm.details]; arr[idx] = { ...arr[idx], amtInTax: e.target.value }; setAddForm(prev => ({ ...prev, details: arr })); } }) },
+                ]} bordered size="small" pagination={false} scroll={{ x: 1000 }} />
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 8 }}>
+                  <Space size={16}><a style={{ color: '#1677ff' }} onClick={() => setAddForm(prev => ({ ...prev, details: [...prev.details, { key: Date.now().toString() }] }))}>+ 添加</a><a style={{ color: '#1677ff' }}>导入</a><a style={{ color: '#1677ff' }}>快速填报</a></Space>
+                  <span style={{ color: '#8c8c8c', fontSize: 12 }}>{addForm.details.length} / 200</span>
+                </div>
+              </div>
+              <div style={{ textAlign: 'center', padding: '12px 0 4px', borderTop: '1px solid #f0f0f0' }}>
+                <Space size={16}>
+                  <Button type="primary" style={{ ...blueBtnStyle, width: 100, height: 36 }} onClick={handleAddSubmit}>提交</Button>
+                  <Button type="primary" style={{ background: '#52c41a', borderColor: '#52c41a', width: 100, height: 36 }} onClick={handleAddSaveDraft}>保存草稿</Button>
+                </Space>
+              </div>
+            </div>
+          </Modal>
+        </div>
+      );
+    }
+
+    // ===== 采购需求池组件 =====
+    function PurchasePool() {
+      const [selectedRowKeys, setSelectedRowKeys] = useState([]);
+      const [addVisible, setAddVisible] = useState(false);
+      const [addForm, setAddForm] = useState({ source: '', applyNo: '', applicant: '', applyDate: null, dept: '', amount: '', description: '', budgetTotal: '', goodsCode: '', goodsName: '', spec: '', unit: '', qty: '', priceExTax: '', taxRate: '', amountExTax: '', localPriceExTax: '', expectDate: null, origDemand: '', origPoolNo: '', sourceMethod: '', poolStatus: '', amountInTax: '' });
+      const [activeTab, setActiveTab] = useState('source');
+
+      const [tableData, setTableData] = useState([
+        { key: '1', serialNo: 'XQC202601290016', source: '采购申请', poolStatus: '已完成', applyNo: 'CGSQ20251217001', applicant: '李里', applyDate: '2025-12-17', dept: '采购部', amount: '1,219.00', description: '', budgetTotal: '1,219.00', goodsCode: 'WP2025110005', goodsName: '雷达传感器', spec: '奔驰 A0009059117', unit: '个', qty: 1, priceExTax: '1,219.00', taxRate: '13%', amountExTax: '1,078.76', localPriceExTax: '1,078.76', expectDate: '2025-03-31', origDemand: '', origPoolNo: '', quoteTemplate: '', sourceMethod: '询比价', inquiryNo: '', auctionNo: '', bidNo: '', winSupplier: '', amountInTax: '1,219.00', interSupplier: '否', priceCurrency: 'CNY', priceOrig: '1,219.00', unorderQty: 0, orderedQty: 1, submitter: '用户257522', submitTime: '2026-07-21 11:31:49', updateTime: '2026-07-21 14:20:33' },
+        { key: '2', serialNo: 'XQC202601290015', source: '采购申请', poolStatus: '已完成', applyNo: 'CGSQ20251217001', applicant: '李里', applyDate: '2025-12-17', dept: '采购部', amount: '250.00', description: '', budgetTotal: '250.00', goodsCode: 'WP2025110004', goodsName: '火花塞', spec: 'NGK LZKAR6AP-11', unit: '个', qty: 5, priceExTax: '50.00', taxRate: '13%', amountExTax: '221.24', localPriceExTax: '44.25', expectDate: '2025-03-31', origDemand: '', origPoolNo: '', quoteTemplate: '', sourceMethod: '询比价', inquiryNo: '', auctionNo: '', bidNo: '', winSupplier: '', amountInTax: '250.00', interSupplier: '否', priceCurrency: 'CNY', priceOrig: '50.00', unorderQty: 0, orderedQty: 5, submitter: '用户257522', submitTime: '2026-07-21 11:31:49', updateTime: '2026-07-21 14:20:33' },
+        { key: '3', serialNo: 'XQC202601290012', source: '采购申请', poolStatus: '进行中', applyNo: 'CGSQ20260129002', applicant: '李里', applyDate: '2026-01-29', dept: '采购部', amount: '6,000.00', description: '服务器运维', budgetTotal: '6,000.00', goodsCode: 'WP2026010001', goodsName: '服务器机房运维服务', spec: '服务', unit: '次', qty: 2, priceExTax: '3,000.00', taxRate: '6%', amountExTax: '5,660.38', localPriceExTax: '2,830.19', expectDate: '2026-06-30', origDemand: '', origPoolNo: '', quoteTemplate: '', sourceMethod: '询比价', inquiryNo: 'XJ20260201001', auctionNo: '', bidNo: '', winSupplier: '', amountInTax: '6,000.00', interSupplier: '否', priceCurrency: 'CNY', priceOrig: '3,000.00', unorderQty: 2, orderedQty: 0, submitter: '用户257522', submitTime: '2026-07-20 09:00:00', updateTime: '2026-07-22 10:00:00' },
+      ]);
+
+      const handleEdit = (record) => { antd.message.info('编辑功能开发中'); };
+      const handleDelete = (record) => { Modal.confirm({ title: '确认删除', content: '确定要删除该需求池记录吗？', okText: '确定', cancelText: '取消', okButtonProps: { danger: true }, onOk: () => { setTableData(prev => prev.filter(item => item.key !== record.key)); antd.message.success('删除成功'); } }); };
+      const handleAddSubmit = () => { antd.message.success('提交成功'); setAddVisible(false); };
+      const handleAddSaveDraft = () => { antd.message.success('草稿已保存'); setAddVisible(false); };
+
+      const columns = [
+        { title: '流水号', dataIndex: 'serialNo', width: 160, fixed: 'left' },
+        { title: '需求来源', dataIndex: 'source', width: 90 },
+        { title: '需求池状态', dataIndex: 'poolStatus', width: 100, render: (v) => { const color = v === '已完成' ? 'success' : v === '进行中' ? 'processing' : 'default'; return React.createElement(Tag, { color }, v); } },
+        { title: '申请单号', dataIndex: 'applyNo', width: 160 },
+        { title: '申请人', dataIndex: 'applicant', width: 80 },
+        { title: '申请日期', dataIndex: 'applyDate', width: 110 },
+        { title: '所属部门', dataIndex: 'dept', width: 90 },
+        { title: '申请金额', dataIndex: 'amount', width: 110, align: 'right' },
+        { title: '采购申请说明', dataIndex: 'description', width: 140, ellipsis: true },
+        { title: '预算总金额', dataIndex: 'budgetTotal', width: 110, align: 'right' },
+        { title: '物品编码', dataIndex: 'goodsCode', width: 130 },
+        { title: '物品名称', dataIndex: 'goodsName', width: 140 },
+        { title: '规格型号', dataIndex: 'spec', width: 160 },
+        { title: '单位', dataIndex: 'unit', width: 50, align: 'center' },
+        { title: '申请数量', dataIndex: 'qty', width: 80, align: 'right' },
+        { title: '预算单价（不含税）', dataIndex: 'priceExTax', width: 140, align: 'right' },
+        { title: '税率', dataIndex: 'taxRate', width: 60, align: 'center' },
+        { title: '不含税金额', dataIndex: 'amountExTax', width: 110, align: 'right' },
+        { title: '本币核价单价（不含税）', dataIndex: 'localPriceExTax', width: 160, align: 'right' },
+        { title: '期望到货时间', dataIndex: 'expectDate', width: 120 },
+        { title: '原需求', dataIndex: 'origDemand', width: 80 },
+        { title: '原需求池编号', dataIndex: 'origPoolNo', width: 120 },
+        { title: '报价模板辅助字段', dataIndex: 'quoteTemplate', width: 140 },
+        { title: '寻源方式', dataIndex: 'sourceMethod', width: 90 },
+        { title: '询价单号', dataIndex: 'inquiryNo', width: 140 },
+        { title: '竞价单号', dataIndex: 'auctionNo', width: 120 },
+        { title: '招标单号', dataIndex: 'bidNo', width: 120 },
+        { title: '中标供应商', dataIndex: 'winSupplier', width: 120 },
+        { title: '含税金额', dataIndex: 'amountInTax', width: 110, align: 'right' },
+        { title: '互联供应商', dataIndex: 'interSupplier', width: 90 },
+        { title: '核价币种', dataIndex: 'priceCurrency', width: 80 },
+        { title: '核价单价（原币）', dataIndex: 'priceOrig', width: 130, align: 'right' },
+        { title: '未下单数量', dataIndex: 'unorderQty', width: 100, align: 'right' },
+        { title: '已下单数量', dataIndex: 'orderedQty', width: 100, align: 'right' },
+        { title: '提交人', dataIndex: 'submitter', width: 100, render: (v) => React.createElement('a', { style: { color: '#1677ff' } }, v) },
+        { title: '提交时间', dataIndex: 'submitTime', width: 170 },
+        { title: '更新时间', dataIndex: 'updateTime', width: 170 },
+        { title: '操作', key: 'action', width: 150, fixed: 'right', render: (_, record) => React.createElement(Space, { size: 8 }, React.createElement('a', { style: { color: '#1677ff' } }, '详情'), React.createElement('a', { style: { color: '#1677ff' }, onClick: () => handleEdit(record) }, '编辑'), React.createElement('a', { style: { color: '#ff4d4f' }, onClick: () => handleDelete(record) }, '删除')) },
+      ];
+
+      const blueBtnStyle = { background: '#1677ff', borderColor: '#1677ff' };
+      const purpleBtnStyle = { background: '#7c5cfc', borderColor: '#7c5cfc' };
+
+      const tabItems = [
+        { key: 'source', label: '寻源进度', children: React.createElement('div', null,
+          React.createElement(Row, { gutter: [16, 16], style: { marginBottom: 16 } },
+            React.createElement(Col, { span: 8 }, React.createElement('div', { style: { fontSize: 13, color: '#595959', marginBottom: 4 } }, '寻源方式'), React.createElement(Select, { style: { width: '100%' }, defaultValue: '招投标', onChange: (v) => setAddForm(prev => ({ ...prev, sourceMethod: v })) }, React.createElement(Option, { value: '招投标' }, '招投标'), React.createElement(Option, { value: '询比价' }, '询比价'), React.createElement(Option, { value: '竞价' }, '竞价'), React.createElement(Option, { value: '单一来源采购' }, '单一来源采购'))),
+            React.createElement(Col, { span: 8 }, React.createElement('div', { style: { fontSize: 13, color: '#595959', marginBottom: 4 } }, '需求池状态'), React.createElement(Select, { style: { width: '100%' }, placeholder: '请选择', onChange: (v) => setAddForm(prev => ({ ...prev, poolStatus: v })) }, React.createElement(Option, { value: '未开始' }, '未开始'), React.createElement(Option, { value: '进行中' }, '进行中'), React.createElement(Option, { value: '已完成' }, '已完成'))),
+            React.createElement(Col, { span: 8 }, React.createElement('div', { style: { fontSize: 13, color: '#595959', marginBottom: 4 } }, '含税金额'), React.createElement(Input, { value: addForm.amountInTax, onChange: (e) => setAddForm(prev => ({ ...prev, amountInTax: e.target.value })) }))
+          ),
+          React.createElement('div', { style: { fontSize: 14, fontWeight: 500, marginBottom: 8 } }, '招标情况'),
+          React.createElement(Table, { dataSource: [], columns: [{ title: '招标流水号', dataIndex: 'bidNo', width: 140 }, { title: '项目编号', dataIndex: 'projectCode', width: 120 }, { title: '项目名称', dataIndex: 'projectName', width: 140 }, { title: '招标负责人', dataIndex: 'bidManager', width: 100 }, { title: '联系电话', dataIndex: 'phone', width: 120 }, { title: '项目状态', dataIndex: 'status', width: 90 }], bordered: true, size: 'small', pagination: false, scroll: { x: 700 }, locale: { emptyText: '暂无数据' } }),
+          React.createElement('div', { style: { display: 'flex', justifyContent: 'flex-end', alignItems: 'center', marginTop: 8, gap: 8 } }, React.createElement('span', { style: { fontSize: 12, color: '#595959' } }, '共 0 条'), React.createElement(Pagination, { current: 1, total: 0, pageSize: 10, size: 'small', showSizeChanger: false })),
+          React.createElement('div', { style: { fontSize: 14, fontWeight: 500, marginBottom: 8, marginTop: 20 } }, '合同记录'),
+          React.createElement(Table, { dataSource: [], columns: [{ title: '流水号', dataIndex: 'serialNo', width: 140 }, { title: '所属分类', dataIndex: 'category', width: 100 }, { title: '合同编号', dataIndex: 'contractNo', width: 140 }, { title: '合同名称', dataIndex: 'contractName', width: 140 }, { title: '签约日期', dataIndex: 'signDate', width: 110 }, { title: '供应商名称', dataIndex: 'supplierName', width: 140 }], bordered: true, size: 'small', pagination: false, scroll: { x: 700 }, locale: { emptyText: '暂无数据' } }),
+          React.createElement('div', { style: { display: 'flex', justifyContent: 'flex-end', alignItems: 'center', marginTop: 8, gap: 8 } }, React.createElement('span', { style: { fontSize: 12, color: '#595959' } }, '共 0 条'), React.createElement(Pagination, { current: 1, total: 0, pageSize: 10, size: 'small', showSizeChanger: false }))
+        ) },
+        { key: 'contract', label: '合同订单', children: React.createElement('div', { style: { padding: '40px 0', textAlign: 'center', color: '#bfbfbf' } }, '暂无数据') },
+        { key: 'delivery', label: '发货情况', children: React.createElement('div', { style: { padding: '40px 0', textAlign: 'center', color: '#bfbfbf' } }, '暂无数据') },
+        { key: 'supplier', label: '供方方案', children: React.createElement('div', { style: { padding: '40px 0', textAlign: 'center', color: '#bfbfbf' } }, '暂无数据') },
+      ];
+
+      return (
+        <div style={{ background: '#fff', borderRadius: 8, padding: '16px 24px' }}>
+          {/* 工具栏 */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+            <Space size={8}>
+              <Button type="primary" style={blueBtnStyle} icon={React.createElement(PlusOutlined)} onClick={() => { setAddForm({ source: '', applyNo: '', applicant: '', applyDate: null, dept: '', amount: '', description: '', budgetTotal: '', goodsCode: '', goodsName: '', spec: '', unit: '', qty: '', priceExTax: '', taxRate: '', amountExTax: '', localPriceExTax: '', expectDate: null, origDemand: '', origPoolNo: '', sourceMethod: '', poolStatus: '', amountInTax: '' }); setActiveTab('source'); setAddVisible(true); }}>新建</Button>
+              <Button icon={React.createElement(ImportOutlined)}>导入</Button>
+              <Button icon={React.createElement(ExportOutlined)}>导出</Button>
+            </Space>
+            <Space size={8}>
+              <Select defaultValue="all" size="middle" style={{ width: 110 }}><Option value="all">搜索范围</Option></Select>
+              <Input placeholder="请输入搜索内容" style={{ width: 220 }} suffix={React.createElement(SearchOutlined)} />
+            </Space>
+          </div>
+          {/* 表格 */}
+          <Table columns={columns} dataSource={tableData} rowSelection={{ selectedRowKeys, onChange: setSelectedRowKeys }} bordered size="small" pagination={false} scroll={{ x: 5000 }} />
+          {/* 分页 */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 12, padding: '12px 0 8px', borderTop: '1px solid #f0f0f0' }}>
+            <Space size={16}>
+              {React.createElement(ColumnWidthOutlined, { style: { color: '#8c8c8c' } })}
+              <Select defaultValue="20" size="small" style={{ width: 90 }}><Option value="20">20条/页</Option><Option value="50">50条/页</Option></Select>
+              <span style={{ color: '#595959', fontSize: 13 }}>共 {tableData.length} 条</span>
+            </Space>
+            <Pagination current={1} total={tableData.length} pageSize={20} size="small" showSizeChanger={false} />
+          </div>
+
+          {/* 新建弹框 */}
+          <Modal title="新建采购需求池" open={addVisible} onCancel={() => setAddVisible(false)} footer={null} width={1100}>
+            <div style={{ padding: '16px 20px', maxHeight: '70vh', overflowY: 'auto' }}>
+              <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
+                <Col span={6}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>需求来源</div><Select style={{ width: '100%' }} value={addForm.source || undefined} placeholder="请选择" onChange={(v) => setAddForm(prev => ({ ...prev, source: v }))}><Option value="采购申请">采购申请</Option><Option value="手工创建">手工创建</Option></Select></Col>
+                <Col span={6}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>申请单号</div><Input value={addForm.applyNo} onChange={(e) => setAddForm(prev => ({ ...prev, applyNo: e.target.value }))} /></Col>
+                <Col span={6}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>申请人</div><div style={{ display: 'flex', gap: 8 }}><Input value={addForm.applicant} readOnly style={{ flex: 1 }} placeholder="请选择" /><Button type="primary" style={purpleBtnStyle} onClick={() => setAddForm(prev => ({ ...prev, applicant: '用户257522' }))}>选择</Button></div></Col>
+                <Col span={6}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>申请日期</div><DatePicker style={{ width: '100%' }} value={addForm.applyDate} onChange={(d) => setAddForm(prev => ({ ...prev, applyDate: d }))} /></Col>
+              </Row>
+              <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
+                <Col span={6}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>所属部门</div><div style={{ display: 'flex', gap: 8 }}><Input value={addForm.dept} readOnly style={{ flex: 1 }} /><Button type="primary" style={purpleBtnStyle} onClick={() => setAddForm(prev => ({ ...prev, dept: '采购部' }))}>选择</Button></div></Col>
+                <Col span={6}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>申请金额</div><Input value={addForm.amount} onChange={(e) => setAddForm(prev => ({ ...prev, amount: e.target.value }))} /></Col>
+                <Col span={6}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>采购申请说明</div><TextArea rows={3} value={addForm.description} onChange={(e) => setAddForm(prev => ({ ...prev, description: e.target.value }))} /></Col>
+                <Col span={6}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>预算总金额</div><Input value={addForm.budgetTotal} onChange={(e) => setAddForm(prev => ({ ...prev, budgetTotal: e.target.value }))} /></Col>
+              </Row>
+              <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
+                <Col span={6}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>物品编码</div><Input value={addForm.goodsCode} onChange={(e) => setAddForm(prev => ({ ...prev, goodsCode: e.target.value }))} /></Col>
+                <Col span={6}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>物品名称</div><Input value={addForm.goodsName} onChange={(e) => setAddForm(prev => ({ ...prev, goodsName: e.target.value }))} /></Col>
+                <Col span={6}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>规格型号</div><Input value={addForm.spec} onChange={(e) => setAddForm(prev => ({ ...prev, spec: e.target.value }))} /></Col>
+                <Col span={6}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>单位</div><Input value={addForm.unit} onChange={(e) => setAddForm(prev => ({ ...prev, unit: e.target.value }))} /></Col>
+              </Row>
+              <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
+                <Col span={6}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>申请数量</div><Input value={addForm.qty} onChange={(e) => setAddForm(prev => ({ ...prev, qty: e.target.value }))} /></Col>
+                <Col span={6}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>预算单价（不含税）</div><Input value={addForm.priceExTax} onChange={(e) => setAddForm(prev => ({ ...prev, priceExTax: e.target.value }))} /></Col>
+                <Col span={6}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>税率</div><Input value={addForm.taxRate} onChange={(e) => setAddForm(prev => ({ ...prev, taxRate: e.target.value }))} /></Col>
+                <Col span={6}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>不含税金额</div><Input value={addForm.amountExTax} onChange={(e) => setAddForm(prev => ({ ...prev, amountExTax: e.target.value }))} /></Col>
+              </Row>
+              <Row gutter={[16, 16]} style={{ marginBottom: 20 }}>
+                <Col span={6}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>本币核价单价（不含税）</div><Input value={addForm.localPriceExTax} onChange={(e) => setAddForm(prev => ({ ...prev, localPriceExTax: e.target.value }))} /></Col>
+                <Col span={6}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>期望到货时间</div><DatePicker style={{ width: '100%' }} value={addForm.expectDate} onChange={(d) => setAddForm(prev => ({ ...prev, expectDate: d }))} /></Col>
+                <Col span={6}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>原需求</div><Input value={addForm.origDemand} readOnly placeholder="" suffix={React.createElement(Button, { type: 'link', size: 'small', icon: React.createElement(SearchOutlined), style: { padding: 0 } }, '关联表单')} /></Col>
+                <Col span={6}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>原需求池编号</div><Input value={addForm.origPoolNo} onChange={(e) => setAddForm(prev => ({ ...prev, origPoolNo: e.target.value }))} /></Col>
+              </Row>
+              {/* Tabs */}
+              <Tabs activeKey={activeTab} onChange={setActiveTab} items={tabItems} style={{ marginBottom: 20 }} />
+              {/* 底部按钮 */}
+              <div style={{ textAlign: 'center', padding: '12px 0 4px', borderTop: '1px solid #f0f0f0' }}>
+                <Space size={16}>
+                  <Button type="primary" style={{ ...blueBtnStyle, width: 100, height: 36 }} onClick={handleAddSubmit}>提交</Button>
+                  <Button type="primary" style={{ background: '#52c41a', borderColor: '#52c41a', width: 100, height: 36 }} onClick={handleAddSaveDraft}>保存草稿</Button>
+                </Space>
+              </div>
+            </div>
+          </Modal>
+        </div>
+      );
+    }
+
+    // ===== 询价大厅组件 =====
+    function InquiryHall() {
+      const [selectedRowKeys, setSelectedRowKeys] = useState([]);
+      const [filterType, setFilterType] = useState('all');
+
+      const allData = [
+        { key: '1', flowStatus: '已生效', serialNo: 'XJ20260201001', collabType: '协同', inquiryNo: 'XJ20260201001', projectName: '雷达传感器询价', sealed: '否', manager: '李里', contact: '010-12345678', inquiryStatus: '已报价', deadline: '2026-02-15', round: '1', rate: '', emailQuote: '否', supplierEmail: 'supplier@example.com', quoteEmail: '已发送', supplier: '天津海叶商贸', quoter: '张三', quoteDate: '2026-02-10', supplierCode: 'GYS000008', supplierName: '天津海叶商贸', joinQuote: '是', foreignQuote: '否', currency: 'CNY', quoteTime: '2026-02-10 14:30:00', ip: '192.168.1.100', quoteDetail: '', poolNo: 'XQC202601290016', materialCode: 'WP2025110005', goods: '雷达传感器', spec: '奔驰 A0009059117', unit: '个', demandQty: 1, expectDate: '2025-03-31', availableQty: 1, quotePrice: '1,219.00', taxRate: '13%', validUntil: '2026-03-31', priceExTax: '1,078.76', localPriceExTax: '1,078.76', localPriceInTax: '1,219.00', totalInTax: '1,219.00', totalLocal: '1,219.00', taxAmount: '140.24', totalExTax: '1,078.76', remark: '', applyNo: 'CGSQ20251217001', ladderInfo: '', quoteDesc: '含税到货价', totalExTax2: '1,078.76', taxAmount2: '140.24', totalInTax2: '1,219.00', amountCN: '壹仟贰佰壹拾玖元整', file: '-', openPrice: '否', purchaseHelper: '王五', supplierContact: '李四', submitter: '用户257522', submitTime: '2026-07-21 11:31:49', updateTime: '2026-07-21 14:20:33', currentNode: '已完成', currentOwner: '-', quoteStatus: '已报价' },
+        { key: '2', flowStatus: '已生效', serialNo: 'XJ20260201002', collabType: '协同', inquiryNo: 'XJ20260201002', projectName: '火花塞询价', sealed: '否', manager: '李里', contact: '010-12345678', inquiryStatus: '未报价', deadline: '2026-02-20', round: '1', rate: '', emailQuote: '否', supplierEmail: '', quoteEmail: '', supplier: '上海易点科技有限公司', quoter: '', quoteDate: '', supplierCode: 'GYS000005', supplierName: '上海易点科技有限公司', joinQuote: '否', foreignQuote: '否', currency: '', quoteTime: '', ip: '', quoteDetail: '', poolNo: 'XQC202601290015', materialCode: 'WP2025110004', goods: '火花塞', spec: 'NGK LZKAR6AP-11', unit: '个', demandQty: 5, expectDate: '2025-03-31', availableQty: '', quotePrice: '', taxRate: '', validUntil: '', priceExTax: '', localPriceExTax: '', localPriceInTax: '', totalInTax: '', totalLocal: '', taxAmount: '', totalExTax: '', remark: '', applyNo: 'CGSQ20251217001', ladderInfo: '', quoteDesc: '', totalExTax2: '', taxAmount2: '', totalInTax2: '', amountCN: '', file: '-', openPrice: '否', purchaseHelper: '王五', supplierContact: '', submitter: '用户257522', submitTime: '2026-07-21 11:31:49', updateTime: '2026-07-21 14:20:33', currentNode: '报价中', currentOwner: '供应商', quoteStatus: '未报价' },
+        { key: '3', flowStatus: '已生效', serialNo: 'XJ20260115003', collabType: '非协同', inquiryNo: 'XJ20260115003', projectName: '汽车轮胎询价', sealed: '是', manager: '张经理', contact: '021-55667788', inquiryStatus: '已报价', deadline: '2026-01-25', round: '2', rate: '', emailQuote: '是', supplierEmail: 'jd@jd.com', quoteEmail: '已发送', supplier: '京东企业购', quoter: '赵六', quoteDate: '2026-01-20', supplierCode: 'GYS000002', supplierName: '京东企业购', joinQuote: '是', foreignQuote: '否', currency: 'CNY', quoteTime: '2026-01-20 09:00:00', ip: '10.0.0.55', quoteDetail: '', poolNo: 'XQC202601290014', materialCode: 'WP2025110003', goods: '汽车轮胎', spec: '米其林 205/55R16', unit: '条', demandQty: 4000, expectDate: '2025-03-31', availableQty: 5000, quotePrice: '320.00', taxRate: '13%', validUntil: '2026-02-28', priceExTax: '283.19', localPriceExTax: '283.19', localPriceInTax: '320.00', totalInTax: '1,280,000.00', totalLocal: '1,280,000.00', taxAmount: '146,902.65', totalExTax: '1,133,097.35', remark: '', applyNo: 'CGSQ20251217001', ladderInfo: '1000条以上单价300', quoteDesc: '含运费含税', totalExTax2: '1,133,097.35', taxAmount2: '146,902.65', totalInTax2: '1,280,000.00', amountCN: '壹佰贰拾捌万元整', file: '报价单.pdf', openPrice: '否', purchaseHelper: '周八', supplierContact: '孙七', submitter: '用户257522', submitTime: '2026-07-20 09:00:00', updateTime: '2026-07-22 10:00:00', currentNode: '已完成', currentOwner: '-', quoteStatus: '已报价' },
+        { key: '4', flowStatus: '已关闭', serialNo: 'XJ20251201004', collabType: '协同', inquiryNo: 'XJ20251201004', projectName: '制动盘询价', sealed: '否', manager: '李里', contact: '010-12345678', inquiryStatus: '已结束', deadline: '2025-12-20', round: '1', rate: '', emailQuote: '否', supplierEmail: 'haiye@163.com', quoteEmail: '已发送', supplier: '天津海叶商贸', quoter: '张三', quoteDate: '2025-12-15', supplierCode: 'GYS000008', supplierName: '天津海叶商贸', joinQuote: '是', foreignQuote: '否', currency: 'CNY', quoteTime: '2025-12-15 16:00:00', ip: '192.168.1.100', quoteDetail: '', poolNo: 'XQC202601290013', materialCode: 'WP2025110002', goods: '制动盘', spec: '萨瓦尼尼 282X23', unit: '组', demandQty: 2000, expectDate: '2025-03-31', availableQty: 2000, quotePrice: '85.00', taxRate: '13%', validUntil: '2026-01-31', priceExTax: '75.22', localPriceExTax: '75.22', localPriceInTax: '85.00', totalInTax: '170,000.00', totalLocal: '170,000.00', taxAmount: '19,557.52', totalExTax: '150,442.48', remark: '已定标', applyNo: 'CGSQ20251217001', ladderInfo: '', quoteDesc: '含税含运', totalExTax2: '150,442.48', taxAmount2: '19,557.52', totalInTax2: '170,000.00', amountCN: '壹拾柒万元整', file: '报价单.pdf', openPrice: '是', purchaseHelper: '王五', supplierContact: '李四', submitter: '用户257522', submitTime: '2026-07-19 08:00:00', updateTime: '2026-07-20 12:00:00', currentNode: '已关闭', currentOwner: '-', quoteStatus: '已结束' },
+      ];
+
+      const filteredData = filterType === 'all' ? allData : allData.filter(item => item.quoteStatus === filterType);
+
+      const columns = [
+        { title: '流程状态', dataIndex: 'flowStatus', width: 90, fixed: 'left', render: (v) => { const color = v === '已生效' ? 'success' : v === '已关闭' ? 'default' : 'processing'; return React.createElement(Tag, { color }, v); } },
+        { title: '流水号', dataIndex: 'serialNo', width: 140 },
+        { title: '协同类型', dataIndex: 'collabType', width: 80 },
+        { title: '询价单号', dataIndex: 'inquiryNo', width: 140 },
+        { title: '询价项目名称', dataIndex: 'projectName', width: 140 },
+        { title: '密封报价', dataIndex: 'sealed', width: 80 },
+        { title: '询价负责人', dataIndex: 'manager', width: 100 },
+        { title: '联系方式', dataIndex: 'contact', width: 120 },
+        { title: '本次询价状态', dataIndex: 'inquiryStatus', width: 110, render: (v) => { const color = v === '已报价' ? 'success' : v === '未报价' ? 'warning' : 'default'; return React.createElement(Tag, { color }, v); } },
+        { title: '本轮报价截止时间', dataIndex: 'deadline', width: 140 },
+        { title: '本次报价轮次', dataIndex: 'round', width: 110, align: 'center' },
+        { title: '汇率', dataIndex: 'rate', width: 60 },
+        { title: '邮件报价', dataIndex: 'emailQuote', width: 80 },
+        { title: '供应商联系邮箱', dataIndex: 'supplierEmail', width: 160 },
+        { title: '报价邮件', dataIndex: 'quoteEmail', width: 80 },
+        { title: '供应商', dataIndex: 'supplier', width: 140 },
+        { title: '报价人', dataIndex: 'quoter', width: 80 },
+        { title: '报价日期', dataIndex: 'quoteDate', width: 110 },
+        { title: '供应商编码', dataIndex: 'supplierCode', width: 120 },
+        { title: '供应商名称', dataIndex: 'supplierName', width: 140 },
+        { title: '参与报价', dataIndex: 'joinQuote', width: 80 },
+        { title: '外币报价', dataIndex: 'foreignQuote', width: 80 },
+        { title: '报价币种', dataIndex: 'currency', width: 80 },
+        { title: '报价时间', dataIndex: 'quoteTime', width: 160 },
+        { title: 'IP地址', dataIndex: 'ip', width: 120 },
+        { title: '报价明细', dataIndex: 'quoteDetail', width: 80 },
+        { title: '需求池流水号', dataIndex: 'poolNo', width: 150 },
+        { title: '物料编码', dataIndex: 'materialCode', width: 130 },
+        { title: '商品', dataIndex: 'goods', width: 120 },
+        { title: '规格型号', dataIndex: 'spec', width: 150 },
+        { title: '单位', dataIndex: 'unit', width: 50, align: 'center' },
+        { title: '需求数量', dataIndex: 'demandQty', width: 80, align: 'right' },
+        { title: '期望到货时间', dataIndex: 'expectDate', width: 120 },
+        { title: '可供货数量', dataIndex: 'availableQty', width: 90, align: 'right' },
+        { title: '报价单价', dataIndex: 'quotePrice', width: 100, align: 'right' },
+        { title: '税率', dataIndex: 'taxRate', width: 60, align: 'center' },
+        { title: '有效期至', dataIndex: 'validUntil', width: 110 },
+        { title: '不含税单价', dataIndex: 'priceExTax', width: 110, align: 'right' },
+        { title: '不含税本币单价', dataIndex: 'localPriceExTax', width: 130, align: 'right' },
+        { title: '含税本币单价', dataIndex: 'localPriceInTax', width: 120, align: 'right' },
+        { title: '含税总价', dataIndex: 'totalInTax', width: 130, align: 'right' },
+        { title: '本币总价', dataIndex: 'totalLocal', width: 120, align: 'right' },
+        { title: '税额', dataIndex: 'taxAmount', width: 110, align: 'right' },
+        { title: '不含税总价', dataIndex: 'totalExTax', width: 120, align: 'right' },
+        { title: '说明', dataIndex: 'remark', width: 80 },
+        { title: '采购申请编号', dataIndex: 'applyNo', width: 150 },
+        { title: '阶梯信息辅助字段', dataIndex: 'ladderInfo', width: 150 },
+        { title: '报价说明', dataIndex: 'quoteDesc', width: 100 },
+        { title: '不含税总价', dataIndex: 'totalExTax2', width: 120, align: 'right' },
+        { title: '税额', dataIndex: 'taxAmount2', width: 110, align: 'right' },
+        { title: '含税总金额', dataIndex: 'totalInTax2', width: 120, align: 'right' },
+        { title: '金额大写', dataIndex: 'amountCN', width: 160 },
+        { title: '文件', dataIndex: 'file', width: 100 },
+        { title: '开价', dataIndex: 'openPrice', width: 60 },
+        { title: '采购协助人', dataIndex: 'purchaseHelper', width: 100 },
+        { title: '供应商联系人', dataIndex: 'supplierContact', width: 110 },
+        { title: '提交人', dataIndex: 'submitter', width: 100, render: (v) => React.createElement('a', { style: { color: '#1677ff' } }, v) },
+        { title: '提交时间', dataIndex: 'submitTime', width: 170 },
+        { title: '更新时间', dataIndex: 'updateTime', width: 170 },
+        { title: '当前节点', dataIndex: 'currentNode', width: 90 },
+        { title: '当前负责人', dataIndex: 'currentOwner', width: 100 },
+        { title: '操作', key: 'action', width: 80, fixed: 'right', render: () => React.createElement('a', { style: { color: '#1677ff' } }, '详情') },
+      ];
+
+      const filterTypes = ['all', '未报价', '已报价', '已结束'];
+
+      return (
+        <div style={{ background: '#fff', borderRadius: 8, padding: '16px 24px' }}>
+          {/* 筛选按钮组 */}
+          <div style={{ display: 'flex', gap: 0, marginBottom: 16 }}>
+            {filterTypes.map((type, idx) => (
+              <div key={type} onClick={() => setFilterType(type)} style={{ padding: '6px 20px', cursor: 'pointer', fontSize: 13, background: filterType === type ? '#1677ff' : '#fff', color: filterType === type ? '#fff' : '#595959', border: '1px solid ' + (filterType === type ? '#1677ff' : '#d9d9d9'), borderRadius: idx === 0 ? '4px 0 0 4px' : idx === filterTypes.length - 1 ? '0 4px 4px 0' : 0, borderLeft: idx !== 0 ? 'none' : undefined, transition: 'all 0.2s' }}>{type === 'all' ? '全部' : type}</div>
+            ))}
+          </div>
+          {/* 工具栏 */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+            <Space size={8}>
+              <Button icon={React.createElement(ImportOutlined)}>导入</Button>
+              <Button icon={React.createElement(ExportOutlined)}>导出</Button>
+            </Space>
+            <Space size={8}>
+              <Select defaultValue="all" size="middle" style={{ width: 110 }}><Option value="all">搜索范围</Option></Select>
+              <Input placeholder="请输入搜索内容" style={{ width: 220 }} suffix={React.createElement(SearchOutlined)} />
+            </Space>
+          </div>
+          {/* 表格 */}
+          <Table columns={columns} dataSource={filteredData} rowSelection={{ selectedRowKeys, onChange: setSelectedRowKeys }} bordered size="small" pagination={false} scroll={{ x: 8000 }} />
+          {/* 分页 */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 12, padding: '12px 0 8px', borderTop: '1px solid #f0f0f0' }}>
+            <Space size={16}>
+              {React.createElement(ColumnWidthOutlined, { style: { color: '#8c8c8c' } })}
+              <Select defaultValue="20" size="small" style={{ width: 90 }}><Option value="20">20条/页</Option><Option value="50">50条/页</Option></Select>
+              <span style={{ color: '#595959', fontSize: 13 }}>共 {filteredData.length} 条</span>
+            </Space>
+            <Pagination current={1} total={filteredData.length} pageSize={20} size="small" showSizeChanger={false} />
+          </div>
+        </div>
+      );
+    }
+
     // ===== 供应商绩效看板组件 =====
     function QualityBoard() {
       const chart1Ref = useRef(null);
@@ -2865,6 +4366,24 @@
       const isSupplierRegister = selectedKeys[0] === "supplier/register";
       // 是否显示供应商绩效看板
       const isQualityBoard = selectedKeys[0] === "quality/board";
+      // 是否显示绩效考核方案
+      const isQualityPlan = selectedKeys[0] === "quality/plan";
+      // 是否显示绩效考核评价
+      const isQualityEvaluation = selectedKeys[0] === "quality/evaluation";
+      // 是否显示采购需求看板
+      const isDemandBoard = selectedKeys[0] === "procurement/data-board/demand";
+      // 是否显示需求跟踪看板
+      const isTrackBoard = selectedKeys[0] === "procurement/data-board/track";
+      // 是否显示寻源统计看板
+      const isSourceBoard = selectedKeys[0] === "procurement/data-board/source";
+      // 是否显示项目管理
+      const isProjectMgmt = selectedKeys[0] === "procurement/project";
+      // 是否显示采购申请
+      const isPurchaseApply = selectedKeys[0] === "procurement/apply";
+      // 是否显示采购需求池
+      const isPurchasePool = selectedKeys[0] === "procurement/pool";
+      // 是否显示询价大厅
+      const isInquiryHall = selectedKeys[0] === "rfq/hall";
 
       return (
         <Layout style={{ minHeight: "100vh" }}>
@@ -2962,13 +4481,13 @@
             {/* Content */}
             <Content className="site-content">
               {/* 面包屑 */}
-              {!isHomePage && !isSupplierBoard && !isSupplierAccess && !isSupplierType && !isSupplierArchive && !isSupplierRegister && !isQualityBoard && <Breadcrumb
+              {!isHomePage && !isSupplierBoard && !isSupplierAccess && !isSupplierType && !isSupplierArchive && !isSupplierRegister && !isQualityBoard && !isQualityPlan && !isQualityEvaluation && !isDemandBoard && !isTrackBoard && !isSourceBoard && !isProjectMgmt && !isPurchaseApply && !isPurchasePool && !isInquiryHall && <Breadcrumb
                 items={breadcrumb}
                 style={{ marginBottom: 16 }}
               />}
 
               {/* 主内容卡片 */}
-              <div className="content-card" style={(isHomePage || isSupplierBoard || isSupplierAccess || isSupplierType || isSupplierArchive || isSupplierRegister || isQualityBoard) ? { padding: 0, background: 'transparent', boxShadow: 'none' } : {}}>
+              <div className="content-card" style={(isHomePage || isSupplierBoard || isSupplierAccess || isSupplierType || isSupplierArchive || isSupplierRegister || isQualityBoard || isQualityPlan || isQualityEvaluation || isDemandBoard || isTrackBoard || isSourceBoard || isProjectMgmt || isPurchaseApply || isPurchasePool || isInquiryHall) ? { padding: 0, background: 'transparent', boxShadow: 'none' } : {}}>
                 {isHomePage ? (
                   <HomeDashboard />
                 ) : isSupplierBoard ? (
@@ -2983,6 +4502,24 @@
                   <SupplierRegister />
                 ) : isQualityBoard ? (
                   <QualityBoard />
+                ) : isQualityPlan ? (
+                  <QualityPlan />
+                ) : isQualityEvaluation ? (
+                  <QualityEvaluation />
+                ) : isDemandBoard ? (
+                  <DemandBoard />
+                ) : isTrackBoard ? (
+                  <TrackBoard />
+                ) : isSourceBoard ? (
+                  <SourceBoard />
+                ) : isProjectMgmt ? (
+                  <ProjectManagement />
+                ) : isPurchaseApply ? (
+                  <PurchaseApply />
+                ) : isPurchasePool ? (
+                  <PurchasePool />
+                ) : isInquiryHall ? (
+                  <InquiryHall />
                 ) : (
                   <div>
                     <div className="page-header">
