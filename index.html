@@ -329,6 +329,9 @@
       ExpandOutlined,
       MessageOutlined,
       InfoCircleOutlined,
+      ShareAltOutlined,
+      PrinterOutlined,
+      SwapOutlined,
     } = icons;
 
     // ===== 菜单数据定义 =====
@@ -4019,6 +4022,1123 @@
       );
     }
 
+    // ===== 询价申请组件 =====
+    function InquiryApply() {
+      const [selectedRowKeys, setSelectedRowKeys] = useState([]);
+      const [addVisible, setAddVisible] = useState(false);
+      const [detailVisible, setDetailVisible] = useState(false);
+      const [detailRecord, setDetailRecord] = useState(null);
+      const [colConfigVisible, setColConfigVisible] = useState(false);
+      const [detailTab, setDetailTab] = useState('basic');
+      const [addForm, setAddForm] = useState({ projectName: '', inquiryDate: null, manager: '用户257522', needPreReview: false, emailQuote: true, foreignCurrency: 'no', suppliers: [], supplierTotal: 0, description: '', quoteRounds: '', round1: true, round1Deadline: null, round2: false, round2Deadline: null, round3: false, round3Deadline: null, invoiceType: '增值税专用发票', paymentMethod: '银行转账', paymentTerms: [], contentItems: [] });
+
+      // 列配置定义
+      const colConfigTree = [
+        { key: 'flowStatus', label: '流程状态', checked: true },
+        { key: 'applyNo', label: '申请单号', checked: true },
+        { key: 'projectName', label: '询价项目名称', checked: true },
+        { key: 'inquiryDate', label: '询价日期', checked: true },
+        { key: 'manager', label: '询价负责人', checked: true },
+        { key: 'contentGroup', label: '询价内容', checked: true, children: [
+          { key: 'contentApplyNo', label: '申请单号', checked: true },
+          { key: 'goodsName', label: '物品名称', checked: true },
+          { key: 'spec', label: '规格型号', checked: true },
+          { key: 'unit', label: '单位', checked: true },
+          { key: 'expectDate', label: '期望到货时间', checked: true },
+          { key: 'applyQty', label: '申请数量', checked: true },
+          { key: 'budgetPrice', label: '预算单价', checked: true },
+          { key: 'amountExTax', label: '不含税金额', checked: true },
+          { key: 'taxRate', label: '税率', checked: true },
+          { key: 'amountInTax', label: '含税金额', checked: true },
+          { key: 'poolNo', label: '需求池流水号', checked: true },
+        ]},
+        { key: 'needPreReview', label: '需要资格预审', checked: false },
+        { key: 'reviewTemplate', label: '选择评审模板', checked: false },
+        { key: 'passScore', label: '及格分', checked: false },
+        { key: 'preReviewer', label: '预审评委', checked: false },
+        { key: 'preReviewTime', label: '预审完成时间', checked: false },
+        { key: 'reviewerCount', label: '评委人数', checked: true },
+        { key: 'reviewRuleGroup', label: '预审评审规则', checked: false, children: [
+          { key: 'reviewItem', label: '评审项目', checked: true },
+          { key: 'reviewRatio', label: '占比', checked: true },
+        ]},
+        { key: 'needSignup', label: '需要供应商报名', checked: false },
+        { key: 'signupDeadline', label: '报名截止时间', checked: false },
+        { key: 'needDeposit', label: '需要保证金', checked: false },
+        { key: 'deposit', label: '保证金', checked: false },
+        { key: 'sealedQuote', label: '密封报价', checked: false },
+        { key: 'supplierGroup', label: '入围供应商', checked: true, children: [
+          { key: 'supplierName', label: '供应商名称', checked: false },
+          { key: 'contactPerson', label: '联系人', checked: true },
+          { key: 'contactPhone', label: '联系电话', checked: true },
+          { key: 'contactEmail', label: '联系邮箱', checked: true },
+          { key: 'collabType', label: '协同类型', checked: true },
+        ]},
+        { key: 'supplierRelation', label: '供应商关联关系', checked: true },
+        { key: 'inquiryStatus', label: '询价状态', checked: false },
+        { key: 'inquiryDesc', label: '询价说明', checked: true },
+        { key: 'confirmAux', label: '确认参与辅助字段', checked: false },
+        { key: 'quoteRounds', label: '报价轮数', checked: true },
+        { key: 'round1Start', label: '启动第一轮报价', checked: true },
+        { key: 'round1Deadline', label: '第一轮截止时间', checked: true },
+        { key: 'round2Start', label: '启动第二轮报价', checked: true },
+        { key: 'round2Deadline', label: '第二轮截止时间', checked: true },
+        { key: 'round3Start', label: '启动第三轮报价', checked: true },
+        { key: 'round3Deadline', label: '第三轮截止时间', checked: true },
+        { key: 'invoiceType', label: '发票类型', checked: true },
+        { key: 'paymentMethod', label: '付款方式', checked: true },
+        { key: 'paymentTermGroup', label: '付款条款', checked: true, children: [
+          { key: 'payCondition', label: '付款条件', checked: true },
+          { key: 'payRatio', label: '付款比例', checked: true },
+        ]},
+        { key: 'currentTime', label: '当前时间', checked: true },
+        { key: 'submitter', label: '提交人', checked: true },
+        { key: 'submitTime', label: '提交时间', checked: true },
+        { key: 'updateTime', label: '更新时间', checked: true },
+        { key: 'currentNode', label: '当前节点', checked: true },
+        { key: 'currentOwner', label: '当前负责人', checked: true },
+      ];
+      const [colChecked, setColChecked] = useState(() => {
+        const m = {};
+        const walk = (arr) => arr.forEach(item => { m[item.key] = item.checked; if (item.children) walk(item.children); });
+        walk(colConfigTree);
+        return m;
+      });
+
+      const toggleCol = (key) => setColChecked(prev => ({ ...prev, [key]: !prev[key] }));
+
+      const tableData = [
+        { key: '1', flowStatus: '已生效', applyNo: 'XJ20260129001', projectName: '整车配件2026年第一季度采购', inquiryDate: '2026-01-29', manager: '李里', contentApplyNo: 'SQ20260129001', goodsName: '汽车轮胎', spec: '米其林 205/55R16 Energy XM2', unit: '条', expectDate: '2026-01-31', applyQty: 4000, budgetPrice: '320.00', amountExTax: '1,132,743.36', taxRate: '13%', amountInTax: '1,280,000.00', poolNo: 'XQC202601290014', needPreReview: '是', reviewTemplate: '通用方案', passScore: 80, preReviewer: '李里', preReviewTime: '2026-01-29 22:05', reviewerCount: 1, reviewItem: '技术团队配置', reviewRatio: '40%', needSignup: '否', signupDeadline: '2026-01-29 23:59', needDeposit: '否', deposit: '', sealedQuote: '否', supplierName: '上海易点科技有限公司', contactPerson: '李里', contactPhone: '123', contactEmail: '123@123.com', collabType: '协同', supplierRelation: '-', inquiryStatus: '已完成', inquiryDesc: '', confirmAux: '是', quoteRounds: '二轮报价', round1Start: '一轮报价', round1Deadline: '2026-01-30 18:05', round2Start: '二轮报价', round2Deadline: '2026-01-29 23:20', round3Start: '三轮报价', round3Deadline: '', invoiceType: '增值税专用发票', paymentMethod: '银行转账', payCondition: '', payRatio: '', currentTime: '2026-01-29 18:05', submitter: '用户257522', submitTime: '2026-07-21 11:31:49', updateTime: '', currentNode: '', currentOwner: '' },
+        { key: '2', flowStatus: '已生效', applyNo: 'XJ20260129002', projectName: '制动盘紧急采购', inquiryDate: '2026-01-29', manager: '李里', contentApplyNo: 'SQ20260129001', goodsName: '制动盘', spec: '萨瓦尼尼 282X23', unit: '组', expectDate: '2026-01-31', applyQty: 2000, budgetPrice: '85.00', amountExTax: '150,442.48', taxRate: '13%', amountInTax: '170,000.00', poolNo: 'XQC202601290013', needPreReview: '否', reviewTemplate: '', passScore: '', preReviewer: '', preReviewTime: '', reviewerCount: '', reviewItem: '', reviewRatio: '', needSignup: '否', signupDeadline: '', needDeposit: '否', deposit: '', sealedQuote: '否', supplierName: '武汉办公用品有限公司', contactPerson: 'lixd0126@yi', contactPhone: '123', contactEmail: '123@123.com', collabType: '协同', supplierRelation: '-', inquiryStatus: '已完成', inquiryDesc: '', confirmAux: '是', quoteRounds: '一轮报价', round1Start: '一轮报价', round1Deadline: '2026-01-30 18:05', round2Start: '', round2Deadline: '', round3Start: '', round3Deadline: '', invoiceType: '增值税专用发票', paymentMethod: '银行转账', payCondition: '', payRatio: '', currentTime: '2026-01-29 18:05', submitter: '用户257522', submitTime: '2026-07-21 11:31:49', updateTime: '', currentNode: '', currentOwner: '' },
+      ];
+
+      const allColumns = [
+        { title: '流程状态', dataIndex: 'flowStatus', width: 90, fixed: 'left', render: (v) => React.createElement(Tag, { color: v === '已生效' ? 'success' : 'default' }, v) },
+        { title: '申请单号', dataIndex: 'applyNo', width: 150 },
+        { title: '询价项目名称', dataIndex: 'projectName', width: 200, ellipsis: true },
+        { title: '询价日期', dataIndex: 'inquiryDate', width: 110 },
+        { title: '询价负责人', dataIndex: 'manager', width: 100 },
+        { title: '申请单号', dataIndex: 'contentApplyNo', width: 150 },
+        { title: '物品名称', dataIndex: 'goodsName', width: 100 },
+        { title: '规格型号', dataIndex: 'spec', width: 180, ellipsis: true },
+        { title: '单位', dataIndex: 'unit', width: 50, align: 'center' },
+        { title: '期望到货时间', dataIndex: 'expectDate', width: 120 },
+        { title: '申请数量', dataIndex: 'applyQty', width: 90, align: 'right' },
+        { title: '预算单价', dataIndex: 'budgetPrice', width: 100, align: 'right' },
+        { title: '不含税金额', dataIndex: 'amountExTax', width: 130, align: 'right' },
+        { title: '税率', dataIndex: 'taxRate', width: 60, align: 'center' },
+        { title: '含税金额', dataIndex: 'amountInTax', width: 130, align: 'right' },
+        { title: '需求池流水号', dataIndex: 'poolNo', width: 150 },
+        { title: '需要资格预审', dataIndex: 'needPreReview', width: 110 },
+        { title: '选择评审模板', dataIndex: 'reviewTemplate', width: 120 },
+        { title: '及格分', dataIndex: 'passScore', width: 70, align: 'center' },
+        { title: '预审评委', dataIndex: 'preReviewer', width: 90 },
+        { title: '预审完成时间', dataIndex: 'preReviewTime', width: 150 },
+        { title: '评委人数', dataIndex: 'reviewerCount', width: 80, align: 'center' },
+        { title: '评审项目', dataIndex: 'reviewItem', width: 140 },
+        { title: '占比', dataIndex: 'reviewRatio', width: 60, align: 'center' },
+        { title: '需要供应商报名', dataIndex: 'needSignup', width: 120 },
+        { title: '报名截止时间', dataIndex: 'signupDeadline', width: 150 },
+        { title: '需要保证金', dataIndex: 'needDeposit', width: 100 },
+        { title: '保证金', dataIndex: 'deposit', width: 80 },
+        { title: '密封报价', dataIndex: 'sealedQuote', width: 80 },
+        { title: '供应商名称', dataIndex: 'supplierName', width: 160 },
+        { title: '联系人', dataIndex: 'contactPerson', width: 100 },
+        { title: '联系电话', dataIndex: 'contactPhone', width: 100 },
+        { title: '联系邮箱', dataIndex: 'contactEmail', width: 130 },
+        { title: '协同类型', dataIndex: 'collabType', width: 80 },
+        { title: '供应商关联关系', dataIndex: 'supplierRelation', width: 120 },
+        { title: '询价状态', dataIndex: 'inquiryStatus', width: 90, render: (v) => React.createElement(Tag, { color: v === '已完成' ? 'success' : 'processing' }, v) },
+        { title: '询价说明', dataIndex: 'inquiryDesc', width: 120 },
+        { title: '确认参与辅助字段', dataIndex: 'confirmAux', width: 130 },
+        { title: '报价轮数', dataIndex: 'quoteRounds', width: 90 },
+        { title: '启动第一轮报价', dataIndex: 'round1Start', width: 120 },
+        { title: '第一轮截止时间', dataIndex: 'round1Deadline', width: 150 },
+        { title: '启动第二轮报价', dataIndex: 'round2Start', width: 120 },
+        { title: '第二轮截止时间', dataIndex: 'round2Deadline', width: 150 },
+        { title: '启动第三轮报价', dataIndex: 'round3Start', width: 120 },
+        { title: '第三轮截止时间', dataIndex: 'round3Deadline', width: 150 },
+        { title: '发票类型', dataIndex: 'invoiceType', width: 130 },
+        { title: '付款方式', dataIndex: 'paymentMethod', width: 100 },
+        { title: '付款条件', dataIndex: 'payCondition', width: 100 },
+        { title: '付款比例', dataIndex: 'payRatio', width: 80 },
+        { title: '当前时间', dataIndex: 'currentTime', width: 150 },
+        { title: '提交人', dataIndex: 'submitter', width: 100, render: (v) => React.createElement('a', { style: { color: '#1677ff' } }, v) },
+        { title: '提交时间', dataIndex: 'submitTime', width: 170 },
+        { title: '更新时间', dataIndex: 'updateTime', width: 170 },
+        { title: '当前节点', dataIndex: 'currentNode', width: 90 },
+        { title: '当前负责人', dataIndex: 'currentOwner', width: 100 },
+        { title: '操作', key: 'action', width: 80, fixed: 'right', render: (_, record) => React.createElement('a', { style: { color: '#1677ff' }, onClick: () => { setDetailRecord(record); setDetailVisible(true); } }, '详情') },
+      ];
+
+      // 根据列配置过滤显示列
+      const colKeyMap = ['applyNo','projectName','inquiryDate','manager','contentApplyNo','goodsName','spec','unit','expectDate','applyQty','budgetPrice','amountExTax','taxRate','amountInTax','poolNo','needPreReview','reviewTemplate','passScore','preReviewer','preReviewTime','reviewerCount','reviewItem','reviewRatio','needSignup','signupDeadline','needDeposit','deposit','sealedQuote','supplierName','contactPerson','contactPhone','contactEmail','collabType','supplierRelation','inquiryStatus','inquiryDesc','confirmAux','quoteRounds','round1Start','round1Deadline','round2Start','round2Deadline','round3Start','round3Deadline','invoiceType','paymentMethod','payCondition','payRatio','currentTime','submitter','submitTime','updateTime','currentNode','currentOwner'];
+      const configKeyOrder = [];
+      const walkKeys = (arr) => arr.forEach(item => { if (!item.children) configKeyOrder.push(item.key); else walkKeys(item.children); });
+      walkKeys(colConfigTree);
+      const visibleColKeys = new Set(configKeyOrder.filter(k => colChecked[k]));
+      const visibleColumns = allColumns.filter((col, idx) => {
+        if (col.key === 'action') return true;
+        if (col.fixed === 'left') return true;
+        const ck = colKeyMap[idx - 1]; // offset for fixed left cols
+        return ck ? visibleColKeys.has(ck) : true;
+      });
+
+      const blueBtnStyle = { background: '#1677ff', borderColor: '#1677ff' };
+      const sectionTitle = (text) => React.createElement('div', { style: { marginBottom: 16 } }, React.createElement('div', { style: { display: 'flex', alignItems: 'center', marginBottom: 8 } }, React.createElement('div', { style: { background: 'linear-gradient(90deg, #4a7cf7 0%, #6c9cff 100%)', color: '#fff', padding: '6px 16px', borderRadius: 4, fontSize: 14, fontWeight: 600, position: 'relative', overflow: 'hidden', display: 'inline-flex' } }, text, React.createElement('span', { style: { position: 'absolute', right: 0, top: 0, width: 24, height: '100%', background: 'repeating-linear-gradient(135deg, transparent, transparent 2px, rgba(255,255,255,0.3) 2px, rgba(255,255,255,0.3) 4px)' } }))), React.createElement('div', { style: { height: 2, background: '#4a7cf7' } }));
+
+      // 列配置面板内容
+      const renderColConfig = () => React.createElement('div', { style: { maxHeight: 500, overflowY: 'auto', width: 220 } }, colConfigTree.map(item => React.createElement('div', { key: item.key }, React.createElement('div', { style: { display: 'flex', alignItems: 'center', padding: '4px 0' } }, React.createElement(Checkbox, { checked: colChecked[item.key], onChange: () => toggleCol(item.key) }), React.createElement('span', { style: { marginLeft: 8, fontSize: 13 } }, item.label)), item.children && React.createElement('div', { style: { paddingLeft: 24 } }, item.children.map(child => React.createElement('div', { key: child.key, style: { display: 'flex', alignItems: 'center', padding: '3px 0' } }, React.createElement(Checkbox, { checked: colChecked[child.key], onChange: () => toggleCol(child.key) }), React.createElement('span', { style: { marginLeft: 8, fontSize: 13 } }, child.label)))))));
+
+      return (
+        <div style={{ background: '#fff', borderRadius: 8, padding: '16px 24px' }}>
+          {/* 工具栏 */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+            <Space size={8}>
+              <Button type="primary" style={blueBtnStyle} icon={React.createElement(PlusOutlined)} onClick={() => { setAddForm({ projectName: '', inquiryDate: null, manager: '用户257522', needPreReview: false, emailQuote: true, foreignCurrency: 'no', suppliers: [], supplierTotal: 0, description: '', quoteRounds: '', round1: true, round1Deadline: null, round2: false, round2Deadline: null, round3: false, round3Deadline: null, invoiceType: '增值税专用发票', paymentMethod: '银行转账', paymentTerms: [], contentItems: [] }); setAddVisible(true); }}>新建</Button>
+              <Button icon={React.createElement(ImportOutlined)}>导入</Button>
+              <Button icon={React.createElement(ExportOutlined)}>导出</Button>
+            </Space>
+            <Space size={8}>
+              <Select defaultValue="all" size="middle" style={{ width: 110 }}><Option value="all">搜索范围</Option></Select>
+              <Input placeholder="请输入搜索内容" style={{ width: 220 }} suffix={React.createElement(SearchOutlined)} />
+            </Space>
+          </div>
+          {/* 表格 */}
+          <Table columns={visibleColumns} dataSource={tableData} rowSelection={{ selectedRowKeys, onChange: setSelectedRowKeys }} bordered size="small" pagination={false} scroll={{ x: 6000 }} />
+          {/* 分页 */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 12, padding: '12px 0 8px', borderTop: '1px solid #f0f0f0' }}>
+            <Space size={16}>
+              <Popover content={renderColConfig()} trigger="click" open={colConfigVisible} onOpenChange={setColConfigVisible} placement="topLeft">
+                {React.createElement(ColumnWidthOutlined, { style: { color: '#8c8c8c', cursor: 'pointer' } })}
+              </Popover>
+              <Select defaultValue="20" size="small" style={{ width: 90 }}><Option value="20">20条/页</Option><Option value="50">50条/页</Option></Select>
+              <span style={{ color: '#595959', fontSize: 13 }}>共 {tableData.length} 条</span>
+            </Space>
+            <Pagination current={1} total={tableData.length} pageSize={20} size="small" showSizeChanger={false} />
+          </div>
+
+          {/* ===== 新建弹框 ===== */}
+          <Modal title="新建询价申请" open={addVisible} onCancel={() => setAddVisible(false)} footer={null} width={1100}>
+            <div style={{ padding: '16px 20px', maxHeight: '75vh', overflowY: 'auto' }}>
+              {/* 头部表单 */}
+              <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
+                <Col span={8}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>询价项目名称 <span style={{ color: '#ff4d4f' }}>*</span></div><Input value={addForm.projectName} onChange={(e) => setAddForm(prev => ({ ...prev, projectName: e.target.value }))} placeholder="请输入" /></Col>
+                <Col span={8}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>询价日期</div><DatePicker style={{ width: '100%' }} value={addForm.inquiryDate} onChange={(d) => setAddForm(prev => ({ ...prev, inquiryDate: d }))} /></Col>
+                <Col span={8}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>询价负责人</div><div style={{ display: 'flex', alignItems: 'center', border: '1px solid #d9d9d9', borderRadius: 4, padding: '4px 8px', minHeight: 32, background: '#fafafa' }}>{React.createElement(Avatar, { size: 20, style: { backgroundColor: '#52c41a', fontSize: 11 } }, '用')}<span style={{ marginLeft: 6, fontSize: 13 }}>{addForm.manager}</span></div></Col>
+              </Row>
+              {/* 询价内容 */}
+              <div style={{ marginBottom: 16 }}>
+                <div style={{ fontSize: 14, fontWeight: 500, marginBottom: 8 }}>询价内容 <span style={{ color: '#ff4d4f' }}>*</span></div>
+                <Table dataSource={addForm.contentItems} columns={[
+                  { title: '#', width: 40, align: 'center', render: (_, __, idx) => idx + 1 },
+                  { title: '选择需求池', width: 100, render: () => React.createElement(Button, { type: 'link', size: 'small' }, '选择') },
+                  { title: '物品名称 *', dataIndex: 'goodsName', render: (v, _, idx) => React.createElement(Input, { size: 'small', value: v, onChange: (e) => { const arr = [...addForm.contentItems]; arr[idx] = { ...arr[idx], goodsName: e.target.value }; setAddForm(prev => ({ ...prev, contentItems: arr })); } }) },
+                  { title: '规格型号', dataIndex: 'spec', render: (v, _, idx) => React.createElement(Input, { size: 'small', value: v, onChange: (e) => { const arr = [...addForm.contentItems]; arr[idx] = { ...arr[idx], spec: e.target.value }; setAddForm(prev => ({ ...prev, contentItems: arr })); } }) },
+                  { title: '报价方式 *', dataIndex: 'quoteMethod', render: (v, _, idx) => React.createElement(Select, { size: 'small', style: { width: '100%' }, value: v, onChange: (val) => { const arr = [...addForm.contentItems]; arr[idx] = { ...arr[idx], quoteMethod: val }; setAddForm(prev => ({ ...prev, contentItems: arr })); } }, React.createElement(Option, { value: '单价' }, '单价'), React.createElement(Option, { value: '总价' }, '总价')) },
+                  { title: '报价模板', dataIndex: 'quoteTemplate', render: (v, _, idx) => React.createElement(Input, { size: 'small', value: v, onChange: (e) => { const arr = [...addForm.contentItems]; arr[idx] = { ...arr[idx], quoteTemplate: e.target.value }; setAddForm(prev => ({ ...prev, contentItems: arr })); } }) },
+                  { title: '报价阶梯', dataIndex: 'quoteLadder', render: (v, _, idx) => React.createElement(Input, { size: 'small', value: v, onChange: (e) => { const arr = [...addForm.contentItems]; arr[idx] = { ...arr[idx], quoteLadder: e.target.value }; setAddForm(prev => ({ ...prev, contentItems: arr })); } }) },
+                  { title: '单位', dataIndex: 'unit', width: 60, render: (v, _, idx) => React.createElement(Input, { size: 'small', value: v, onChange: (e) => { const arr = [...addForm.contentItems]; arr[idx] = { ...arr[idx], unit: e.target.value }; setAddForm(prev => ({ ...prev, contentItems: arr })); } }) },
+                ]} bordered size="small" pagination={false} scroll={{ x: 900 }} />
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 8 }}>
+                  <Space size={16}><a style={{ color: '#1677ff' }} onClick={() => setAddForm(prev => ({ ...prev, contentItems: [...prev.contentItems, { key: Date.now().toString() }] }))}>+ 添加</a><a style={{ color: '#1677ff' }}>导入</a></Space>
+                  <span style={{ color: '#8c8c8c', fontSize: 12 }}>{addForm.contentItems.length} / 200</span>
+                </div>
+              </div>
+              {/* 询价规则 */}
+              {sectionTitle('询价规则')}
+              <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
+                <Col span={8}><div style={{ fontSize: 13, color: '#595959', marginBottom: 8 }}>需要资格预审</div><Radio.Group value={addForm.needPreReview} onChange={(e) => setAddForm(prev => ({ ...prev, needPreReview: e.target.value }))}><Radio value={true}><Tag color="blue">是</Tag></Radio><Radio value={false}><Tag color="green">否</Tag></Radio></Radio.Group></Col>
+                <Col span={8}><div style={{ fontSize: 13, color: '#595959', marginBottom: 8 }}>启用邮件报价</div><Radio.Group value={addForm.emailQuote} onChange={(e) => setAddForm(prev => ({ ...prev, emailQuote: e.target.value }))}><Radio value={true}><Tag color="blue">是</Tag></Radio><Radio value={false}><Tag color="green">否</Tag></Radio></Radio.Group></Col>
+                <Col span={8}><div style={{ fontSize: 13, color: '#595959', marginBottom: 8 }}>接受外币报价</div><Radio.Group value={addForm.foreignCurrency} onChange={(e) => setAddForm(prev => ({ ...prev, foreignCurrency: e.target.value }))}><Radio value="unlimited"><Tag color="blue">是，不限定币种</Tag></Radio><Radio value="specified"><Tag color="blue">是，指定币种</Tag></Radio><Radio value="no"><Tag color="green">否</Tag></Radio></Radio.Group></Col>
+              </Row>
+              {/* 入围供应商 */}
+              <div style={{ marginBottom: 16 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}><span style={{ fontSize: 14, fontWeight: 500 }}>入围供应商 <span style={{ color: '#ff4d4f' }}>*</span></span><Button size="small" type="primary" ghost icon={React.createElement(PlusOutlined)}>推荐供应商</Button></div>
+                <Table dataSource={addForm.suppliers} columns={[
+                  { title: '#', width: 40, align: 'center', render: (_, __, idx) => idx + 1 },
+                  { title: '供应商名称', dataIndex: 'name', render: (v, _, idx) => React.createElement(Input, { size: 'small', value: v, onChange: (e) => { const arr = [...addForm.suppliers]; arr[idx] = { ...arr[idx], name: e.target.value }; setAddForm(prev => ({ ...prev, suppliers: arr })); } }) },
+                  { title: '联系人', dataIndex: 'contact', render: (v, _, idx) => React.createElement(Input, { size: 'small', value: v, onChange: (e) => { const arr = [...addForm.suppliers]; arr[idx] = { ...arr[idx], contact: e.target.value }; setAddForm(prev => ({ ...prev, suppliers: arr })); } }) },
+                  { title: '联系电话', dataIndex: 'phone', render: (v, _, idx) => React.createElement(Input, { size: 'small', value: v, onChange: (e) => { const arr = [...addForm.suppliers]; arr[idx] = { ...arr[idx], phone: e.target.value }; setAddForm(prev => ({ ...prev, suppliers: arr })); } }) },
+                  { title: '联系邮箱', dataIndex: 'email', render: (v, _, idx) => React.createElement(Input, { size: 'small', value: v, onChange: (e) => { const arr = [...addForm.suppliers]; arr[idx] = { ...arr[idx], email: e.target.value }; setAddForm(prev => ({ ...prev, suppliers: arr })); } }) },
+                  { title: '入围供应商编码 *', dataIndex: 'code', render: (v, _, idx) => React.createElement(Input, { size: 'small', value: v, onChange: (e) => { const arr = [...addForm.suppliers]; arr[idx] = { ...arr[idx], code: e.target.value }; setAddForm(prev => ({ ...prev, suppliers: arr })); } }) },
+                ]} bordered size="small" pagination={false} scroll={{ x: 800 }} />
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 8 }}>
+                  <Space size={16}><a style={{ color: '#1677ff' }} onClick={() => setAddForm(prev => ({ ...prev, suppliers: [...prev.suppliers, { key: Date.now().toString() }] }))}>+ 添加</a><a style={{ color: '#1677ff' }}>导入</a></Space>
+                  <span style={{ color: '#8c8c8c', fontSize: 12 }}>{addForm.suppliers.length} / 200</span>
+                </div>
+              </div>
+              <div style={{ marginBottom: 16 }}><Button type="primary" style={{ background: '#7c5cfc', borderColor: '#7c5cfc' }}>查看供应商关联关系</Button><div style={{ marginTop: 8, color: '#ff4d4f', fontSize: 12 }}>如果需要查询供应商关联关系，请在开放平台安装「<a>企业风险查询</a>」插件</div></div>
+              <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
+                <Col span={8}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>入围供应商总数</div><Input value={String(addForm.suppliers.length)} readOnly style={{ background: '#f5f5f5' }} /></Col>
+              </Row>
+              <div style={{ marginBottom: 16 }}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>询价说明</div><TextArea rows={4} value={addForm.description} onChange={(e) => setAddForm(prev => ({ ...prev, description: e.target.value }))} placeholder="请输入询价说明" /></div>
+              <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
+                <Col span={8}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>报价轮数 <span style={{ color: '#ff4d4f' }}>*</span></div><Select style={{ width: '100%' }} value={addForm.quoteRounds} onChange={(v) => setAddForm(prev => ({ ...prev, quoteRounds: v }))} placeholder="请选择"><Option value="一轮报价">一轮报价</Option><Option value="二轮报价">二轮报价</Option><Option value="三轮报价">三轮报价</Option></Select></Col>
+                <Col span={8}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>启动第一轮报价 <span style={{ color: '#ff4d4f' }}>*</span></div><div style={{ display: 'flex', alignItems: 'center', gap: 8, paddingTop: 4 }}><Radio checked={addForm.round1} onChange={() => setAddForm(prev => ({ ...prev, round1: true }))} /><Tag color="green">一轮报价</Tag></div></Col>
+                <Col span={8}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>第一轮截止时间 <span style={{ color: '#ff4d4f' }}>*</span></div><DatePicker showTime style={{ width: '100%' }} value={addForm.round1Deadline} onChange={(d) => setAddForm(prev => ({ ...prev, round1Deadline: d }))} /></Col>
+              </Row>
+              {/* 商务条款 */}
+              {sectionTitle('商务条款')}
+              <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
+                <Col span={8}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>发票类型</div><Select style={{ width: '100%' }} value={addForm.invoiceType} onChange={(v) => setAddForm(prev => ({ ...prev, invoiceType: v }))}><Option value="增值税专用发票">增值税专用发票</Option><Option value="增值税普通发票">增值税普通发票</Option><Option value="其他">其他</Option></Select></Col>
+                <Col span={8}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>付款方式</div><Select style={{ width: '100%' }} value={addForm.paymentMethod} onChange={(v) => setAddForm(prev => ({ ...prev, paymentMethod: v }))}><Option value="银行转账">银行转账</Option><Option value="承兑汇票">承兑汇票</Option><Option value="现金">现金</Option></Select></Col>
+              </Row>
+              <div style={{ marginBottom: 16 }}>
+                <div style={{ fontSize: 14, fontWeight: 500, marginBottom: 8 }}>付款条款</div>
+                <Table dataSource={addForm.paymentTerms} columns={[
+                  { title: '#', width: 40, align: 'center', render: (_, __, idx) => idx + 1 },
+                  { title: '付款条件', dataIndex: 'condition', render: (v, _, idx) => React.createElement(Input, { size: 'small', value: v, onChange: (e) => { const arr = [...addForm.paymentTerms]; arr[idx] = { ...arr[idx], condition: e.target.value }; setAddForm(prev => ({ ...prev, paymentTerms: arr })); } }) },
+                  { title: '付款比例', dataIndex: 'ratio', render: (v, _, idx) => React.createElement(Input, { size: 'small', value: v, onChange: (e) => { const arr = [...addForm.paymentTerms]; arr[idx] = { ...arr[idx], ratio: e.target.value }; setAddForm(prev => ({ ...prev, paymentTerms: arr })); } }) },
+                ]} bordered size="small" pagination={false} />
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 8 }}>
+                  <Space size={16}><a style={{ color: '#1677ff' }} onClick={() => setAddForm(prev => ({ ...prev, paymentTerms: [...prev.paymentTerms, { key: Date.now().toString() }] }))}>+ 添加</a><a style={{ color: '#1677ff' }}>导入</a><a style={{ color: '#1677ff' }}>快速填报</a></Space>
+                  <span style={{ color: '#8c8c8c', fontSize: 12 }}>{addForm.paymentTerms.length} / 200</span>
+                </div>
+              </div>
+              <div style={{ textAlign: 'center', padding: '16px 0 4px', borderTop: '1px solid #f0f0f0' }}>
+                <Button type="primary" style={{ ...blueBtnStyle, width: 120, height: 36 }} onClick={() => { antd.message.success('提交成功'); setAddVisible(false); }}>提交</Button>
+              </div>
+            </div>
+          </Modal>
+
+          {/* ===== 详情弹框 ===== */}
+          <Modal title={null} open={detailVisible} onCancel={() => { setDetailVisible(false); setDetailTab('basic'); }} footer={<Button onClick={() => { setDetailVisible(false); setDetailTab('basic'); }}>关闭</Button>} width={1100}>
+            {detailRecord && (
+              <div style={{ display: 'flex', maxHeight: '75vh' }}>
+                {/* 左侧垂直 Tabs */}
+                <div style={{ width: 90, borderRight: '1px solid #f0f0f0', flexShrink: 0, paddingTop: 8 }}>
+                  <div onClick={() => setDetailTab('basic')} style={{ padding: '12px 16px', cursor: 'pointer', fontSize: 14, color: detailTab === 'basic' ? '#1677ff' : '#595959', fontWeight: detailTab === 'basic' ? 500 : 400, borderLeft: detailTab === 'basic' ? '3px solid #1677ff' : '3px solid transparent', background: detailTab === 'basic' ? '#f0f5ff' : 'transparent' }}>基本信息</div>
+                  <div onClick={() => setDetailTab('flow')} style={{ padding: '12px 16px', cursor: 'pointer', fontSize: 14, color: detailTab === 'flow' ? '#1677ff' : '#595959', fontWeight: detailTab === 'flow' ? 500 : 400, borderLeft: detailTab === 'flow' ? '3px solid #1677ff' : '3px solid transparent', background: detailTab === 'flow' ? '#f0f5ff' : 'transparent' }}>业务流程</div>
+                </div>
+                {/* 右侧内容区 */}
+                <div style={{ flex: 1, padding: '0 20px 16px', overflowY: 'auto' }}>
+                {detailTab === 'basic' ? (
+                <div>
+                {/* 顶部操作栏 */}
+                <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', borderBottom: '1px solid #f0f0f0', marginBottom: 16, paddingBottom: 8 }}>
+                  <Space size={16}><a style={{ color: '#595959' }}>{React.createElement(ShareAltOutlined)} 分享</a><a style={{ color: '#595959' }}>{React.createElement(PrinterOutlined)} 打印</a></Space>
+                </div>
+                {/* 头部信息 */}
+                <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
+                  <Col span={8}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>询价项目名称 <span style={{ color: '#ff4d4f' }}>*</span></div><div style={{ padding: '8px 12px', background: '#f5f5f5', borderRadius: 4 }}>{detailRecord.projectName}</div></Col>
+                  <Col span={8}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>询价日期</div><div style={{ padding: '8px 12px', background: '#f5f5f5', borderRadius: 4 }}>{detailRecord.inquiryDate}</div></Col>
+                  <Col span={8}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>询价负责人</div><div style={{ padding: '6px 12px', background: '#f5f5f5', borderRadius: 4, display: 'flex', alignItems: 'center', gap: 6 }}>{React.createElement(Avatar, { size: 20, style: { backgroundColor: '#52c41a', fontSize: 11 } }, detailRecord.manager ? detailRecord.manager[0] : '')}<span>{detailRecord.manager}</span></div></Col>
+                </Row>
+                {/* 询价内容 */}
+                <div style={{ marginBottom: 16 }}>
+                  <div style={{ fontSize: 14, fontWeight: 500, marginBottom: 8 }}>询价内容 <span style={{ color: '#ff4d4f' }}>*</span></div>
+                  <Table dataSource={[
+                    { key: '1', idx: 1, applyNo: detailRecord.contentApplyNo, goodsName: detailRecord.goodsName, spec: detailRecord.spec, unit: detailRecord.unit, expectDate: detailRecord.expectDate },
+                  ]} columns={[
+                    { title: '#', dataIndex: 'idx', width: 40, align: 'center' },
+                    { title: '申请单号', dataIndex: 'applyNo', width: 150 },
+                    { title: '物品名称', dataIndex: 'goodsName', width: 100 },
+                    { title: '规格型号', dataIndex: 'spec', width: 180 },
+                    { title: '单位', dataIndex: 'unit', width: 50, align: 'center' },
+                    { title: '期望到货时间', dataIndex: 'expectDate', width: 120 },
+                  ]} bordered size="small" pagination={false} scroll={{ x: 700 }} />
+                </div>
+                {/* 询价规则 */}
+                {sectionTitle('询价规则')}
+                <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
+                  <Col span={6}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>需要资格预审</div><div><Radio checked={detailRecord.needPreReview === '是'} disabled>是</Radio><Radio checked={detailRecord.needPreReview === '否'} disabled>否</Radio></div></Col>
+                  <Col span={6}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>选择评审模板 <span style={{ color: '#ff4d4f' }}>*</span></div><div style={{ padding: '8px 12px', background: '#f5f5f5', borderRadius: 4 }}>{detailRecord.reviewTemplate || '-'}</div></Col>
+                  <Col span={6}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>及格分 <span style={{ color: '#ff4d4f' }}>*</span></div><div style={{ padding: '8px 12px', background: '#f5f5f5', borderRadius: 4 }}>{detailRecord.passScore || '-'}</div></Col>
+                  <Col span={6}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>预审评委 <span style={{ color: '#ff4d4f' }}>*</span></div><div style={{ padding: '6px 12px', background: '#f5f5f5', borderRadius: 4, display: 'flex', alignItems: 'center', gap: 6 }}>{detailRecord.preReviewer ? React.createElement(React.Fragment, null, React.createElement(Avatar, { size: 20, style: { backgroundColor: '#52c41a', fontSize: 11 } }, detailRecord.preReviewer[0]), React.createElement('span', null, detailRecord.preReviewer)) : '-'}</div></Col>
+                </Row>
+                <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
+                  <Col span={8}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>预审完成时间 <span style={{ color: '#ff4d4f' }}>*</span></div><div style={{ padding: '8px 12px', background: '#f5f5f5', borderRadius: 4 }}>{detailRecord.preReviewTime || '-'}</div></Col>
+                  <Col span={8}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>评委人数</div><div style={{ padding: '8px 12px', background: '#f5f5f5', borderRadius: 4 }}>{detailRecord.reviewerCount || '-'}</div></Col>
+                </Row>
+                {/* 预审评审规则 */}
+                <div style={{ marginBottom: 16 }}>
+                  <div style={{ fontSize: 14, fontWeight: 500, marginBottom: 8 }}>预审评审规则 <span style={{ color: '#ff4d4f' }}>*</span></div>
+                  <Table dataSource={[
+                    { key: '1', idx: 1, item: '技术团队配置', ratio: '40%' },
+                    { key: '2', idx: 2, item: '过往类似项目业绩，提供同类项目3-5个', ratio: '30%' },
+                    { key: '3', idx: 3, item: '技术方案响应能力', ratio: '20%' },
+                    { key: '4', idx: 4, item: '本地化服务能力', ratio: '10%' },
+                  ]} columns={[
+                    { title: '#', dataIndex: 'idx', width: 50, align: 'center' },
+                    { title: '评审项目', dataIndex: 'item' },
+                    { title: '占比', dataIndex: 'ratio', width: 80, align: 'center' },
+                  ]} bordered size="small" pagination={false} />
+                </div>
+                <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
+                  <Col span={8}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>报名截止时间 <span style={{ color: '#ff4d4f' }}>*</span></div><div style={{ padding: '8px 12px', background: '#f5f5f5', borderRadius: 4 }}>{detailRecord.signupDeadline || '-'}</div></Col>
+                  <Col span={8}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>需要保证金 <span style={{ color: '#ff4d4f' }}>*</span></div><div><Radio checked={detailRecord.needDeposit === '是'} disabled>是</Radio><Radio checked={detailRecord.needDeposit === '否'} disabled>否</Radio></div></Col>
+                </Row>
+                {/* 入围供应商 */}
+                <div style={{ marginBottom: 16 }}>
+                  <div style={{ fontSize: 14, fontWeight: 500, marginBottom: 8 }}>入围供应商</div>
+                  <Table dataSource={[
+                    { key: '1', idx: 1, name: '上海易点科技有限公司', contact: '李里', phone: '123', email: '123@123.com' },
+                    { key: '2', idx: 2, name: '武汉办公用品有限公司', contact: 'lixd0126@yi', phone: '123', email: '123@123.com' },
+                  ]} columns={[
+                    { title: '#', dataIndex: 'idx', width: 40, align: 'center' },
+                    { title: '供应商名称', dataIndex: 'name', width: 180 },
+                    { title: '联系人', dataIndex: 'contact', width: 120 },
+                    { title: '联系电话', dataIndex: 'phone', width: 100 },
+                    { title: '联系邮箱', dataIndex: 'email', width: 130 },
+                  ]} bordered size="small" pagination={false} scroll={{ x: 600 }} />
+                </div>
+                <div style={{ marginBottom: 16 }}><Button type="primary" style={{ background: '#7c5cfc', borderColor: '#7c5cfc' }}>查看供应商关联关系</Button></div>
+                <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
+                  <Col span={8}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>询价状态</div><div style={{ padding: '8px 12px', background: '#f5f5f5', borderRadius: 4 }}>{detailRecord.inquiryStatus || '-'}</div></Col>
+                </Row>
+                <div style={{ marginBottom: 16 }}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>询价说明</div><div style={{ padding: '12px', background: '#f5f5f5', borderRadius: 4, minHeight: 60 }}>{detailRecord.inquiryDesc || '-'}</div></div>
+                <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
+                  <Col span={6}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>确认参与辅助字段</div><div><Radio checked={detailRecord.confirmAux === '是'} disabled>是</Radio></div></Col>
+                  <Col span={6}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>报价轮数 <span style={{ color: '#ff4d4f' }}>*</span></div><div style={{ padding: '8px 12px', background: '#f5f5f5', borderRadius: 4 }}>{detailRecord.quoteRounds || '-'}</div></Col>
+                  <Col span={6}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>启动第一轮报价 <span style={{ color: '#ff4d4f' }}>*</span></div><div style={{ display: 'flex', alignItems: 'center', gap: 6 }}><Radio checked disabled />{React.createElement(Tag, { color: 'green' }, detailRecord.round1Start || '一轮报价')}</div></Col>
+                  <Col span={6}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>第一轮截止时间 <span style={{ color: '#ff4d4f' }}>*</span></div><div style={{ padding: '8px 12px', background: '#f5f5f5', borderRadius: 4 }}>{detailRecord.round1Deadline || '-'}</div></Col>
+                </Row>
+                <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
+                  <Col span={6}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>启动第二轮报价 <span style={{ color: '#ff4d4f' }}>*</span></div><div style={{ display: 'flex', alignItems: 'center', gap: 6 }}><Radio checked={!!detailRecord.round2Start} disabled />{detailRecord.round2Start ? React.createElement(Tag, { color: 'green' }, detailRecord.round2Start) : '-'}</div></Col>
+                  <Col span={6}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>第二轮截止时间 <span style={{ color: '#ff4d4f' }}>*</span></div><div style={{ padding: '8px 12px', background: '#f5f5f5', borderRadius: 4 }}>{detailRecord.round2Deadline || '-'}</div></Col>
+                  <Col span={6}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>启动第三轮报价 <span style={{ color: '#ff4d4f' }}>*</span></div><div style={{ display: 'flex', alignItems: 'center', gap: 6 }}><Radio checked={!!detailRecord.round3Start} disabled />{detailRecord.round3Start ? React.createElement(Tag, { color: 'green' }, detailRecord.round3Start) : '-'}</div></Col>
+                  <Col span={6}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>第三轮截止时间 <span style={{ color: '#ff4d4f' }}>*</span></div><div style={{ padding: '8px 12px', background: '#f5f5f5', borderRadius: 4 }}>{detailRecord.round3Deadline || '-'}</div></Col>
+                </Row>
+                {/* 商务条款 */}
+                {sectionTitle('商务条款')}
+                <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
+                  <Col span={8}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>发票类型</div><div style={{ padding: '8px 12px', background: '#f5f5f5', borderRadius: 4 }}>{detailRecord.invoiceType || '-'}</div></Col>
+                  <Col span={8}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>付款方式</div><div style={{ padding: '8px 12px', background: '#f5f5f5', borderRadius: 4 }}>{detailRecord.paymentMethod || '-'}</div></Col>
+                </Row>
+                <div style={{ marginBottom: 16 }}>
+                  <div style={{ fontSize: 14, fontWeight: 500, marginBottom: 8 }}>付款条款</div>
+                  <Table dataSource={[]} columns={[
+                    { title: '#', width: 40, align: 'center', render: (_, __, idx) => idx + 1 },
+                    { title: '付款条件', dataIndex: 'condition' },
+                    { title: '付款比例', dataIndex: 'ratio', width: 100 },
+                  ]} bordered size="small" pagination={false} locale={{ emptyText: '暂无数据' }} />
+                </div>
+                {/* 供应商报价详情 */}
+                <div style={{ marginBottom: 16 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}><span style={{ fontSize: 14, fontWeight: 500 }}>供应商报价详情</span><a style={{ color: '#1677ff', fontSize: 12 }}>{React.createElement(SwapOutlined)} 按商品维度 {React.createElement(ExpandOutlined)}</a></div>
+                  <Table dataSource={[
+                    { key: '1', goodsName: detailRecord.goodsName, spec: detailRecord.spec, qty: detailRecord.applyQty, unit: detailRecord.unit, expectDate: detailRecord.expectDate },
+                  ]} columns={[
+                    { title: '商品名称', dataIndex: 'goodsName', width: 120 },
+                    { title: '规格型号', dataIndex: 'spec', width: 180 },
+                    { title: '需求数量', dataIndex: 'qty', width: 90, align: 'right' },
+                    { title: '单位', dataIndex: 'unit', width: 50, align: 'center' },
+                    { title: '期望到货时间', dataIndex: 'expectDate', width: 120 },
+                  ]} bordered size="small" pagination={{ size: 'small', pageSize: 10, total: 1 }} scroll={{ x: 600 }} />
+                </div>
+                {/* 底部信息 */}
+                <div style={{ borderTop: '1px solid #f0f0f0', paddingTop: 16 }}>
+                  <Row gutter={[16, 12]}>
+                    <Col span={8}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>当前时间</div><div style={{ padding: '8px 12px', background: '#f5f5f5', borderRadius: 4 }}>{detailRecord.currentTime || '-'}</div></Col>
+                  </Row>
+                  <Row gutter={[16, 12]} style={{ marginTop: 12 }}>
+                    <Col span={12}><span style={{ color: '#8c8c8c' }}>提交人</span><a style={{ color: '#1677ff', marginLeft: 16 }}>{detailRecord.submitter}</a></Col>
+                    <Col span={12}><span style={{ color: '#8c8c8c' }}>提交时间</span><span style={{ marginLeft: 16 }}>{detailRecord.submitTime}</span></Col>
+                    <Col span={12}><span style={{ color: '#8c8c8c' }}>更新时间</span><span style={{ marginLeft: 16 }}>{detailRecord.updateTime || '-'}</span></Col>
+                    <Col span={12}><span style={{ color: '#8c8c8c' }}>流程状态</span><span style={{ marginLeft: 16 }}>{React.createElement(Tag, { color: 'success' }, detailRecord.flowStatus)}</span></Col>
+                    <Col span={12}><span style={{ color: '#8c8c8c' }}>当前节点</span><span style={{ marginLeft: 16 }}>{detailRecord.currentNode || '-'}</span></Col>
+                    <Col span={12}><span style={{ color: '#8c8c8c' }}>当前负责人</span><span style={{ marginLeft: 16 }}>{detailRecord.currentOwner || '-'}</span></Col>
+                  </Row>
+                </div>
+              </div>
+              ) : (
+              <div style={{ position: 'relative', minHeight: 500, background: '#f8f9fc', borderRadius: 8, overflow: 'hidden' }}>
+                {/* 业务流程图 */}
+                <svg style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none' }}>
+                  <defs>
+                    <marker id="arrowhead" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#7c8cf7" /></marker>
+                  </defs>
+                  {/* 询价申请 -> 供应商报价单1 */}
+                  <path d="M 280 250 C 350 250, 350 170, 420 170" stroke="#7c8cf7" strokeWidth="1.5" fill="none" markerEnd="url(#arrowhead)" />
+                  {/* 询价申请 -> 供应商报价单2 */}
+                  <path d="M 280 250 C 350 250, 350 340, 420 340" stroke="#7c8cf7" strokeWidth="1.5" fill="none" markerEnd="url(#arrowhead)" />
+                  {/* 供应商报价单1 -> 询价结果确认 */}
+                  <path d="M 620 170 C 690 170, 690 250, 760 250" stroke="#7c8cf7" strokeWidth="1.5" fill="none" markerEnd="url(#arrowhead)" />
+                  {/* 供应商报价单2 -> 询价结果确认 */}
+                  <path d="M 620 340 C 690 340, 690 250, 760 250" stroke="#7c8cf7" strokeWidth="1.5" fill="none" markerEnd="url(#arrowhead)" />
+                </svg>
+                {/* 节点: 询价申请 */}
+                <div style={{ position: 'absolute', left: 60, top: 200, width: 220, background: '#fff', borderRadius: 8, boxShadow: '0 2px 8px rgba(0,0,0,0.08)', padding: '16px 20px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                    <span style={{ fontSize: 14, fontWeight: 500, display: 'flex', alignItems: 'center', gap: 6 }}>{React.createElement(SearchOutlined, { style: { color: '#8c8c8c' } })}询价申请</span>
+                    <span style={{ background: '#7c8cf7', color: '#fff', borderRadius: '50%', width: 20, height: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11 }}>2</span>
+                  </div>
+                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: '#f5f5f5', borderRadius: 4, padding: '2px 8px', fontSize: 12, color: '#595959', marginBottom: 6 }}>XJ20260129012 {React.createElement(CopyOutlined, { style: { fontSize: 11, color: '#8c8c8c' } })}</div>
+                  <div style={{ fontSize: 13, color: '#262626' }}>整车配件2026年第一季度采购</div>
+                </div>
+                {/* 节点: 供应商报价单 1 */}
+                <div style={{ position: 'absolute', left: 420, top: 120, width: 200, background: '#fff', borderRadius: 8, boxShadow: '0 2px 8px rgba(0,0,0,0.08)', padding: '16px 20px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                    <span style={{ fontSize: 14, fontWeight: 500, display: 'flex', alignItems: 'center', gap: 6 }}>{React.createElement(SearchOutlined, { style: { color: '#8c8c8c' } })}供应商报价单</span>
+                    <span style={{ background: '#7c8cf7', color: '#fff', borderRadius: '50%', width: 20, height: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11 }}>1</span>
+                  </div>
+                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: '#f5f5f5', borderRadius: 4, padding: '2px 8px', fontSize: 12, color: '#595959', marginBottom: 6 }}>BJ20260129025 {React.createElement(CopyOutlined, { style: { fontSize: 11, color: '#8c8c8c' } })}</div>
+                  <div style={{ fontSize: 13, color: '#262626' }}>武汉办公用品有限公司</div>
+                </div>
+                {/* 节点: 供应商报价单 2 */}
+                <div style={{ position: 'absolute', left: 420, top: 290, width: 200, background: '#fff', borderRadius: 8, boxShadow: '0 2px 8px rgba(0,0,0,0.08)', padding: '16px 20px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                    <span style={{ fontSize: 14, fontWeight: 500, display: 'flex', alignItems: 'center', gap: 6 }}>{React.createElement(SearchOutlined, { style: { color: '#8c8c8c' } })}供应商报价单</span>
+                    <span style={{ background: '#7c8cf7', color: '#fff', borderRadius: '50%', width: 20, height: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11 }}>1</span>
+                  </div>
+                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: '#f5f5f5', borderRadius: 4, padding: '2px 8px', fontSize: 12, color: '#595959', marginBottom: 6 }}>BJ20260129024 {React.createElement(CopyOutlined, { style: { fontSize: 11, color: '#8c8c8c' } })}</div>
+                  <div style={{ fontSize: 13, color: '#262626' }}>上海易点科技有限公司</div>
+                </div>
+                {/* 节点: 询价结果确认 */}
+                <div style={{ position: 'absolute', left: 760, top: 200, width: 220, background: '#fff', borderRadius: 8, boxShadow: '0 2px 8px rgba(0,0,0,0.08)', padding: '16px 20px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                    <span style={{ fontSize: 14, fontWeight: 500, display: 'flex', alignItems: 'center', gap: 6 }}>{React.createElement(SearchOutlined, { style: { color: '#8c8c8c' } })}询价结果确认</span>
+                  </div>
+                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: '#f5f5f5', borderRadius: 4, padding: '2px 8px', fontSize: 12, color: '#595959', marginBottom: 6 }}>JG20260129001 {React.createElement(CopyOutlined, { style: { fontSize: 11, color: '#8c8c8c' } })}</div>
+                  <div style={{ fontSize: 13, color: '#262626' }}>整车配件2026年第一季度采购</div>
+                </div>
+              </div>
+              )}
+              </div>
+              </div>
+            )}
+          </Modal>
+        </div>
+      );
+    }
+
+    // ===== 询价结果确认组件 =====
+    function InquiryConfirm() {
+      const [selectedRowKeys, setSelectedRowKeys] = useState([]);
+      const [addVisible, setAddVisible] = useState(false);
+      const [detailVisible, setDetailVisible] = useState(false);
+      const [detailRecord, setDetailRecord] = useState(null);
+      const [colConfigVisible, setColConfigVisible] = useState(false);
+      const [addTab, setAddTab] = useState('compare');
+      const [detailTab, setDetailTab] = useState('compare');
+      const [addForm, setAddForm] = useState({ inquirySelect: '', projectName: '', inquiryNo: '', quoteRounds: '', priceChecker: '用户257522', checkDate: null, winSuppliers: [], inquiryResult: '完成采购寻源，进入合同阶段。' });
+
+      // 列配置树
+      const colConfigTree = [
+        { key: 'flowStatus', label: '流程状态', checked: true },
+        { key: 'confirmNo', label: '询价结果单号', checked: true },
+        { key: 'bidProjectName', label: '招标项目名称', checked: false },
+        { key: 'inquiryNo', label: '询价单号', checked: true },
+        { key: 'quoteRounds', label: '报价轮数', checked: true },
+        { key: 'priceChecker', label: '核价人', checked: true },
+        { key: 'checkDate', label: '核价日期', checked: true },
+        { key: 'contentGroup', label: '询价内容', checked: true, children: [
+          { key: 'goods', label: '商品', checked: true },
+          { key: 'spec', label: '规格型号', checked: true },
+          { key: 'unit', label: '单位', checked: true },
+          { key: 'qty', label: '数量', checked: true },
+          { key: 'expectDate', label: '期望到货时间', checked: true },
+        ]},
+        { key: 'priceAnalysis', label: '价格分析', checked: true },
+        { key: 'winGroup', label: '中标供应商及中标数量', checked: true, children: [
+          { key: 'supplierName', label: '供应商名称', checked: true },
+          { key: 'supplierCode', label: '供应商编码', checked: false },
+          { key: 'goodsCode', label: '物品编码', checked: true },
+          { key: 'goodsName', label: '物品名称', checked: true },
+          { key: 'winSpec', label: '规格型号', checked: true },
+          { key: 'demandQty', label: '需求数量', checked: false },
+          { key: 'availQty', label: '可供货数量', checked: true },
+          { key: 'winUnit', label: '单位', checked: true },
+          { key: 'winExpectDate', label: '期望到货时间', checked: true },
+          { key: 'winQty', label: '中标数量', checked: true },
+          { key: 'currency', label: '报价币种', checked: true },
+          { key: 'rate', label: '汇率', checked: true },
+          { key: 'priceInTax', label: '报价单价（含税）', checked: true },
+          { key: 'priceExTax', label: '报价单价（不含税）', checked: true },
+          { key: 'checkPrice', label: '核价单价', checked: true },
+          { key: 'taxRate', label: '税率', checked: true },
+          { key: 'checkPriceLocal', label: '核价单价（本位币）', checked: true },
+          { key: 'amtExTax', label: '不含税金额', checked: true },
+          { key: 'amtExTaxLocal', label: '不含税金额（本位币）', checked: true },
+          { key: 'amtInTax', label: '含税金额', checked: true },
+          { key: 'amtInTaxLocal', label: '含税金额（本位币）', checked: true },
+          { key: 'validUntil', label: '有效期至', checked: true },
+        ]},
+        { key: 'inquiryResult', label: '询价结果', checked: true },
+        { key: 'totalExTax', label: '不含税总价', checked: true },
+        { key: 'taxAmount', label: '税额', checked: true },
+        { key: 'totalInTax', label: '含税总价', checked: true },
+        { key: 'attachment', label: '附件', checked: true },
+        { key: 'submitter', label: '提交人', checked: true },
+        { key: 'submitTime', label: '提交时间', checked: true },
+        { key: 'updateTime', label: '更新时间', checked: true },
+        { key: 'currentNode', label: '当前节点', checked: true },
+        { key: 'currentOwner', label: '当前负责人', checked: true },
+      ];
+      const [colChecked, setColChecked] = useState(() => {
+        const m = {};
+        const walk = (arr) => arr.forEach(item => { m[item.key] = item.checked; if (item.children) walk(item.children); });
+        walk(colConfigTree);
+        return m;
+      });
+      const toggleCol = (key) => setColChecked(prev => ({ ...prev, [key]: !prev[key] }));
+
+      const tableData = [
+        { key: '1', flowStatus: '已生效', confirmNo: 'JG20260129001', bidProjectName: '整车配件2026年第一季度采购', inquiryNo: 'XJ20260129012', quoteRounds: '二轮报价', priceChecker: '李里', checkDate: '2026-01-29', goods: '汽车轮胎', spec: '米其林 205/55R16 Energy XM2 韧悦 91V', unit: '条', qty: 4000, expectDate: '2026-01-31', priceAnalysis: '', supplierName: '武汉办公用品有限公司', supplierCode: '', goodsCode: '', goodsName: '制动盘', winSpec: '萨瓦尼尼 282X23', demandQty: 2000, availQty: 2000, winUnit: '组', winExpectDate: '2026-01-31', winQty: 2000, currency: 'CNY', rate: '1', priceInTax: '85.00', priceExTax: '75.22', checkPrice: '75.22', taxRate: '13%', checkPriceLocal: '75.22', amtExTax: '150,442.48', amtExTaxLocal: '150,442.48', amtInTax: '170,000.00', amtInTaxLocal: '170,000.00', validUntil: '2026-03-31', inquiryResult: '完成采购寻源，进入合同阶段。', totalExTax: '6,637,180.00', taxAmount: '862,833.40', totalInTax: '7,500,013.40', attachment: '-', submitter: '用户257522', submitTime: '2026-07-21 11:31:48', updateTime: '', currentNode: '', currentOwner: '' },
+        { key: '2', flowStatus: '草稿', confirmNo: 'JG20260728002', bidProjectName: '', inquiryNo: '', quoteRounds: '', priceChecker: '用户257522', checkDate: '2026-07-28', goods: '', spec: '', unit: '', qty: '', expectDate: '', priceAnalysis: '', supplierName: '', supplierCode: '', goodsCode: '', goodsName: '', winSpec: '', demandQty: '', availQty: '', winUnit: '', winExpectDate: '', winQty: '', currency: '', rate: '', priceInTax: '', priceExTax: '', checkPrice: '', taxRate: '', checkPriceLocal: '', amtExTax: '', amtExTaxLocal: '', amtInTax: '', amtInTaxLocal: '', validUntil: '', inquiryResult: '', totalExTax: '', taxAmount: '', totalInTax: '', attachment: '-', submitter: '用户257522', submitTime: '-', updateTime: '2026-07-28 08:00:00', currentNode: '草稿', currentOwner: '用户257522' },
+      ];
+
+      const allColumns = [
+        { title: '流程状态', dataIndex: 'flowStatus', width: 90, fixed: 'left', render: (v) => React.createElement(Tag, { color: v === '已生效' ? 'success' : 'default' }, v) },
+        { title: '询价结果单号', dataIndex: 'confirmNo', width: 150 },
+        { title: '招标项目名称', dataIndex: 'bidProjectName', width: 200, ellipsis: true },
+        { title: '询价单号', dataIndex: 'inquiryNo', width: 150 },
+        { title: '报价轮数', dataIndex: 'quoteRounds', width: 90 },
+        { title: '核价人', dataIndex: 'priceChecker', width: 90 },
+        { title: '核价日期', dataIndex: 'checkDate', width: 110 },
+        { title: '商品', dataIndex: 'goods', width: 100 },
+        { title: '规格型号', dataIndex: 'spec', width: 200, ellipsis: true },
+        { title: '单位', dataIndex: 'unit', width: 50, align: 'center' },
+        { title: '数量', dataIndex: 'qty', width: 70, align: 'right' },
+        { title: '期望到货时间', dataIndex: 'expectDate', width: 120 },
+        { title: '价格分析', dataIndex: 'priceAnalysis', width: 90 },
+        { title: '供应商名称', dataIndex: 'supplierName', width: 160 },
+        { title: '供应商编码', dataIndex: 'supplierCode', width: 120 },
+        { title: '物品编码', dataIndex: 'goodsCode', width: 120 },
+        { title: '物品名称', dataIndex: 'goodsName', width: 100 },
+        { title: '规格型号', dataIndex: 'winSpec', width: 150 },
+        { title: '需求数量', dataIndex: 'demandQty', width: 80, align: 'right' },
+        { title: '可供货数量', dataIndex: 'availQty', width: 90, align: 'right' },
+        { title: '单位', dataIndex: 'winUnit', width: 50, align: 'center' },
+        { title: '期望到货时间', dataIndex: 'winExpectDate', width: 120 },
+        { title: '中标数量', dataIndex: 'winQty', width: 80, align: 'right' },
+        { title: '报价币种', dataIndex: 'currency', width: 80 },
+        { title: '汇率', dataIndex: 'rate', width: 60, align: 'right' },
+        { title: '报价单价（含税）', dataIndex: 'priceInTax', width: 130, align: 'right' },
+        { title: '报价单价（不含税）', dataIndex: 'priceExTax', width: 140, align: 'right' },
+        { title: '核价单价', dataIndex: 'checkPrice', width: 100, align: 'right' },
+        { title: '税率', dataIndex: 'taxRate', width: 60, align: 'center' },
+        { title: '核价单价（本位币）', dataIndex: 'checkPriceLocal', width: 140, align: 'right' },
+        { title: '不含税金额', dataIndex: 'amtExTax', width: 130, align: 'right' },
+        { title: '不含税金额（本位币）', dataIndex: 'amtExTaxLocal', width: 150, align: 'right' },
+        { title: '含税金额', dataIndex: 'amtInTax', width: 120, align: 'right' },
+        { title: '含税金额（本位币）', dataIndex: 'amtInTaxLocal', width: 140, align: 'right' },
+        { title: '有效期至', dataIndex: 'validUntil', width: 110 },
+        { title: '询价结果', dataIndex: 'inquiryResult', width: 200, ellipsis: true },
+        { title: '不含税总价', dataIndex: 'totalExTax', width: 130, align: 'right' },
+        { title: '税额', dataIndex: 'taxAmount', width: 120, align: 'right' },
+        { title: '含税总价', dataIndex: 'totalInTax', width: 130, align: 'right' },
+        { title: '附件', dataIndex: 'attachment', width: 60 },
+        { title: '提交人', dataIndex: 'submitter', width: 100, render: (v) => React.createElement('a', { style: { color: '#1677ff' } }, v) },
+        { title: '提交时间', dataIndex: 'submitTime', width: 170 },
+        { title: '更新时间', dataIndex: 'updateTime', width: 170 },
+        { title: '当前节点', dataIndex: 'currentNode', width: 90 },
+        { title: '当前负责人', dataIndex: 'currentOwner', width: 100 },
+        { title: '操作', key: 'action', width: 80, fixed: 'right', render: (_, record) => React.createElement('a', { style: { color: '#1677ff' }, onClick: () => { setDetailRecord(record); setDetailVisible(true); } }, '详情') },
+      ];
+
+      // 列配置过滤
+      const colKeyMap = ['confirmNo','bidProjectName','inquiryNo','quoteRounds','priceChecker','checkDate','goods','spec','unit','qty','expectDate','priceAnalysis','supplierName','supplierCode','goodsCode','goodsName','winSpec','demandQty','availQty','winUnit','winExpectDate','winQty','currency','rate','priceInTax','priceExTax','checkPrice','taxRate','checkPriceLocal','amtExTax','amtExTaxLocal','amtInTax','amtInTaxLocal','validUntil','inquiryResult','totalExTax','taxAmount','totalInTax','attachment','submitter','submitTime','updateTime','currentNode','currentOwner'];
+      const configKeyOrder = [];
+      const walkKeys = (arr) => arr.forEach(item => { if (!item.children) configKeyOrder.push(item.key); else walkKeys(item.children); });
+      walkKeys(colConfigTree);
+      const visibleColKeys = new Set(configKeyOrder.filter(k => colChecked[k]));
+      const visibleColumns = allColumns.filter((col, idx) => {
+        if (col.key === 'action') return true;
+        if (col.fixed === 'left') return true;
+        const ck = colKeyMap[idx - 1];
+        return ck ? visibleColKeys.has(ck) : true;
+      });
+
+      const blueBtnStyle = { background: '#1677ff', borderColor: '#1677ff' };
+      const purpleBtnStyle = { background: '#7c5cfc', borderColor: '#7c5cfc' };
+
+      // 列配置面板
+      const renderColConfig = () => React.createElement('div', { style: { maxHeight: 500, overflowY: 'auto', width: 220 } }, colConfigTree.map(item => React.createElement('div', { key: item.key }, React.createElement('div', { style: { display: 'flex', alignItems: 'center', padding: '4px 0' } }, React.createElement(Checkbox, { checked: colChecked[item.key], onChange: () => toggleCol(item.key) }), React.createElement('span', { style: { marginLeft: 8, fontSize: 13 } }, item.label)), item.children && React.createElement('div', { style: { paddingLeft: 24 } }, item.children.map(child => React.createElement('div', { key: child.key, style: { display: 'flex', alignItems: 'center', padding: '3px 0' } }, React.createElement(Checkbox, { checked: colChecked[child.key], onChange: () => toggleCol(child.key) }), React.createElement('span', { style: { marginLeft: 8, fontSize: 13 } }, child.label)))))));
+
+      // 报价明细表格列（新建/详情共用）
+      const quoteDetailCols = [
+        { title: '商品', children: [
+          { title: '商品名称', dataIndex: 'goodsName', width: 120 },
+          { title: '规格型号', dataIndex: 'spec', width: 180 },
+          { title: '单位', dataIndex: 'unit', width: 50, align: 'center' },
+          { title: '需求数量', dataIndex: 'demandQty', width: 80, align: 'right' },
+          { title: '期望到货时间', dataIndex: 'expectDate', width: 120 },
+        ]},
+      ];
+
+      // 中标供应商表格列
+      const winSupplierCols = [
+        { title: '#', width: 40, align: 'center', render: (_, __, idx) => idx + 1 },
+        { title: '中标供应商', dataIndex: 'winSupplier', width: 120 },
+        { title: '供应商名称', dataIndex: 'supplierName', width: 160 },
+        { title: '物品编码', dataIndex: 'goodsCode', width: 120 },
+        { title: '物品名称', dataIndex: 'goodsName', width: 100 },
+        { title: '规格型号', dataIndex: 'spec', width: 150 },
+        { title: '需求数量', dataIndex: 'demandQty', width: 80, align: 'right' },
+        { title: '可供货数量', dataIndex: 'availQty', width: 90, align: 'right' },
+        { title: '单位', dataIndex: 'unit', width: 50, align: 'center' },
+        { title: '期望到货时间', dataIndex: 'expectDate', width: 120 },
+        { title: '中标数量', dataIndex: 'winQty', width: 80, align: 'right' },
+        { title: '报价币种', dataIndex: 'currency', width: 80 },
+        { title: '汇率', dataIndex: 'rate', width: 60, align: 'right' },
+        { title: '报价单价（含税）', dataIndex: 'priceInTax', width: 130, align: 'right' },
+        { title: '报价单价（不含税）', dataIndex: 'priceExTax', width: 140, align: 'right' },
+        { title: '核价单价', dataIndex: 'checkPrice', width: 100, align: 'right' },
+        { title: '税率', dataIndex: 'taxRate', width: 60, align: 'center' },
+        { title: '核价单价（本位币）', dataIndex: 'checkPriceLocal', width: 140, align: 'right' },
+        { title: '不含税金额', dataIndex: 'amtExTax', width: 120, align: 'right' },
+        { title: '不含税金额（本位币）', dataIndex: 'amtExTaxLocal', width: 150, align: 'right' },
+        { title: '含税金额', dataIndex: 'amtInTax', width: 120, align: 'right' },
+        { title: '含税金额（本位币）', dataIndex: 'amtInTaxLocal', width: 140, align: 'right' },
+        { title: '有效期至', dataIndex: 'validUntil', width: 110 },
+      ];
+
+      return (
+        <div style={{ background: '#fff', borderRadius: 8, padding: '16px 24px' }}>
+          {/* 工具栏 */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+            <Space size={8}>
+              <Button type="primary" style={blueBtnStyle} icon={React.createElement(PlusOutlined)} onClick={() => { setAddForm({ inquirySelect: '', projectName: '', inquiryNo: '', quoteRounds: '', priceChecker: '用户257522', checkDate: null, winSuppliers: [], inquiryResult: '完成采购寻源，进入合同阶段。' }); setAddTab('compare'); setAddVisible(true); }}>新建</Button>
+              <Button icon={React.createElement(ImportOutlined)}>导入</Button>
+              <Button icon={React.createElement(ExportOutlined)}>导出</Button>
+            </Space>
+            <Space size={8}>
+              <Select defaultValue="all" size="middle" style={{ width: 110 }}><Option value="all">搜索范围</Option></Select>
+              <Input placeholder="请输入搜索内容" style={{ width: 220 }} suffix={React.createElement(SearchOutlined)} />
+            </Space>
+          </div>
+          {/* 表格 */}
+          <Table columns={visibleColumns} dataSource={tableData} rowSelection={{ selectedRowKeys, onChange: setSelectedRowKeys }} bordered size="small" pagination={false} scroll={{ x: 6000 }} />
+          {/* 分页 */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 12, padding: '12px 0 8px', borderTop: '1px solid #f0f0f0' }}>
+            <Space size={16}>
+              <Popover content={renderColConfig()} trigger="click" open={colConfigVisible} onOpenChange={setColConfigVisible} placement="topLeft">
+                {React.createElement(ColumnWidthOutlined, { style: { color: '#8c8c8c', cursor: 'pointer' } })}
+              </Popover>
+              <Select defaultValue="20" size="small" style={{ width: 90 }}><Option value="20">20条/页</Option><Option value="50">50条/页</Option></Select>
+              <span style={{ color: '#595959', fontSize: 13 }}>共 {tableData.length} 条</span>
+            </Space>
+            <Pagination current={1} total={tableData.length} pageSize={20} size="small" showSizeChanger={false} />
+          </div>
+
+          {/* ===== 新建弹框 ===== */}
+          <Modal title="新建询价结果确认" open={addVisible} onCancel={() => setAddVisible(false)} footer={null} width={1100}>
+            <div style={{ padding: '16px 20px', maxHeight: '75vh', overflowY: 'auto' }}>
+              {/* 头部表单 */}
+              <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
+                <Col span={12}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>选择询价单</div><div style={{ display: 'flex', gap: 8 }}><Input value={addForm.inquirySelect} onChange={(e) => setAddForm(prev => ({ ...prev, inquirySelect: e.target.value }))} placeholder="招标项目名称" style={{ flex: 1 }} /><Button type="primary" style={blueBtnStyle} onClick={() => setAddForm(prev => ({ ...prev, inquirySelect: 'XJ20260129012', projectName: '整车配件2026年第一季度采购', inquiryNo: 'XJ20260129012', quoteRounds: '二轮报价' }))}>选择</Button></div></Col>
+                <Col span={12}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>招标项目名称</div><Input value={addForm.projectName} readOnly style={{ background: '#fafafa' }} /></Col>
+              </Row>
+              <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
+                <Col span={12}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>询价单号 <span style={{ color: '#ff4d4f' }}>*</span></div><Input value={addForm.inquiryNo} onChange={(e) => setAddForm(prev => ({ ...prev, inquiryNo: e.target.value }))} /></Col>
+                <Col span={12}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>报价轮数</div><Input value={addForm.quoteRounds} readOnly style={{ background: '#fafafa' }} /></Col>
+              </Row>
+              <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
+                <Col span={12}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>核价人 <span style={{ color: '#ff4d4f' }}>*</span></div><div style={{ display: 'flex', gap: 8 }}><div style={{ flex: 1, display: 'flex', alignItems: 'center', border: '1px solid #d9d9d9', borderRadius: 4, padding: '4px 8px', minHeight: 32, background: '#fafafa' }}>{React.createElement(Avatar, { size: 20, style: { backgroundColor: '#52c41a', fontSize: 11 } }, '用')}<span style={{ marginLeft: 6, fontSize: 13 }}>{addForm.priceChecker}</span></div><Button type="primary" style={purpleBtnStyle}>选择</Button></div></Col>
+                <Col span={12}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>核价日期</div><DatePicker style={{ width: '100%' }} value={addForm.checkDate} onChange={(d) => setAddForm(prev => ({ ...prev, checkDate: d }))} /></Col>
+              </Row>
+              {/* Tabs */}
+              <div style={{ borderBottom: '2px solid #1677ff', marginBottom: 16 }}>
+                <Space size={0}>
+                  {['compare', 'content', 'smart'].map(tab => (
+                    <div key={tab} onClick={() => setAddTab(tab)} style={{ padding: '8px 20px', cursor: 'pointer', fontSize: 14, color: addTab === tab ? '#fff' : '#595959', background: addTab === tab ? '#1677ff' : '#f0f0f0', borderRadius: '4px 4px 0 0', fontWeight: addTab === tab ? 500 : 400 }}>{tab === 'compare' ? '比价' : tab === 'content' ? '询价内容' : '智能比价'}</div>
+                  ))}
+                </Space>
+              </div>
+              {addTab === 'compare' && (
+                <div>
+                  {/* 报价明细 */}
+                  <div style={{ marginBottom: 16 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}><span style={{ fontSize: 14, fontWeight: 500 }}>报价明细</span><a style={{ color: '#1677ff', fontSize: 12 }}>{React.createElement(SwapOutlined)} 按商品维度 {React.createElement(ExpandOutlined)}</a></div>
+                    <Table dataSource={[]} columns={quoteDetailCols} bordered size="small" pagination={{ size: 'small', pageSize: 10, total: 0 }} scroll={{ x: 600 }} locale={{ emptyText: '暂无数据' }} />
+                  </div>
+                  {/* 中标供应商及中标数量 */}
+                  <div style={{ marginBottom: 16 }}>
+                    <div style={{ fontSize: 14, fontWeight: 500, marginBottom: 8 }}>中标供应商及中标数量</div>
+                    <Table dataSource={addForm.winSuppliers} columns={winSupplierCols.map(col => col.dataIndex ? { ...col, render: (v, _, idx) => React.createElement(Input, { size: 'small', value: v, onChange: (e) => { const arr = [...addForm.winSuppliers]; arr[idx] = { ...arr[idx], [col.dataIndex]: e.target.value }; setAddForm(prev => ({ ...prev, winSuppliers: arr })); } }) } : col)} bordered size="small" pagination={false} scroll={{ x: 2000 }} />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 8 }}>
+                      <Space size={16}><a style={{ color: '#1677ff' }} onClick={() => setAddForm(prev => ({ ...prev, winSuppliers: [...prev.winSuppliers, { key: Date.now().toString() }] }))}>+ 添加</a><a style={{ color: '#1677ff' }}>导入</a><a style={{ color: '#1677ff' }}>快速填报</a></Space>
+                      <span style={{ color: '#8c8c8c', fontSize: 12 }}>{addForm.winSuppliers.length} / 200</span>
+                    </div>
+                  </div>
+                  {/* 询价结果 */}
+                  <div style={{ marginBottom: 16 }}>
+                    <div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>询价结果 <span style={{ color: '#ff4d4f' }}>*</span></div>
+                    <Select style={{ width: '50%' }} value={addForm.inquiryResult} onChange={(v) => setAddForm(prev => ({ ...prev, inquiryResult: v }))}><Option value="完成采购寻源，进入合同阶段。">完成采购寻源，进入合同阶段。</Option><Option value="流标，重新询价。">流标，重新询价。</Option><Option value="终止采购。">终止采购。</Option></Select>
+                  </div>
+                </div>
+              )}
+              {addTab === 'content' && <div style={{ padding: '40px 0', textAlign: 'center', color: '#8c8c8c' }}>询价内容（选择询价单后自动填充）</div>}
+              {addTab === 'smart' && <div style={{ padding: '40px 0', textAlign: 'center', color: '#8c8c8c' }}>智能比价功能开发中</div>}
+              <div style={{ textAlign: 'center', padding: '16px 0 4px', borderTop: '1px solid #f0f0f0' }}>
+                <Button type="primary" style={{ ...blueBtnStyle, width: 120, height: 36 }} onClick={() => { antd.message.success('提交成功'); setAddVisible(false); }}>提交</Button>
+              </div>
+            </div>
+          </Modal>
+
+          {/* ===== 详情弹框 ===== */}
+          <Modal title={null} open={detailVisible} onCancel={() => setDetailVisible(false)} footer={<Button onClick={() => setDetailVisible(false)}>关闭</Button>} width={1100}>
+            {detailRecord && (
+              <div style={{ padding: '16px 20px', maxHeight: '75vh', overflowY: 'auto' }}>
+                {/* 头部信息 */}
+                <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
+                  <Col span={12}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>招标项目名称</div><div style={{ padding: '8px 12px', background: '#f5f5f5', borderRadius: 4 }}>{detailRecord.bidProjectName || '-'}</div></Col>
+                  <Col span={12}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>询价单号 <span style={{ color: '#ff4d4f' }}>*</span></div><div style={{ padding: '8px 12px', background: '#f5f5f5', borderRadius: 4 }}>{detailRecord.inquiryNo || '-'}</div></Col>
+                </Row>
+                <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
+                  <Col span={12}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>报价轮数</div><div style={{ padding: '8px 12px', background: '#f5f5f5', borderRadius: 4 }}>{detailRecord.quoteRounds || '-'}</div></Col>
+                  <Col span={12}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>核价人 <span style={{ color: '#ff4d4f' }}>*</span></div><div style={{ padding: '6px 12px', background: '#f5f5f5', borderRadius: 4, display: 'flex', alignItems: 'center', gap: 6 }}>{React.createElement(Avatar, { size: 20, style: { backgroundColor: '#52c41a', fontSize: 11 } }, detailRecord.priceChecker ? detailRecord.priceChecker[0] : '')}<span>{detailRecord.priceChecker}</span></div></Col>
+                </Row>
+                <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
+                  <Col span={12}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>核价日期</div><div style={{ padding: '8px 12px', background: '#f5f5f5', borderRadius: 4 }}>{detailRecord.checkDate || '-'}</div></Col>
+                </Row>
+                {/* Tabs */}
+                <div style={{ borderBottom: '2px solid #1677ff', marginBottom: 16 }}>
+                  <Space size={0}>
+                    {['compare', 'content', 'smart'].map(tab => (
+                      <div key={tab} onClick={() => setDetailTab(tab)} style={{ padding: '8px 20px', cursor: 'pointer', fontSize: 14, color: detailTab === tab ? '#fff' : '#595959', background: detailTab === tab ? '#1677ff' : '#f0f0f0', borderRadius: '4px 4px 0 0', fontWeight: detailTab === tab ? 500 : 400 }}>{tab === 'compare' ? '比价' : tab === 'content' ? '询价内容' : '智能比价'}</div>
+                    ))}
+                  </Space>
+                </div>
+                {detailTab === 'compare' && (
+                  <div>
+                    {/* 报价明细 */}
+                    <div style={{ marginBottom: 16 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}><span style={{ fontSize: 14, fontWeight: 500 }}>报价明细</span><a style={{ color: '#1677ff', fontSize: 12 }}>{React.createElement(SwapOutlined)} 按商品维度 {React.createElement(ExpandOutlined)}</a></div>
+                      <Table dataSource={[
+                        { key: '1', goodsName: '汽车轮胎', spec: '米其林 205/55R16 Energy XM2 韧悦 91V', unit: '条', demandQty: 4000, expectDate: '2026-01-31', supplier1_avail: '', supplier1_price: '', supplier1_total: '', supplier2_avail: '', supplier2_price: '111.1', supplier2_total: '' },
+                        { key: '2', goodsName: '制动盘', spec: '萨瓦尼尼 282X23', unit: '组', demandQty: 2000, expectDate: '2026-01-31', supplier1_avail: '', supplier1_price: '', supplier1_total: '', supplier2_avail: '', supplier2_price: '', supplier2_total: '' },
+                      ]} columns={[
+                        ...quoteDetailCols,
+                        { title: '上海易点科技有限公司', children: [
+                          { title: '可供货数量', dataIndex: 'supplier2_avail', width: 90 },
+                          { title: '报价单价', dataIndex: 'supplier2_price', width: 90, render: (v) => v ? React.createElement('span', { style: { background: '#ff7875', color: '#fff', padding: '2px 6px', borderRadius: 2 } }, v) : '' },
+                          { title: '不含税总价', dataIndex: 'supplier2_total', width: 100 },
+                        ]},
+                      ]} bordered size="small" pagination={{ size: 'small', pageSize: 10, total: 2 }} scroll={{ x: 900 }} />
+                    </div>
+                    {/* 中标供应商及中标数量 */}
+                    <div style={{ marginBottom: 16 }}>
+                      <div style={{ fontSize: 14, fontWeight: 500, marginBottom: 8 }}>中标供应商及中标数量</div>
+                      <Table dataSource={[
+                        { key: '1', idx: 1, supplierName: '武汉办公用品有限公司', supplierCode: '', goodsCode: '', goodsName: '制动盘', spec: '萨瓦尼尼 282X23' },
+                        { key: '2', idx: 2, supplierName: '武汉办公用品有限公司', supplierCode: '', goodsCode: '', goodsName: '汽车轮胎', spec: '米其林 205/55R16' },
+                      ]} columns={[
+                        { title: '#', dataIndex: 'idx', width: 40, align: 'center' },
+                        { title: '供应商名称', dataIndex: 'supplierName', width: 180 },
+                        { title: '供应商编码', dataIndex: 'supplierCode', width: 120 },
+                        { title: '物品编码', dataIndex: 'goodsCode', width: 120 },
+                        { title: '物品名称', dataIndex: 'goodsName', width: 100 },
+                        { title: '规格型号', dataIndex: 'spec', width: 150 },
+                      ]} bordered size="small" pagination={false} scroll={{ x: 700 }} />
+                    </div>
+                    {/* 询价结果 + 金额 */}
+                    <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
+                      <Col span={12}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>询价结果 <span style={{ color: '#ff4d4f' }}>*</span></div><div style={{ padding: '8px 12px', background: '#f5f5f5', borderRadius: 4 }}>{detailRecord.inquiryResult || '-'}</div></Col>
+                      <Col span={12}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>不含税总价</div><div style={{ padding: '8px 12px', background: '#f5f5f5', borderRadius: 4 }}>{detailRecord.totalExTax || '-'}</div></Col>
+                    </Row>
+                    <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
+                      <Col span={12}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>税额</div><div style={{ padding: '8px 12px', background: '#f5f5f5', borderRadius: 4 }}>{detailRecord.taxAmount || '-'}</div></Col>
+                      <Col span={12}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>含税总价</div><div style={{ padding: '8px 12px', background: '#f5f5f5', borderRadius: 4 }}>{detailRecord.totalInTax || '-'}</div></Col>
+                    </Row>
+                    <div style={{ marginBottom: 16 }}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>附件</div><div style={{ padding: '8px 12px', background: '#f5f5f5', borderRadius: 4, minHeight: 32 }}>-</div></div>
+                  </div>
+                )}
+                {detailTab === 'content' && <div style={{ padding: '40px 0', textAlign: 'center', color: '#8c8c8c' }}>询价内容</div>}
+                {detailTab === 'smart' && <div style={{ padding: '40px 0', textAlign: 'center', color: '#8c8c8c' }}>智能比价</div>}
+                {/* 底部信息 */}
+                <div style={{ borderTop: '1px solid #f0f0f0', paddingTop: 16 }}>
+                  <Row gutter={[16, 12]}>
+                    <Col span={12}><span style={{ color: '#8c8c8c' }}>提交人</span><a style={{ color: '#1677ff', marginLeft: 16 }}>{detailRecord.submitter}</a></Col>
+                    <Col span={12}><span style={{ color: '#8c8c8c' }}>提交时间</span><span style={{ marginLeft: 16 }}>{detailRecord.submitTime}</span></Col>
+                    <Col span={12}><span style={{ color: '#8c8c8c' }}>更新时间</span><span style={{ marginLeft: 16 }}>{detailRecord.updateTime || '-'}</span></Col>
+                    <Col span={12}><span style={{ color: '#8c8c8c' }}>流程状态</span><span style={{ marginLeft: 16 }}>{React.createElement(Tag, { color: detailRecord.flowStatus === '已生效' ? 'success' : 'default' }, detailRecord.flowStatus)}</span></Col>
+                    <Col span={12}><span style={{ color: '#8c8c8c' }}>当前节点</span><span style={{ marginLeft: 16 }}>{detailRecord.currentNode || '-'}</span></Col>
+                    <Col span={12}><span style={{ color: '#8c8c8c' }}>当前负责人</span><span style={{ marginLeft: 16 }}>{detailRecord.currentOwner || '-'}</span></Col>
+                  </Row>
+                </div>
+              </div>
+            )}
+          </Modal>
+        </div>
+      );
+    }
+
+    // ===== 供应商报价单组件 =====
+    function SupplierQuote() {
+      const [selectedRowKeys, setSelectedRowKeys] = useState([]);
+      const [detailVisible, setDetailVisible] = useState(false);
+      const [detailRecord, setDetailRecord] = useState(null);
+      const [colConfigVisible, setColConfigVisible] = useState(false);
+
+      // 列配置（扁平结构）
+      const colConfigList = [
+        { key: 'flowStatus', label: '流程状态', checked: true },
+        { key: 'serialNo', label: '流水号', checked: true },
+        { key: 'collabType', label: '协同类型', checked: true },
+        { key: 'inquiryNo', label: '询价单号', checked: true },
+        { key: 'projectName', label: '询价项目名称', checked: true },
+        { key: 'sealed', label: '密封报价', checked: true },
+        { key: 'manager', label: '询价负责人', checked: true },
+        { key: 'contact', label: '联系方式', checked: true },
+        { key: 'inquiryStatus', label: '本次询价状态', checked: true },
+        { key: 'deadline', label: '本轮报价截止时间', checked: true },
+        { key: 'round', label: '本次报价轮次', checked: true },
+        { key: 'rate', label: '汇率', checked: true },
+        { key: 'emailQuote', label: '邮件报价', checked: true },
+        { key: 'supplierEmail', label: '供应商联系邮箱', checked: true },
+        { key: 'quoteEmail', label: '报价邮件', checked: true },
+        { key: 'supplier', label: '供应商', checked: true },
+        { key: 'quoter', label: '报价人', checked: true },
+        { key: 'quoteDate', label: '报价日期', checked: true },
+        { key: 'supplierCode', label: '供应商编码', checked: true },
+        { key: 'supplierName', label: '供应商名称', checked: true },
+        { key: 'joinQuote', label: '参与报价', checked: true },
+        { key: 'foreignQuote', label: '外币报价', checked: true },
+        { key: 'currency', label: '报价币种', checked: true },
+        { key: 'quoteTime', label: '报价时间', checked: true },
+        { key: 'ladderInfo', label: '阶梯信息辅助字段', checked: true },
+        { key: 'quoteDesc', label: '报价说明', checked: true },
+        { key: 'totalExTax', label: '不含税总价', checked: true },
+        { key: 'taxAmount', label: '税额', checked: true },
+        { key: 'totalInTax', label: '含税总金额', checked: true },
+        { key: 'amountCN', label: '金额大写', checked: true },
+        { key: 'file', label: '文件', checked: true },
+        { key: 'openPrice', label: '开价', checked: true },
+        { key: 'purchaseHelper', label: '采购协助人', checked: true },
+        { key: 'supplierContact', label: '供应商联系人', checked: true },
+        { key: 'submitter', label: '提交人', checked: true },
+        { key: 'submitTime', label: '提交时间', checked: true },
+        { key: 'updateTime', label: '更新时间', checked: true },
+        { key: 'currentNode', label: '当前节点', checked: true },
+        { key: 'currentOwner', label: '当前负责人', checked: true },
+      ];
+      const [colChecked, setColChecked] = useState(() => {
+        const m = {};
+        colConfigList.forEach(item => { m[item.key] = item.checked; });
+        return m;
+      });
+      const toggleCol = (key) => setColChecked(prev => ({ ...prev, [key]: !prev[key] }));
+
+      const tableData = [
+        { key: '1', flowStatus: '已生效', serialNo: 'BJ20260129025', collabType: '非协同', inquiryNo: 'XJ20260129015', projectName: '二季度备货样品采购202601290034', sealed: '是', manager: '李里', contact: '', inquiryStatus: '报价中', deadline: '2026-01-29 21:42', round: '一轮报价', rate: '', emailQuote: '是', supplierEmail: '', quoteEmail: '', supplier: '', quoter: '李里', quoteDate: '2026-01-29', supplierCode: 'GYS000008', supplierName: '天津海叶商贸', joinQuote: '是', foreignQuote: '否', currency: '', quoteTime: '2026-01-29 21:12', ladderInfo: '', quoteDesc: '22', totalExTax: '4,287.62', taxAmount: '557.38', totalInTax: '4,845.00', amountCN: '肆仟捌佰肆拾伍元整', file: '-', openPrice: '开价', purchaseHelper: '郭尚德/李里', supplierContact: '', submitter: '用户257522', submitTime: '2026-07-21 11:31:48', updateTime: '', currentNode: '', currentOwner: '' },
+        { key: '2', flowStatus: '已生效', serialNo: 'BJ20260129024', collabType: '协同', inquiryNo: 'XJ20260129012', projectName: '整车配件2026年第一季度采购', sealed: '否', manager: '李里', contact: '010-12345678', inquiryStatus: '已报价', deadline: '2026-01-30 18:05', round: '二轮报价', rate: '', emailQuote: '否', supplierEmail: 'supplier@example.com', quoteEmail: '已发送', supplier: '上海易点科技有限公司', quoter: '张三', quoteDate: '2026-01-29', supplierCode: 'GYS000005', supplierName: '上海易点科技有限公司', joinQuote: '是', foreignQuote: '否', currency: 'CNY', quoteTime: '2026-01-29 14:30:00', ladderInfo: '', quoteDesc: '含税到货价', totalExTax: '1,078.76', taxAmount: '140.24', totalInTax: '1,219.00', amountCN: '壹仟贰佰壹拾玖元整', file: '-', openPrice: '否', purchaseHelper: '王五', supplierContact: '李四', submitter: '用户257522', submitTime: '2026-07-21 11:31:49', updateTime: '2026-07-21 14:20:33', currentNode: '已完成', currentOwner: '-' },
+        { key: '3', flowStatus: '已关闭', serialNo: 'BJ20251215003', collabType: '协同', inquiryNo: 'XJ20251201004', projectName: '制动盘询价', sealed: '否', manager: '李里', contact: '010-12345678', inquiryStatus: '已结束', deadline: '2025-12-20', round: '一轮报价', rate: '', emailQuote: '否', supplierEmail: 'haiye@163.com', quoteEmail: '已发送', supplier: '天津海叶商贸', quoter: '张三', quoteDate: '2025-12-15', supplierCode: 'GYS000008', supplierName: '天津海叶商贸', joinQuote: '是', foreignQuote: '否', currency: 'CNY', quoteTime: '2025-12-15 16:00:00', ladderInfo: '', quoteDesc: '含税含运', totalExTax: '150,442.48', taxAmount: '19,557.52', totalInTax: '170,000.00', amountCN: '壹拾柒万元整', file: '报价单.pdf', openPrice: '是', purchaseHelper: '王五', supplierContact: '李四', submitter: '用户257522', submitTime: '2026-07-19 08:00:00', updateTime: '2026-07-20 12:00:00', currentNode: '已关闭', currentOwner: '-' },
+      ];
+
+      const allColumns = [
+        { title: '流程状态', dataIndex: 'flowStatus', width: 90, fixed: 'left', render: (v) => React.createElement(Tag, { color: v === '已生效' ? 'success' : v === '已关闭' ? 'default' : 'processing' }, v) },
+        { title: '流水号', dataIndex: 'serialNo', width: 140 },
+        { title: '协同类型', dataIndex: 'collabType', width: 80 },
+        { title: '询价单号', dataIndex: 'inquiryNo', width: 150 },
+        { title: '询价项目名称', dataIndex: 'projectName', width: 220, ellipsis: true },
+        { title: '密封报价', dataIndex: 'sealed', width: 80 },
+        { title: '询价负责人', dataIndex: 'manager', width: 100 },
+        { title: '联系方式', dataIndex: 'contact', width: 120 },
+        { title: '本次询价状态', dataIndex: 'inquiryStatus', width: 110, render: (v) => React.createElement(Tag, { color: v === '已报价' ? 'success' : v === '报价中' ? 'processing' : 'default' }, v) },
+        { title: '本轮报价截止时间', dataIndex: 'deadline', width: 150 },
+        { title: '本次报价轮次', dataIndex: 'round', width: 110 },
+        { title: '汇率', dataIndex: 'rate', width: 60 },
+        { title: '邮件报价', dataIndex: 'emailQuote', width: 80 },
+        { title: '供应商联系邮箱', dataIndex: 'supplierEmail', width: 160 },
+        { title: '报价邮件', dataIndex: 'quoteEmail', width: 80 },
+        { title: '供应商', dataIndex: 'supplier', width: 140 },
+        { title: '报价人', dataIndex: 'quoter', width: 80 },
+        { title: '报价日期', dataIndex: 'quoteDate', width: 110 },
+        { title: '供应商编码', dataIndex: 'supplierCode', width: 120 },
+        { title: '供应商名称', dataIndex: 'supplierName', width: 140 },
+        { title: '参与报价', dataIndex: 'joinQuote', width: 80 },
+        { title: '外币报价', dataIndex: 'foreignQuote', width: 80 },
+        { title: '报价币种', dataIndex: 'currency', width: 80 },
+        { title: '报价时间', dataIndex: 'quoteTime', width: 160 },
+        { title: '阶梯信息辅助字段', dataIndex: 'ladderInfo', width: 140 },
+        { title: '报价说明', dataIndex: 'quoteDesc', width: 100 },
+        { title: '不含税总价', dataIndex: 'totalExTax', width: 120, align: 'right' },
+        { title: '税额', dataIndex: 'taxAmount', width: 110, align: 'right' },
+        { title: '含税总金额', dataIndex: 'totalInTax', width: 120, align: 'right' },
+        { title: '金额大写', dataIndex: 'amountCN', width: 160 },
+        { title: '文件', dataIndex: 'file', width: 80 },
+        { title: '开价', dataIndex: 'openPrice', width: 60 },
+        { title: '采购协助人', dataIndex: 'purchaseHelper', width: 110 },
+        { title: '供应商联系人', dataIndex: 'supplierContact', width: 110 },
+        { title: '提交人', dataIndex: 'submitter', width: 100, render: (v) => React.createElement('a', { style: { color: '#1677ff' } }, v) },
+        { title: '提交时间', dataIndex: 'submitTime', width: 170 },
+        { title: '更新时间', dataIndex: 'updateTime', width: 170 },
+        { title: '当前节点', dataIndex: 'currentNode', width: 90 },
+        { title: '当前负责人', dataIndex: 'currentOwner', width: 100 },
+        { title: '操作', key: 'action', width: 80, fixed: 'right', render: (_, record) => React.createElement('a', { style: { color: '#1677ff' }, onClick: () => { setDetailRecord(record); setDetailVisible(true); } }, '详情') },
+      ];
+
+      const colKeyOrder = colConfigList.map(c => c.key);
+      const visibleColKeys = new Set(colKeyOrder.filter(k => colChecked[k]));
+      const visibleColumns = allColumns.filter((col, idx) => {
+        if (col.key === 'action' || col.fixed === 'left') return true;
+        const ck = colKeyOrder[idx - 1];
+        return ck ? visibleColKeys.has(ck) : true;
+      });
+
+      const blueBtnStyle = { background: '#1677ff', borderColor: '#1677ff' };
+      const sectionTitle = (text) => React.createElement('div', { style: { marginBottom: 16 } }, React.createElement('div', { style: { display: 'flex', alignItems: 'center', marginBottom: 8 } }, React.createElement('div', { style: { background: 'linear-gradient(90deg, #4a7cf7 0%, #6c9cff 100%)', color: '#fff', padding: '6px 16px', borderRadius: 4, fontSize: 14, fontWeight: 600, position: 'relative', overflow: 'hidden', display: 'inline-flex' } }, text, React.createElement('span', { style: { position: 'absolute', right: 0, top: 0, width: 24, height: '100%', background: 'repeating-linear-gradient(135deg, transparent, transparent 2px, rgba(255,255,255,0.3) 2px, rgba(255,255,255,0.3) 4px)' } }))), React.createElement('div', { style: { height: 2, background: '#4a7cf7' } }));
+
+      const renderColConfig = () => React.createElement('div', { style: { maxHeight: 500, overflowY: 'auto', width: 200 } }, colConfigList.map(item => React.createElement('div', { key: item.key, style: { display: 'flex', alignItems: 'center', padding: '4px 0' } }, React.createElement(Checkbox, { checked: colChecked[item.key], onChange: () => toggleCol(item.key) }), React.createElement('span', { style: { marginLeft: 8, fontSize: 13 } }, item.label))));
+
+      return (
+        <div style={{ background: '#fff', borderRadius: 8, padding: '16px 24px' }}>
+          {/* 工具栏 */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+            <Space size={8}>
+              <Button icon={React.createElement(ImportOutlined)}>导入</Button>
+              <Button icon={React.createElement(ExportOutlined)}>导出</Button>
+            </Space>
+            <Space size={8}>
+              <Select defaultValue="all" size="middle" style={{ width: 110 }}><Option value="all">搜索范围</Option></Select>
+              <Input placeholder="请输入搜索内容" style={{ width: 220 }} suffix={React.createElement(SearchOutlined)} />
+            </Space>
+          </div>
+          {/* 表格 */}
+          <Table columns={visibleColumns} dataSource={tableData} rowSelection={{ selectedRowKeys, onChange: setSelectedRowKeys }} bordered size="small" pagination={false} scroll={{ x: 5000 }} />
+          {/* 分页 */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 12, padding: '12px 0 8px', borderTop: '1px solid #f0f0f0' }}>
+            <Space size={16}>
+              <Popover content={renderColConfig()} trigger="click" open={colConfigVisible} onOpenChange={setColConfigVisible} placement="topLeft">
+                {React.createElement(ColumnWidthOutlined, { style: { color: '#8c8c8c', cursor: 'pointer' } })}
+              </Popover>
+              <Select defaultValue="20" size="small" style={{ width: 90 }}><Option value="20">20条/页</Option><Option value="50">50条/页</Option></Select>
+              <span style={{ color: '#595959', fontSize: 13 }}>共 {tableData.length} 条</span>
+            </Space>
+            <Pagination current={1} total={tableData.length} pageSize={20} size="small" showSizeChanger={false} />
+          </div>
+
+          {/* ===== 详情弹框 ===== */}
+          <Modal title={null} open={detailVisible} onCancel={() => setDetailVisible(false)} footer={<Button onClick={() => setDetailVisible(false)}>关闭</Button>} width={1100}>
+            {detailRecord && (
+              <div style={{ padding: '16px 20px', maxHeight: '75vh', overflowY: 'auto' }}>
+                {/* 顶部提示 */}
+                <div style={{ color: '#1677ff', fontSize: 13, marginBottom: 16, padding: '8px 12px', background: '#f0f5ff', borderRadius: 4, border: '1px solid #d6e4ff' }}>本单据由询价申请流程创建，无需手工新增。</div>
+                {/* 基本信息 */}
+                <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
+                  <Col span={8}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>协同类型</div><div><Radio checked={detailRecord.collabType === '协同'} disabled>协同供应商</Radio><Radio checked={detailRecord.collabType !== '协同'} disabled>非协同供应商</Radio></div></Col>
+                  <Col span={8}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>询价单号</div><div style={{ padding: '8px 12px', background: '#f5f5f5', borderRadius: 4 }}>{detailRecord.inquiryNo}</div></Col>
+                  <Col span={8}></Col>
+                </Row>
+                <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
+                  <Col span={8}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>询价项目名称</div><div style={{ padding: '8px 12px', background: '#f5f5f5', borderRadius: 4 }}>{detailRecord.projectName}</div></Col>
+                  <Col span={8}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>密封报价</div><div><Radio checked={detailRecord.sealed === '是'} disabled>是</Radio><Radio checked={detailRecord.sealed === '否'} disabled>否</Radio></div></Col>
+                  <Col span={8}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>询价负责人</div><div style={{ padding: '6px 12px', background: '#f5f5f5', borderRadius: 4, display: 'flex', alignItems: 'center', gap: 6 }}>{React.createElement(Avatar, { size: 20, style: { backgroundColor: '#52c41a', fontSize: 11 } }, detailRecord.manager ? detailRecord.manager[0] : '')}<span>{detailRecord.manager}</span></div></Col>
+                </Row>
+                <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
+                  <Col span={8}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>联系方式</div><div style={{ padding: '8px 12px', background: '#f5f5f5', borderRadius: 4 }}>{detailRecord.contact || '-'}</div></Col>
+                  <Col span={8}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>本次询价状态</div><div style={{ padding: '8px 12px', background: '#f5f5f5', borderRadius: 4 }}>{detailRecord.inquiryStatus}</div></Col>
+                  <Col span={8}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>本轮报价截止时间</div><div style={{ padding: '8px 12px', background: '#f5f5f5', borderRadius: 4 }}>{detailRecord.deadline}</div></Col>
+                </Row>
+                <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
+                  <Col span={8}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>本次报价轮次</div><div style={{ padding: '8px 12px', background: '#f5f5f5', borderRadius: 4 }}>{detailRecord.round}</div></Col>
+                  <Col span={8}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>邮件报价</div><div><Radio checked={detailRecord.emailQuote === '是'} disabled>是</Radio></div></Col>
+                  <Col span={8}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>供应商联系邮箱</div><div style={{ padding: '8px 12px', background: '#f5f5f5', borderRadius: 4 }}>{detailRecord.supplierEmail || '-'}</div></Col>
+                </Row>
+                <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
+                  <Col span={8}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>报价邮件</div><div style={{ padding: '8px 12px', background: '#f5f5f5', borderRadius: 4 }}>{detailRecord.quoteEmail || '-'}</div></Col>
+                </Row>
+                {/* 商务条款 */}
+                <div style={{ marginBottom: 16 }}>
+                  <div style={{ fontSize: 14, fontWeight: 500, marginBottom: 8 }}>商务条款</div>
+                  <Row gutter={[16, 12]} style={{ marginBottom: 8 }}>
+                    <Col span={4}><span style={{ color: '#8c8c8c', fontSize: 13 }}>发票类型</span></Col>
+                    <Col span={20}><span style={{ fontSize: 13 }}>增值税专用发票</span></Col>
+                  </Row>
+                  <Row gutter={[16, 12]} style={{ marginBottom: 8 }}>
+                    <Col span={4}><span style={{ color: '#8c8c8c', fontSize: 13 }}>付款方式</span></Col>
+                    <Col span={20}><span style={{ fontSize: 13 }}>银行转账</span></Col>
+                  </Row>
+                  <Row gutter={[16, 12]}>
+                    <Col span={4}><span style={{ color: '#8c8c8c', fontSize: 13 }}>付款条款</span></Col>
+                    <Col span={20}><Table dataSource={[]} columns={[{ title: '付款条件', dataIndex: 'condition' }, { title: '付款比例', dataIndex: 'ratio', width: 120 }]} bordered size="small" pagination={false} locale={{ emptyText: '暂无数据' }} /></Col>
+                  </Row>
+                </div>
+                {/* 协同供应商报价 */}
+                {sectionTitle('协同供应商报价')}
+                <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
+                  <Col span={8}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>供应商</div><div style={{ padding: '8px 12px', background: '#f5f5f5', borderRadius: 4 }}>{detailRecord.supplier || '-'}</div></Col>
+                  <Col span={8}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>报价人</div><div style={{ padding: '6px 12px', background: '#f5f5f5', borderRadius: 4, display: 'flex', alignItems: 'center', gap: 6 }}>{detailRecord.quoter ? React.createElement(React.Fragment, null, React.createElement(Avatar, { size: 20, style: { backgroundColor: '#52c41a', fontSize: 11 } }, detailRecord.quoter[0]), React.createElement('span', null, detailRecord.quoter)) : '-'}</div></Col>
+                  <Col span={8}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>报价日期</div><div style={{ padding: '8px 12px', background: '#f5f5f5', borderRadius: 4 }}>{detailRecord.quoteDate || '-'}</div></Col>
+                </Row>
+                <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
+                  <Col span={8}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>供应商编码</div><div style={{ padding: '8px 12px', background: '#f5f5f5', borderRadius: 4 }}>{detailRecord.supplierCode || '-'}</div></Col>
+                  <Col span={8}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>供应商名称</div><div style={{ padding: '8px 12px', background: '#f5f5f5', borderRadius: 4 }}>{detailRecord.supplierName || '-'}</div></Col>
+                  <Col span={8}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>参与报价 <span style={{ color: '#ff4d4f' }}>*</span></div><div style={{ display: 'flex', alignItems: 'center', gap: 6 }}><Radio checked={detailRecord.joinQuote === '是'} disabled />{React.createElement(Tag, { color: 'blue' }, '是')}</div></Col>
+                </Row>
+                <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
+                  <Col span={8}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>外币报价</div><div><Radio disabled>是，不限定币种</Radio><Radio disabled>是，指定币种</Radio><Radio checked={detailRecord.foreignQuote === '否'} disabled>否</Radio></div></Col>
+                  <Col span={8}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>报价时间</div><div style={{ padding: '8px 12px', background: '#f5f5f5', borderRadius: 4 }}>{detailRecord.quoteTime || '-'}</div></Col>
+                  <Col span={8}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>IP地址</div><div style={{ padding: '8px 12px', background: '#f5f5f5', borderRadius: 4 }}>111.197.252.72</div></Col>
+                </Row>
+                {/* 报价明细 */}
+                <div style={{ marginBottom: 16 }}>
+                  <div style={{ fontSize: 14, fontWeight: 500, marginBottom: 8 }}>报价明细 <span style={{ color: '#ff4d4f' }}>*</span></div>
+                  <Table dataSource={[
+                    { key: '1', idx: 1, poolNo: 'XQC202601290016', materialCode: '', goods: '火花塞', spec: 'NGK LZKAR6AP-11', unit: '个', demandQty: 5, expectDate: '2025-03-31', availQty: 5, quotePrice: '50.00', taxRate: '13%', priceExTax: '44.25', totalExTax: '221.24', totalInTax: '250.00' },
+                    { key: '2', idx: 2, poolNo: 'XQC202601290015', materialCode: '', goods: '雷达传感器', spec: '奔驰 A0009059117', unit: '个', demandQty: 1, expectDate: '2025-03-31', availQty: 1, quotePrice: '1,219.00', taxRate: '13%', priceExTax: '1,078.76', totalExTax: '1,078.76', totalInTax: '1,219.00' },
+                  ]} columns={[
+                    { title: '#', dataIndex: 'idx', width: 40, align: 'center' },
+                    { title: '需求池流水号', dataIndex: 'poolNo', width: 150 },
+                    { title: '物料编码', dataIndex: 'materialCode', width: 120 },
+                    { title: '商品', dataIndex: 'goods', width: 100 },
+                    { title: '规格型号', dataIndex: 'spec', width: 160 },
+                    { title: '单位', dataIndex: 'unit', width: 50, align: 'center' },
+                    { title: '需求数量', dataIndex: 'demandQty', width: 80, align: 'right' },
+                    { title: '期望到货时间', dataIndex: 'expectDate', width: 120 },
+                    { title: '可供货数量', dataIndex: 'availQty', width: 90, align: 'right' },
+                    { title: '报价单价', dataIndex: 'quotePrice', width: 100, align: 'right' },
+                    { title: '税率', dataIndex: 'taxRate', width: 60, align: 'center' },
+                    { title: '不含税单价', dataIndex: 'priceExTax', width: 100, align: 'right' },
+                    { title: '不含税总价', dataIndex: 'totalExTax', width: 110, align: 'right' },
+                    { title: '含税总价', dataIndex: 'totalInTax', width: 110, align: 'right' },
+                  ]} bordered size="small" pagination={false} scroll={{ x: 1400 }} />
+                </div>
+                {/* 报价说明 */}
+                <div style={{ marginBottom: 16 }}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>报价说明 <span style={{ color: '#ff4d4f' }}>*</span></div><div style={{ padding: '12px', background: '#f5f5f5', borderRadius: 4, minHeight: 60 }}>{detailRecord.quoteDesc || '-'}</div></div>
+                {/* 金额 */}
+                <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
+                  <Col span={8}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>不含税总价</div><div style={{ padding: '8px 12px', background: '#f5f5f5', borderRadius: 4 }}>{detailRecord.totalExTax || '-'}</div></Col>
+                  <Col span={8}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>税额</div><div style={{ padding: '8px 12px', background: '#f5f5f5', borderRadius: 4 }}>{detailRecord.taxAmount || '-'}</div></Col>
+                  <Col span={8}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>含税总金额 <span style={{ color: '#ff4d4f' }}>*</span></div><div style={{ padding: '8px 12px', background: '#f5f5f5', borderRadius: 4 }}>{detailRecord.totalInTax || '-'}</div></Col>
+                </Row>
+                <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
+                  <Col span={8}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>金额大写</div><div style={{ padding: '8px 12px', background: '#f5f5f5', borderRadius: 4 }}>{detailRecord.amountCN || '-'}</div></Col>
+                  <Col span={8}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>文件</div><div style={{ padding: '8px 12px', background: '#f5f5f5', borderRadius: 4 }}>{detailRecord.file || '-'}</div></Col>
+                </Row>
+                {/* 开标 */}
+                {sectionTitle('开标')}
+                <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
+                  <Col span={8}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>开价 <span style={{ color: '#ff4d4f' }}>*</span></div><div style={{ display: 'flex', alignItems: 'center', gap: 6 }}><Radio checked={detailRecord.openPrice === '开价' || detailRecord.openPrice === '是'} disabled />{React.createElement(Tag, { color: 'blue' }, '开价')}</div></Col>
+                  <Col span={8}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>采购协助人</div><div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>{(detailRecord.purchaseHelper || '').split('/').filter(Boolean).map((name, i) => React.createElement('span', { key: i, style: { display: 'inline-flex', alignItems: 'center', gap: 4, background: '#f0f0f0', borderRadius: 4, padding: '2px 8px' } }, React.createElement(Avatar, { size: 18, style: { backgroundColor: i === 0 ? '#7c5cfc' : '#52c41a', fontSize: 10 } }, name[0]), React.createElement('span', { style: { fontSize: 12 } }, name)))}</div></Col>
+                  <Col span={8}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>供应商联系人</div><div style={{ padding: '8px 12px', background: '#f5f5f5', borderRadius: 4 }}>{detailRecord.supplierContact || '-'}</div></Col>
+                </Row>
+                {/* 查询 */}
+                <div style={{ marginBottom: 16 }}>
+                  <div style={{ fontSize: 14, fontWeight: 500, marginBottom: 8 }}>查询</div>
+                  <div style={{ background: '#fafafa', borderRadius: 4, padding: '12px 16px' }}>
+                    <Row gutter={[16, 8]}>
+                      <Col span={8}><span style={{ color: '#8c8c8c', fontSize: 13 }}>结果确认单号</span><span style={{ marginLeft: 12, fontSize: 13 }}>JG20260129002</span></Col>
+                    </Row>
+                    <Row gutter={[16, 8]} style={{ marginTop: 8 }}>
+                      <Col span={8}><span style={{ color: '#8c8c8c', fontSize: 13 }}>询价单号</span><span style={{ marginLeft: 12, fontSize: 13 }}>{detailRecord.inquiryNo}</span></Col>
+                    </Row>
+                    <Row gutter={[16, 8]} style={{ marginTop: 8 }}>
+                      <Col span={8}><span style={{ color: '#8c8c8c', fontSize: 13 }}>报价轮数</span><span style={{ marginLeft: 12, fontSize: 13 }}>三轮报价</span></Col>
+                    </Row>
+                  </div>
+                </div>
+                {/* 底部信息 */}
+                <div style={{ borderTop: '1px solid #f0f0f0', paddingTop: 16 }}>
+                  <Row gutter={[16, 12]}>
+                    <Col span={12}><span style={{ color: '#8c8c8c' }}>提交人</span><a style={{ color: '#1677ff', marginLeft: 16 }}>{detailRecord.submitter}</a></Col>
+                    <Col span={12}><span style={{ color: '#8c8c8c' }}>提交时间</span><span style={{ marginLeft: 16 }}>{detailRecord.submitTime}</span></Col>
+                    <Col span={12}><span style={{ color: '#8c8c8c' }}>更新时间</span><span style={{ marginLeft: 16 }}>{detailRecord.updateTime || '-'}</span></Col>
+                    <Col span={12}><span style={{ color: '#8c8c8c' }}>流程状态</span><span style={{ marginLeft: 16 }}>{React.createElement(Tag, { color: detailRecord.flowStatus === '已生效' ? 'success' : 'default' }, detailRecord.flowStatus)}</span></Col>
+                    <Col span={12}><span style={{ color: '#8c8c8c' }}>当前节点</span><span style={{ marginLeft: 16 }}>{detailRecord.currentNode || '-'}</span></Col>
+                    <Col span={12}><span style={{ color: '#8c8c8c' }}>当前负责人</span><span style={{ marginLeft: 16 }}>{detailRecord.currentOwner || '-'}</span></Col>
+                  </Row>
+                </div>
+              </div>
+            )}
+          </Modal>
+        </div>
+      );
+    }
+
     // ===== 询价大厅组件 =====
     function InquiryHall() {
       const [selectedRowKeys, setSelectedRowKeys] = useState([]);
@@ -4384,6 +5504,12 @@
       const isPurchasePool = selectedKeys[0] === "procurement/pool";
       // 是否显示询价大厅
       const isInquiryHall = selectedKeys[0] === "rfq/hall";
+      // 是否显示询价申请
+      const isInquiryApply = selectedKeys[0] === "rfq/apply";
+      // 是否显示询价结果确认
+      const isInquiryConfirm = selectedKeys[0] === "rfq/confirm";
+      // 是否显示供应商报价单
+      const isSupplierQuote = selectedKeys[0] === "rfq/quote";
 
       return (
         <Layout style={{ minHeight: "100vh" }}>
@@ -4481,13 +5607,13 @@
             {/* Content */}
             <Content className="site-content">
               {/* 面包屑 */}
-              {!isHomePage && !isSupplierBoard && !isSupplierAccess && !isSupplierType && !isSupplierArchive && !isSupplierRegister && !isQualityBoard && !isQualityPlan && !isQualityEvaluation && !isDemandBoard && !isTrackBoard && !isSourceBoard && !isProjectMgmt && !isPurchaseApply && !isPurchasePool && !isInquiryHall && <Breadcrumb
+              {!isHomePage && !isSupplierBoard && !isSupplierAccess && !isSupplierType && !isSupplierArchive && !isSupplierRegister && !isQualityBoard && !isQualityPlan && !isQualityEvaluation && !isDemandBoard && !isTrackBoard && !isSourceBoard && !isProjectMgmt && !isPurchaseApply && !isPurchasePool && !isInquiryHall && !isInquiryApply && !isInquiryConfirm && !isSupplierQuote && <Breadcrumb
                 items={breadcrumb}
                 style={{ marginBottom: 16 }}
               />}
 
               {/* 主内容卡片 */}
-              <div className="content-card" style={(isHomePage || isSupplierBoard || isSupplierAccess || isSupplierType || isSupplierArchive || isSupplierRegister || isQualityBoard || isQualityPlan || isQualityEvaluation || isDemandBoard || isTrackBoard || isSourceBoard || isProjectMgmt || isPurchaseApply || isPurchasePool || isInquiryHall) ? { padding: 0, background: 'transparent', boxShadow: 'none' } : {}}>
+              <div className="content-card" style={(isHomePage || isSupplierBoard || isSupplierAccess || isSupplierType || isSupplierArchive || isSupplierRegister || isQualityBoard || isQualityPlan || isQualityEvaluation || isDemandBoard || isTrackBoard || isSourceBoard || isProjectMgmt || isPurchaseApply || isPurchasePool || isInquiryHall || isInquiryApply || isInquiryConfirm || isSupplierQuote) ? { padding: 0, background: 'transparent', boxShadow: 'none' } : {}}>
                 {isHomePage ? (
                   <HomeDashboard />
                 ) : isSupplierBoard ? (
@@ -4518,6 +5644,12 @@
                   <PurchaseApply />
                 ) : isPurchasePool ? (
                   <PurchasePool />
+                ) : isInquiryApply ? (
+                  <InquiryApply />
+                ) : isInquiryConfirm ? (
+                  <InquiryConfirm />
+                ) : isSupplierQuote ? (
+                  <SupplierQuote />
                 ) : isInquiryHall ? (
                   <InquiryHall />
                 ) : (
