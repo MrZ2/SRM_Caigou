@@ -589,6 +589,65 @@
       window.location.hash = '/' + key;
     }
 
+    // ===== 字段名中文映射表 =====
+    const FIELD_LABEL_MAP = {
+      flowStatus: '流程状态', applyNo: '申请单号', applyDate: '申请日期',
+      applicant: '申请人', dept: '所属部门', company: '申请公司',
+      amount: '金额', projectCode: '项目编码', projectName: '项目名称',
+      budget: '可用预算', receiver: '收件人', phone: '电话',
+      address: '地址', description: '说明', fromBom: '从BOM选择',
+      applyQty: '申请数量', inquiryProgress: '询价进度',
+      purchaseProgress: '采购进度', applySource: '申请来源',
+      submitter: '提交人', submitTime: '提交时间', updateTime: '更新时间',
+      currentNode: '当前节点', currentOwner: '当前负责人',
+      serialNo: '流水号', code: '编码', type: '类型', name: '名称',
+      creditCode: '统一社会信用代码', status: '状态',
+      supplierName: '供应商名称', supplierCode: '供应商编码',
+      inquiryNo: '询价单号', confirmNo: '结果确认单号',
+      orderNo: '订单号', contractNo: '合同号', orderDate: '下单日期',
+      deliveryDate: '交货日期', sourceDocNo: '来源单号',
+      sourceDocType: '来源类型', goodsName: '物品名称', spec: '规格型号',
+      unit: '单位', qty: '数量', expectDate: '期望到货时间',
+      priceInTax: '含税单价', priceExTax: '不含税单价',
+      taxRate: '税率', totalInTax: '含税总价', totalExTax: '不含税总价',
+      taxAmount: '税额', remark: '备注', reason: '原因',
+      planNo: '计划单号', planDate: '计划日期', method: '付款方式',
+      paidAmount: '已付金额', unpaid: '未付余额', aging: '账龄',
+      reconNo: '对账单号', period: '对账期间',
+      ourAmount: '我方金额', theirAmount: '对方金额', diff: '差异',
+      deductNo: '扣款单号', relatedOrder: '关联订单',
+      receiptNo: '收货单号', arriveDate: '到货日期',
+      actualQty: '实收数量', diffQty: '差异数量', diffStatus: '差异状态',
+      inspectNo: '检验单号', sampleRate: '抽检比例',
+      passQty: '合格数', failQty: '不合格数', conclusion: '检验结论',
+      inspector: '检验员', warehouseNo: '入库单号',
+      warehouseDate: '入库日期', warehouse: '仓库', location: '库位',
+      time: '时间', operator: '操作人', material: '物料',
+      flowType: '流程类型', docNo: '单据编号', title: '标题',
+      initiator: '发起人', ccTime: '抄送时间',
+      adjustNo: '调价单号', origPrice: '原价', newPrice: '新价',
+      auditStatus: '核价状态', auditor: '核价人',
+      finalPrice: '最终报价', biddingNo: '竞价单号',
+      publicityNo: '公示单号', startTime: '开始时间', endTime: '结束时间',
+      supplier: '供应商', signupTime: '报名时间', contact: '联系人',
+      depositStatus: '保证金状态', remaining: '剩余时间',
+      supplierCount: '参与供应商数', historyCount: '历史报价次数',
+      contractName: '合同名称', party: '签约方', execStatus: '执行状态',
+      expireDate: '到期日期', signDate: '签约日期',
+      payeeName: '收款账户名', payeeAccount: '收款账号', bank: '开户银行',
+      invoice: '发票号', approver: '审批人', approverOpinion: '审批意见',
+      relatedReceipt: '关联收货单号', applyTime: '申请时间',
+      sealType: '用印类型', copies: '份数',
+      approvalStatus: '审批状态', approvalOpinion: '审批意见',
+      partyA: '甲方', partyB: '乙方',
+      // 竞价模块
+      biddingNo: '竞价单号', startPrice: '起始价', minDrop: '降价幅度',
+      duration: '竞价时长',
+      // 补充其他可能遗漏的字段
+      productName: '物资/商品名称', biddingRule: '竞价规则',
+      remark: '备注', suppliers: '邀请供应商',
+    };
+
     // ===== 通用详情弹框辅助函数 =====
     function showRecordDetail(record) {
       var entries = Object.entries(record).filter(function(e) { return e[0] !== 'key'; });
@@ -599,13 +658,52 @@
           React.createElement(Row, { gutter: [16, 12] },
             entries.map(function(e) {
               return React.createElement(Col, { span: 12, key: e[0] },
-                React.createElement('div', { style: { fontSize: 12, color: '#8c8c8c', marginBottom: 2 } }, e[0]),
+                React.createElement('div', { style: { fontSize: 12, color: '#8c8c8c', marginBottom: 2 } }, FIELD_LABEL_MAP[e[0]] || e[0]),
                 React.createElement('div', { style: { padding: '4px 0', fontWeight: 500 } }, String(e[1] || '-'))
               );
             })
           )
         )
       });
+    }
+
+    // ===== DatePicker 兼容组件（antd UMD 的 DatePicker 打开面板崩溃，用原生 input 替代） =====
+    function SafeDatePicker(props) {
+      const { value, onChange, placeholder, disabled, readOnly, showTime, style } = props;
+      const str = value && value.format ? value.format(showTime ? 'YYYY-MM-DDTHH:mm' : 'YYYY-MM-DD') : '';
+      return React.createElement('input', {
+        type: showTime ? 'datetime-local' : 'date',
+        className: 'ant-input',
+        style: Object.assign({ width: '100%' }, style || {}),
+        value: str,
+        disabled: disabled || readOnly,
+        placeholder: placeholder,
+        onChange: function(e) {
+          var v = e.target.value;
+          if (onChange) onChange(v ? dayjs(v.replace('T', ' ')) : null);
+        }
+      });
+    }
+
+    // ===== RangePicker 兼容组件（antd UMD 的 RangePicker 渲染崩溃，用两个 DatePicker 组合替代） =====
+    function SafeRangePicker(props) {
+      const { value, onChange, placeholder } = props;
+      const start = value && value[0] ? value[0] : null;
+      const end = value && value[1] ? value[1] : null;
+      return React.createElement('div', { style: { display: 'flex', gap: 8, width: '100%' } },
+        React.createElement(SafeDatePicker, {
+          style: { flex: 1, minWidth: 0 },
+          placeholder: (placeholder && placeholder[0]) || '开始日期',
+          value: start,
+          onChange: function(d) { if (onChange) onChange([d, end]); }
+        }),
+        React.createElement(SafeDatePicker, {
+          style: { flex: 1, minWidth: 0 },
+          placeholder: (placeholder && placeholder[1]) || '结束日期',
+          value: end,
+          onChange: function(d) { if (onChange) onChange([start, d]); }
+        })
+      );
     }
 
     // ===== 全局状态：操作日志 & 消息通知 =====
@@ -630,6 +728,7 @@
       };
       globalActionLog.unshift(entry);
       if (globalActionLog.length > 500) globalActionLog.pop();
+      try { window.dispatchEvent(new CustomEvent('srm-notify-change')); } catch (e) {}
     }
 
     // ===== 操作日志类型映射 =====
@@ -690,6 +789,7 @@
       };
       globalNotifications.unshift(item);
       globalNotifUnread.count++;
+      try { window.dispatchEvent(new CustomEvent('srm-notify-change')); } catch (e) {}
     }
 
     // ===== 单据编号自动生成 =====
@@ -720,7 +820,12 @@
     }
 
     // ===== 预算硬控制：全局预算数据 + 检查函数 =====
-    var globalBudgetData = null;
+    var globalBudgetData = [
+      { key: '1', dept: '采购部', project: '2026年原材料采购', budget: '5,000,000.00', used: '2,250,000.00', available: '2,750,000.00', rate: 45, frozen: false },
+      { key: '2', dept: 'IT部', project: 'IT设备采购', budget: '800,000.00', used: '680,000.00', available: '120,000.00', rate: 85, frozen: false },
+      { key: '3', dept: '工程部', project: '厂房建设', budget: '2,000,000.00', used: '2,100,000.00', available: '-100,000.00', rate: 105, frozen: false },
+      { key: '4', dept: '行政部', project: '办公用品采购', budget: '200,000.00', used: '32,000.00', available: '168,000.00', rate: 16, frozen: false },
+    ];
     function checkBudget(dept, amount) {
       var found = null;
       if (typeof globalBudgetData !== 'undefined' && globalBudgetData) {
@@ -728,7 +833,7 @@
       }
       if (!found) return { allowed: true, remaining: 0, rate: 0, dept: dept, frozen: false };
       return {
-        allowed: !(found.rate >= 100 && found.frozen),
+        allowed: !(found.frozen || found.rate >= 100),
         remaining: found.available,
         rate: found.rate,
         dept: found.dept,
@@ -750,12 +855,13 @@
       },
       // 采购订单状态机
       po: {
-        states: ['草稿', '待供应商确认', '供应商已确认', '执行中', '已完成', '已取消'],
+        states: ['草稿', '待供应商确认', '供应商已确认', '执行中', '已完成', '已取消', '已拒绝'],
         transitions: {
-          '草稿': ['待供应商确认', '已取消'], '待供应商确认': ['供应商已确认', '草稿'],
-          '供应商已确认': ['执行中'], '执行中': ['已完成']
+          '草稿': ['待供应商确认', '已取消'], '待供应商确认': ['供应商已确认', '已拒绝'],
+          '供应商已确认': ['执行中'], '执行中': ['已完成'],
+          '已拒绝': ['草稿', '已取消']
         },
-        colors: { '草稿': 'default', '待供应商确认': 'warning', '供应商已确认': 'processing', '执行中': 'processing', '已完成': 'success', '已取消': 'error' }
+        colors: { '草稿': 'default', '待供应商确认': 'warning', '供应商已确认': 'processing', '执行中': 'processing', '已完成': 'success', '已取消': 'error', '已拒绝': 'error' }
       },
       // 合同状态机
       contract: {
@@ -839,6 +945,38 @@
       if (amt < 500000) return { method: '竞价', reason: '金额在10万-50万，建议竞价（充分竞争）' };
       if (amt >= 500000) return { method: '招投标', reason: '金额大于50万，建议招投标（合规透明）' };
       return { method: '询比价', reason: '默认推荐询比价' };
+    }
+
+    // ===== 金额解析工具 =====
+    /** 解析带千分位逗号的金额字符串，NaN 兜底为 0 */
+    function parseAmount(v) {
+      if (v === null || v === undefined || v === '') return 0;
+      var n = parseFloat(String(v).replace(/,/g, '').trim());
+      return isNaN(n) ? 0 : n;
+    }
+
+    // ===== 跨模块数据总线（内存态，刷新重置） =====
+    const globalStore = { inquiries: [], confirms: [], contracts: [], orders: [] };
+    function notifyStoreChange() {
+      try { window.dispatchEvent(new CustomEvent('srm-store-change')); } catch (e) {}
+    }
+    /** 订阅全局列表：返回 [list, setList]，setList 写入 globalStore 并广播变更给所有订阅方 */
+    function useStoreList(key, seed) {
+      const [list, setListState] = useState(() => {
+        if ((!globalStore[key] || globalStore[key].length === 0) && seed && seed.length) globalStore[key] = seed.slice();
+        return globalStore[key];
+      });
+      useEffect(() => {
+        const handler = () => { if (globalStore[key]) setListState(globalStore[key].slice()); };
+        window.addEventListener('srm-store-change', handler);
+        return () => window.removeEventListener('srm-store-change', handler);
+      }, [key]);
+      const setList = useCallback((updater) => {
+        const next = typeof updater === 'function' ? updater(globalStore[key]) : updater;
+        globalStore[key] = next;
+        notifyStoreChange();
+      }, [key]);
+      return [list, setList];
     }
 
     // ===== 通用搜索 & 分页工具 =====
@@ -948,12 +1086,12 @@
       ];
 
       const shortcuts = [
-        { label: '采购申请', icon: React.createElement(FormOutlined, { style: { color: '#fa8c16', fontSize: 18 } }), color: 'rgba(250,140,22,0.1)' },
-        { label: '采购需求池', icon: React.createElement(DatabaseOutlined, { style: { color: '#1677ff', fontSize: 18 } }), color: 'rgba(22,119,255,0.1)' },
-        { label: '询价申请', icon: React.createElement(FileSearchOutlined, { style: { color: '#fa8c16', fontSize: 18 } }), color: 'rgba(250,140,22,0.1)' },
-        { label: '采购订单', icon: React.createElement(ShoppingOutlined, { style: { color: '#fa8c16', fontSize: 18 } }), color: 'rgba(250,140,22,0.1)' },
-        { label: '供应商档案', icon: React.createElement(ProfileOutlined, { style: { color: '#1677ff', fontSize: 18 } }), color: 'rgba(22,119,255,0.1)' },
-        { label: '付款计划', icon: React.createElement(ScheduleOutlined, { style: { color: '#1677ff', fontSize: 18 } }), color: 'rgba(22,119,255,0.1)' },
+        { label: '采购申请', key: 'procurement/apply', icon: React.createElement(FormOutlined, { style: { color: '#fa8c16', fontSize: 18 } }), color: 'rgba(250,140,22,0.1)' },
+        { label: '采购需求池', key: 'procurement/pool', icon: React.createElement(DatabaseOutlined, { style: { color: '#1677ff', fontSize: 18 } }), color: 'rgba(22,119,255,0.1)' },
+        { label: '询价申请', key: 'rfq/apply', icon: React.createElement(FileSearchOutlined, { style: { color: '#fa8c16', fontSize: 18 } }), color: 'rgba(250,140,22,0.1)' },
+        { label: '采购订单', key: 'order/po', icon: React.createElement(ShoppingOutlined, { style: { color: '#fa8c16', fontSize: 18 } }), color: 'rgba(250,140,22,0.1)' },
+        { label: '供应商档案', key: 'supplier/archive', icon: React.createElement(ProfileOutlined, { style: { color: '#1677ff', fontSize: 18 } }), color: 'rgba(22,119,255,0.1)' },
+        { label: '付款计划', key: 'finance/payment-plan', icon: React.createElement(ScheduleOutlined, { style: { color: '#1677ff', fontSize: 18 } }), color: 'rgba(22,119,255,0.1)' },
       ];
 
       const stages = [
@@ -989,7 +1127,7 @@
         { title: '发货日期', dataIndex: 'shipDate', width: 100 },
         { title: '供应商', dataIndex: 'supplier', width: 100 },
         { title: '快递号', dataIndex: 'express', width: 130 },
-        { title: 'Shipping Details', children: [
+        { title: '发货明细', children: [
           { title: '订单编号', dataIndex: 'orderNo', width: 130 },
           { title: '商品', dataIndex: 'product', width: 90 },
           { title: '规格型号', dataIndex: 'spec', width: 140 },
@@ -1019,7 +1157,7 @@
               <div style={{ ...cardStyle, marginBottom: 12 }}>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px 8px' }}>
                   {shortcuts.map((item, idx) => (
-                    <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', padding: '8px 10px', borderRadius: 8, transition: 'all 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.background = '#f5f7fa'} onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
+                    <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', padding: '8px 10px', borderRadius: 8, transition: 'all 0.2s' }} onClick={() => setHashKey(item.key)} onMouseEnter={(e) => e.currentTarget.style.background = '#f5f7fa'} onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
                       <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 32, height: 32, borderRadius: 8, background: item.color }}>{item.icon}</span>
                       <span style={{ fontSize: 13, color: '#262626', fontWeight: 500 }}>{item.label}</span>
                     </div>
@@ -1357,15 +1495,38 @@
       };
 
       // 表格数据
-      const tableData = [
+      const [tableData, setTableData] = useState([
         { key: '1', status: '已生效', serialNo: 'GYS000003', code: 'GYS000008', type: '五金供应商', name: '天津海叶商贸', creditCode: '91440604MA56789012', attachment: '', remark: '同意进入', submitter: '用户257522', submitTime: '2026-07-21 11:31:45', updateTime: '2026-07-21 14:20:33', currentNode: '审批完成', currentOwner: '-' },
         { key: '2', status: '已生效', serialNo: 'GYS000002', code: 'GYS000002', type: '五金供应商', name: '京东企业购', creditCode: '91310101MA1F056789', attachment: '', remark: '同意进入', submitter: '用户257522', submitTime: '2026-07-21 11:31:42', updateTime: '2026-07-21 13:55:18', currentNode: '审批完成', currentOwner: '-' },
-      ];
+      ]);
 
       const handleViewDetail = (record) => {
         setDetailRecord(record);
         setDetailVisible(true);
       };
+
+      const handleAccessSubmit = () => {
+        if (!formData.name) { antd.message.warning('请先选择潜在供应商'); return; }
+        const newNo = generateDocNo('GYS');
+        const now = new Date().toLocaleString('zh-CN', { hour12: false });
+        setTableData(prev => [{ key: String(Date.now()) + Math.random().toString(36).slice(2, 6), status: '审批中', serialNo: newNo, code: formData.code, type: formData.type, name: formData.name, creditCode: formData.creditCode, attachment: '', remark: '', submitter: '用户257522', submitTime: now, updateTime: now, currentNode: '准入审核', currentOwner: '审核员A' }, ...prev]);
+        logAction('供应商准入', '新增', newNo, '发起准入：' + formData.name);
+        notify('info', '准入申请已提交', '供应商「' + formData.name + '」准入申请已提交（流水号：' + newNo + '）', 'supplier/access');
+        antd.message.success('提交成功，流水号：' + newNo);
+        setModalVisible(false);
+      };
+
+      const [searchText, setSearchText] = useState('');
+      const [statusFilter, setStatusFilter] = useState(undefined);
+      const [accessPage, setAccessPage] = useState(1);
+      const [accessSize, setAccessSize] = useState(20);
+      const accessSearchFields = ['serialNo', 'code', 'name', 'type', 'creditCode', 'submitter'];
+      const filteredAccessData = useMemo(() => {
+        let result = filterByKeyword(tableData, searchText, accessSearchFields);
+        if (statusFilter && statusFilter !== 'all') result = result.filter(item => item.status === statusFilter);
+        return result;
+      }, [tableData, searchText, statusFilter]);
+      const accessPagination = { ...standardPagination, total: filteredAccessData.length, current: accessPage, pageSize: accessSize, onChange: (p, s) => { setAccessPage(p); setAccessSize(s); }, pageSizeOptions: ['10', '20', '50', '100'] };
 
       const columns = [
         { title: '流程状态', dataIndex: 'status', width: 90, render: (v) => React.createElement(Tag, { color: 'success' }, v) },
@@ -1448,10 +1609,12 @@
               <Button icon={React.createElement(ExportOutlined)} onClick={() => antd.message.info('导入/导出功能开发中')}>导出</Button>
             </Space>
             <Space size={8}>
-              <Select defaultValue="all" size="middle" style={{ width: 110 }}>
-                <Option value="all">搜索范围</Option>
+              <Select value={statusFilter || 'all'} size="middle" style={{ width: 110 }} allowClear onChange={(v) => { setStatusFilter(v); setAccessPage(1); }}>
+                <Option value="all">全部状态</Option>
+                <Option value="审批中">审批中</Option>
+                <Option value="已生效">已生效</Option>
               </Select>
-              <Input placeholder="请输入搜索内容" style={{ width: 220 }} suffix={React.createElement(SearchOutlined)} />
+              <Input placeholder="搜索流水号/供应商名称" style={{ width: 240 }} suffix={React.createElement(SearchOutlined)} value={searchText} onChange={(e) => { setSearchText(e.target.value); setAccessPage(1); }} allowClear />
               <Popover content={colSettingContent} trigger="click" open={colSettingVisible} onOpenChange={setColSettingVisible} placement="bottomRight">
                 {React.createElement(SettingOutlined, { style: { cursor: 'pointer', color: '#8c8c8c', fontSize: 16 } })}
               </Popover>
@@ -1461,27 +1624,13 @@
           {/* 数据表格 */}
           <Table
             columns={columns}
-            dataSource={tableData}
+            dataSource={filteredAccessData}
             rowSelection={{ selectedRowKeys, onChange: setSelectedRowKeys }}
             bordered
             size="middle"
-            pagination={false}
+            pagination={accessPagination}
             scroll={{ x: 1800 }}
           />
-
-          {/* 底部分页 */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 12, paddingTop: 12, padding: '12px 0 8px', borderTop: '1px solid #f0f0f0' }}>
-            <Space size={16}>
-              {React.createElement(ColumnWidthOutlined, { style: { color: '#8c8c8c' } })}
-              <Select defaultValue="20" size="small" style={{ width: 90 }}>
-                <Option value="20">20条/页</Option>
-                <Option value="50">50条/页</Option>
-                <Option value="100">100条/页</Option>
-              </Select>
-              <span style={{ color: '#595959', fontSize: 13 }}>共 2 条</span>
-            </Space>
-            <Pagination current={1} total={2} pageSize={20} size="small" showSizeChanger={false} />
-          </div>
 
           {/* 新建弹框 */}
           <Modal
@@ -1567,7 +1716,7 @@
 
             {/* 弹框底部提交按钮 */}
             <div style={{ textAlign: 'center', padding: '12px 24px 20px', borderTop: '1px solid #f0f0f0' }}>
-              <Button type="primary" style={{ ...purpleBtnStyle, width: 120, height: 36 }}>提交</Button>
+              <Button type="primary" style={{ ...purpleBtnStyle, width: 120, height: 36 }} onClick={handleAccessSubmit}>提交</Button>
             </div>
           </Modal>
 
@@ -1705,6 +1854,11 @@
       };
 
       const handleSaveDraft = () => {
+        if (!typeName.trim()) { antd.message.warning('请输入类型名称'); return; }
+        const newKey = String(tableData.length + 1);
+        const newCode = '20240407000' + newKey;
+        setTableData(prev => [...prev, { key: newKey, code: newCode, typeName, quals: qualRows.map(r => ({ certName: r.certName, certType: r.certType, expireDate: r.expireDate })), submitter: '用户257522', submitTime: new Date().toLocaleString('zh-CN', { hour12: false }).replace(/\//g, '-'), updateTime: '' }]);
+        logAction('供应商类型', '新增', newCode, '保存草稿：' + typeName);
         antd.message.success('草稿已保存');
         setModalVisible(false);
       };
@@ -1921,7 +2075,11 @@
       };
 
       const handleAddSaveDraft = () => {
-        antd.message.success('草稿已保存');
+        const newCode = generateDocNo('GYS');
+        const newRecord = { ...addFormData, key: String(Date.now()) + Math.random().toString(36).slice(2, 6), code: newCode, status: '草稿', submitter: '管理员', submitTime: new Date().toLocaleString('zh-CN', { hour12: false }), updateTime: new Date().toLocaleString('zh-CN', { hour12: false }) };
+        setTableData(prev => [newRecord, ...prev]);
+        logAction('供应商档案', '新增', newCode, '保存草稿：' + (addFormData.name || '未命名'));
+        antd.message.success('草稿已保存，编号：' + newCode);
         setAddVisible(false);
       };
 
@@ -2587,11 +2745,38 @@
 
       const handleAddChange = (field, value) => { setAddFormData(prev => ({ ...prev, [field]: value })); };
       const handleAddSubmit = () => {
+        if (!addFormData.name) { antd.message.warning('请填写供应商名称'); return; }
+        if (!addFormData.type) { antd.message.warning('请选择供应商类型'); return; }
+        if (addFormData.creditCode && !/^[0-9A-Z]{18}$/i.test(addFormData.creditCode)) { antd.message.warning('统一社会信用代码格式不正确（应为18位字母数字）'); return; }
         if (!addFormData.agreeProtocol) { antd.message.warning('请先阅读并同意供应商协议'); return; }
-        antd.message.success('提交成功');
+        const newNo = generateDocNo('GYS');
+        const now = new Date().toLocaleString('zh-CN', { hour12: false });
+        setTableData(prev => [{
+          key: String(Date.now()) + Math.random().toString(36).slice(2, 6),
+          name: addFormData.name, status: '注册', serialNo: newNo, type: addFormData.type,
+          creditCode: addFormData.creditCode || '', creditCodeDup: '通过', creditCodeQuery: '正常', verifyResult: '待验证',
+          license: '-', contact: addFormData.contact, phone: addFormData.phone,
+          email: addFormData.email, bizMode: addFormData.bizMode || '', materialLevel: '一般', supplierLevel: '一般供应商',
+          relation: '外部供应商', interSupplier: addFormData.interSupplier || '否', supplierStatus: '潜在',
+          attachment: '-', bizScope: addFormData.bizScope || '', accountName: addFormData.accountName || '',
+          bank: addFormData.bank || '', accountNo: addFormData.accountNo || '', tel: addFormData.tel || '',
+          address: addFormData.address || '', certName: '', certType: '', certAttachment: '', certExpire: '',
+          aiVerify: '待核验', agreement: addFormData.agreeProtocol ? '已签署' : '未签署',
+          submitter: '用户257522', submitTime: now, updateTime: now, currentNode: '注册审核', currentOwner: '审核员A'
+        }, ...prev]);
+        logAction('供应商注册', '新增', newNo, '新增供应商：' + addFormData.name);
+        notify('info', '供应商注册已提交', '供应商「' + addFormData.name + '」注册申请已提交（流水号：' + newNo + '）', 'supplier/register');
+        antd.message.success('提交成功，流水号：' + newNo);
         setAddVisible(false);
       };
-      const handleAddSaveDraft = () => { antd.message.success('草稿已保存'); setAddVisible(false); };
+      const handleAddSaveDraft = () => {
+        const newNo = generateDocNo('GYS');
+        const now = new Date().toLocaleString('zh-CN', { hour12: false });
+        setTableData(prev => [{ key: String(Date.now()) + Math.random().toString(36).slice(2, 6), name: addFormData.name || '未命名供应商', status: '草稿', serialNo: newNo, type: addFormData.type || '', creditCode: addFormData.creditCode || '', creditCodeDup: '-', creditCodeQuery: '-', verifyResult: '-', license: '-', contact: addFormData.contact || '', phone: addFormData.phone || '', email: addFormData.email || '', bizMode: addFormData.bizMode || '', materialLevel: '一般', supplierLevel: '一般供应商', relation: '外部供应商', interSupplier: addFormData.interSupplier || '否', supplierStatus: '潜在', attachment: '-', bizScope: addFormData.bizScope || '', accountName: addFormData.accountName || '', bank: addFormData.bank || '', accountNo: addFormData.accountNo || '', tel: addFormData.tel || '', address: addFormData.address || '', certName: '', certType: '', certAttachment: '', certExpire: '', aiVerify: '-', agreement: '未签署', submitter: '用户257522', submitTime: now, updateTime: now, currentNode: '草稿', currentOwner: '用户257522' }, ...prev]);
+        logAction('供应商注册', '新增', newNo, '保存草稿：' + (addFormData.name || '未命名'));
+        antd.message.success('草稿已保存，流水号：' + newNo);
+        setAddVisible(false);
+      };
       const addQualRow = () => { setQualRows(prev => [...prev, { key: prev.length + 1, certName: '', certType: '', certExpire: '' }]); };
 
       const [tableData, setTableData] = useState([
@@ -2607,6 +2792,18 @@
       const handleDelete = (record) => {
         Modal.confirm({ title: '确认删除', content: `确定要删除供应商「${record.name}」吗？此操作不可恢复。`, okText: '确定', cancelText: '取消', okButtonProps: { danger: true }, onOk: () => { setTableData(prev => prev.filter(item => item.key !== record.key)); antd.message.success('删除成功'); } });
       };
+
+      const [searchText, setSearchText] = useState('');
+      const [statusFilter, setStatusFilter] = useState(undefined);
+      const [regPage, setRegPage] = useState(1);
+      const [regSize, setRegSize] = useState(20);
+      const regSearchFields = ['name', 'serialNo', 'type', 'creditCode', 'contact'];
+      const filteredRegData = useMemo(() => {
+        let result = filterByKeyword(tableData, searchText, regSearchFields);
+        if (statusFilter && statusFilter !== 'all') result = result.filter(item => (item.status || item.supplierStatus) === statusFilter);
+        return result;
+      }, [tableData, searchText, statusFilter]);
+      const regPagination = { ...standardPagination, total: filteredRegData.length, current: regPage, pageSize: regSize, onChange: (p, s) => { setRegPage(p); setRegSize(s); }, pageSizeOptions: ['10', '20', '50', '100'] };
 
       const columns = [
         { title: '供应商名称', dataIndex: 'name', width: 160, fixed: 'left' },
@@ -2656,41 +2853,31 @@
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
             <Space size={8}>
               <Button type="primary" style={blueBtnStyle} icon={React.createElement(PlusOutlined)} onClick={() => { setAddFormData({ type: '', name: '', creditCode: '', contact: '', phone: '', email: '', bizMode: '', interSupplier: '', bizScope: '', accountName: '', bank: '', accountNo: '', tel: '', address: '', agreeProtocol: false }); setQualRows([{ key: 1, certName: '', certType: '', certExpire: '' }]); setAddActiveTab('qual'); setAddVisible(true); }}>新建</Button>
-              <Button icon={React.createElement(ImportOutlined)}>导入</Button>
-              <Button icon={React.createElement(ExportOutlined)}>导出</Button>
+              <Button icon={React.createElement(ImportOutlined)} onClick={() => antd.message.info('导入/导出功能开发中')}>导入</Button>
+              <Button icon={React.createElement(ExportOutlined)} onClick={() => antd.message.info('导入/导出功能开发中')}>导出</Button>
             </Space>
             <Space size={8}>
-              <Select defaultValue="all" size="middle" style={{ width: 110 }}>
-                <Option value="all">搜索范围</Option>
+              <Select value={statusFilter || 'all'} size="middle" style={{ width: 110 }} allowClear onChange={(v) => { setStatusFilter(v); setRegPage(1); }}>
+                <Option value="all">全部状态</Option>
+                <Option value="注册">注册</Option>
+                <Option value="审批中">审批中</Option>
+                <Option value="已生效">已生效</Option>
+                <Option value="草稿">草稿</Option>
               </Select>
-              <Input placeholder="请输入搜索内容" style={{ width: 220 }} suffix={React.createElement(SearchOutlined)} />
+              <Input placeholder="搜索名称/流水号/信用代码" style={{ width: 240 }} suffix={React.createElement(SearchOutlined)} value={searchText} onChange={(e) => { setSearchText(e.target.value); setRegPage(1); }} allowClear />
             </Space>
           </div>
 
           {/* 数据表格 */}
           <Table
             columns={columns}
-            dataSource={tableData}
+            dataSource={filteredRegData}
             rowSelection={{ selectedRowKeys, onChange: setSelectedRowKeys }}
             bordered
             size="middle"
-            pagination={false}
+            pagination={regPagination}
             scroll={{ x: 5200 }}
           />
-
-          {/* 底部分页 */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 12, paddingTop: 12, padding: '12px 0 8px', borderTop: '1px solid #f0f0f0' }}>
-            <Space size={16}>
-              {React.createElement(ColumnWidthOutlined, { style: { color: '#8c8c8c' } })}
-              <Select defaultValue="20" size="small" style={{ width: 90 }}>
-                <Option value="20">20条/页</Option>
-                <Option value="50">50条/页</Option>
-                <Option value="100">100条/页</Option>
-              </Select>
-              <span style={{ color: '#595959', fontSize: 13 }}>共 {tableData.length} 条</span>
-            </Space>
-            <Pagination current={1} total={tableData.length} pageSize={20} size="small" showSizeChanger={false} />
-          </div>
 
           {/* 详情弹窗 */}
           <Modal title="供应商注册详情" open={detailVisible} onCancel={() => setDetailVisible(false)} footer={<Button onClick={() => setDetailVisible(false)}>关闭</Button>} width={900}>
@@ -3034,16 +3221,30 @@
         Modal.confirm({ title: '确认删除', content: `确定要删除「${record.supplierName}」的考核方案吗？`, okText: '确定', cancelText: '取消', okButtonProps: { danger: true }, onOk: () => { setTableData(prev => prev.filter(item => item.key !== record.key)); antd.message.success('删除成功'); } });
       };
       const handleAddSubmit = () => {
+        if (!addFormData.planName) { antd.message.warning('请填写方案名称'); return; }
         if (editRecord) {
           setTableData(prev => prev.map(item => item.key === editRecord.key ? { ...item, planName: addFormData.planName, fullScore: Number(addFormData.fullScore) || 100, enabled: addFormData.enabled, description: addFormData.description } : item));
           antd.message.success('编辑成功');
         } else {
-          antd.message.success('提交成功');
+          const newNo = generateDocNo('JXKH');
+          const now = new Date().toLocaleString('zh-CN', { hour12: false }).replace(/\//g, '-');
+          setTableData(prev => [{ key: String(Date.now()) + Math.random().toString(36).slice(2, 6), flowStatus: '草稿', serialNo: newNo, supplierName: '-', supplierCode: '-', interSupplier: '否', evalStartTime: '-', evalEndTime: '-', qualification: '-', orderExec: '-', siteInspect: '-', rectification8d: '-', qualificationContent: '-', orderExecContent: '-', siteInspectContent: '-', rectification8dContent: '-', reviewRequirement: '-', supplierPerformance: '-', submitter: '用户257522', submitTime: now, updateTime: now, currentNode: '草稿', currentOwner: '用户257522', planName: addFormData.planName, fullScore: Number(addFormData.fullScore) || 100, enabled: addFormData.enabled, description: addFormData.description }, ...prev]);
+          logAction('绩效考核方案', '新增', newNo, '新增考核方案：' + addFormData.planName);
+          notify('info', '考核方案已提交', '考核方案「' + addFormData.planName + '」已提交', 'quality/plan');
+          antd.message.success('提交成功，流水号：' + newNo);
         }
         setAddVisible(false);
         setEditRecord(null);
       };
-      const handleAddSaveDraft = () => { antd.message.success('草稿已保存'); setAddVisible(false); setEditRecord(null); };
+      const handleAddSaveDraft = () => {
+        if (!addFormData.planName) { antd.message.warning('请填写方案名称'); return; }
+        const newNo = generateDocNo('JXKH');
+        const now = new Date().toLocaleString('zh-CN', { hour12: false }).replace(/\//g, '-');
+        setTableData(prev => [{ key: String(Date.now()) + Math.random().toString(36).slice(2, 6), flowStatus: '草稿', serialNo: newNo, supplierName: '-', supplierCode: '-', interSupplier: '否', evalStartTime: '-', evalEndTime: '-', qualification: '-', orderExec: '-', siteInspect: '-', rectification8d: '-', qualificationContent: '-', orderExecContent: '-', siteInspectContent: '-', rectification8dContent: '-', reviewRequirement: '-', supplierPerformance: '-', submitter: '用户257522', submitTime: now, updateTime: now, currentNode: '草稿', currentOwner: '用户257522', planName: addFormData.planName, fullScore: Number(addFormData.fullScore) || 100, enabled: addFormData.enabled, description: addFormData.description }, ...prev]);
+        antd.message.success('草稿已保存，流水号：' + newNo);
+        setAddVisible(false);
+        setEditRecord(null);
+      };
 
       const columns = [
         { title: '供应商名称', dataIndex: 'supplierName', width: 160, fixed: 'left' },
@@ -3313,14 +3514,22 @@
           logAction('绩效考核评价', '编辑', editingRecord.supplierCode, '编辑评价：' + addForm.supplierName);
           notify('success', '评价编辑成功', '供应商「' + addForm.supplierName + '」的绩效评价已更新');
         } else {
-          antd.message.success('提交成功');
+          if (!addForm.supplierName) { antd.message.warning('请选择供应商'); return; }
+          const now = new Date().toLocaleString('zh-CN', { hour12: false }).replace(/\//g, '-');
+          setTableData(prev => [{ key: String(Date.now()) + Math.random().toString(36).slice(2, 6), supplierName: addForm.supplierName, supplierCode: addForm.supplierCode, interSupplier: '否', evalStartTime: addForm.evalStart ? addForm.evalStart.format('YYYY-MM-DD') : '', evalEndTime: addForm.evalEnd ? addForm.evalEnd.format('YYYY-MM-DD') : '', qualification: '-', orderExec: '-', siteInspect: '-', rectification8d: '-', qualificationContent: '-', orderExecContent: '-', siteInspectContent: '-', rectification8dContent: '-', reviewRequirement: addForm.reviewRequirement || '-', supplierPerformance: '-', submitter: '用户257522', submitTime: now, updateTime: now, currentNode: '草稿', currentOwner: '用户257522' }, ...prev]);
           logAction('绩效考核评价', '新增', addForm.supplierCode, '新建评价：' + addForm.supplierName);
           notify('success', '评价创建成功', '供应商「' + addForm.supplierName + '」的绩效评价已创建');
         }
         setEditingRecord(null);
         setAddVisible(false);
       };
-      const handleAddSaveDraft = () => { antd.message.success('草稿已保存'); setAddVisible(false); };
+      const handleAddSaveDraft = () => {
+        if (!addForm.supplierName) { antd.message.warning('请选择供应商'); return; }
+        const now = new Date().toLocaleString('zh-CN', { hour12: false }).replace(/\//g, '-');
+        setTableData(prev => [{ key: String(Date.now()) + Math.random().toString(36).slice(2, 6), supplierName: addForm.supplierName, supplierCode: addForm.supplierCode, interSupplier: '否', evalStartTime: addForm.evalStart ? addForm.evalStart.format('YYYY-MM-DD') : '', evalEndTime: addForm.evalEnd ? addForm.evalEnd.format('YYYY-MM-DD') : '', qualification: '-', orderExec: '-', siteInspect: '-', rectification8d: '-', qualificationContent: '-', orderExecContent: '-', siteInspectContent: '-', rectification8dContent: '-', reviewRequirement: addForm.reviewRequirement || '-', supplierPerformance: '-', submitter: '用户257522', submitTime: now, updateTime: now, currentNode: '草稿', currentOwner: '用户257522' }, ...prev]);
+        antd.message.success('草稿已保存');
+        setAddVisible(false);
+      };
       const handleDelete = (record) => {
         Modal.confirm({ title: '确认删除', content: '确定要删除该评价记录吗？', okText: '确定', cancelText: '取消', okButtonProps: { danger: true }, onOk: () => { setTableData(prev => prev.filter(item => item.key !== record.key)); antd.message.success('删除成功'); } });
       };
@@ -3407,11 +3616,11 @@
                 </Col>
                 <Col span={6}>
                   <div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>评价开始时间</div>
-                  <DatePicker style={{ width: '100%' }} value={addForm.evalStart} onChange={(d) => setAddForm(prev => ({ ...prev, evalStart: d }))} />
+                  <SafeDatePicker style={{ width: '100%' }} value={addForm.evalStart} onChange={(d) => setAddForm(prev => ({ ...prev, evalStart: d }))} />
                 </Col>
                 <Col span={6}>
                   <div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>评价截止时间</div>
-                  <DatePicker style={{ width: '100%' }} value={addForm.evalEnd} onChange={(d) => setAddForm(prev => ({ ...prev, evalEnd: d }))} />
+                  <SafeDatePicker style={{ width: '100%' }} value={addForm.evalEnd} onChange={(d) => setAddForm(prev => ({ ...prev, evalEnd: d }))} />
                 </Col>
               </Row>
 
@@ -3804,13 +4013,54 @@
         { key: '3', flowStatus: '草稿', projectCode: 'XM20260728003', projectName: '办公设备采购项目', projectDate: '2026-07-28', manager: '用户257522', department: '', budget: '50,000.00', status: '进行中', description: '采购笔记本电脑和显示器', submitter: '用户257522', submitTime: '-', updateTime: '2026-07-28 08:00:00', currentNode: '草稿', currentOwner: '用户257522' },
       ]);
 
+      const [searchText, setSearchText] = useState('');
+      const [statusFilter, setStatusFilter] = useState(undefined);
+      const [projectPage, setProjectPage] = useState(1);
+      const [projectSize, setProjectSize] = useState(20);
+      const projectSearchFields = ['projectCode', 'projectName', 'manager', 'department'];
+      const filteredProjectData = useMemo(() => {
+        let result = filterByKeyword(tableData, searchText, projectSearchFields);
+        if (statusFilter && statusFilter !== 'all') result = result.filter(item => item.flowStatus === statusFilter);
+        return result;
+      }, [tableData, searchText, statusFilter]);
+      const projectPagination = { ...standardPagination, total: filteredProjectData.length, current: projectPage, pageSize: projectSize, onChange: (p, s) => { setProjectPage(p); setProjectSize(s); }, pageSizeOptions: ['10', '20', '50', '100'] };
+
       const handleViewDetail = (record) => { setDetailRecord(record); setDetailVisible(true); };
       const handleEdit = (record) => { setEditingRecord(record); setAddForm({ projectName: record.projectName || '', projectDate: record.projectDate || null, manager: record.manager || '', department: record.department || '', budget: record.budget || '', status: record.status || '进行中', description: record.description || '' }); setAddVisible(true); };
       const handleDelete = (record) => {
         Modal.confirm({ title: '确认删除', content: '确定要删除该项目吗？', okText: '确定', cancelText: '取消', okButtonProps: { danger: true }, onOk: () => { setTableData(prev => prev.filter(item => item.key !== record.key)); antd.message.success('删除成功'); } });
       };
-      const handleAddSubmit = () => { if (editingRecord) { setTableData(prev => prev.map(item => item.key === editingRecord.key ? {...item, ...addForm} : item)); antd.message.success('编辑成功'); } else { antd.message.success('提交成功'); } setEditingRecord(null); setAddVisible(false); };
-      const handleAddSaveDraft = () => { if (editingRecord) { setTableData(prev => prev.map(item => item.key === editingRecord.key ? {...item, ...addForm} : item)); } antd.message.success('草稿已保存'); setEditingRecord(null); setAddVisible(false); };
+      const handleAddSubmit = () => {
+        if (!addForm.projectName) { antd.message.warning('请填写项目名称'); return; }
+        if (!addForm.manager) { antd.message.warning('请选择项目负责人'); return; }
+        if (!addForm.department) { antd.message.warning('请选择所属部门'); return; }
+        if (editingRecord) {
+          setTableData(prev => prev.map(item => item.key === editingRecord.key ? {...item, ...addForm, budget: parseAmount(addForm.budget).toLocaleString('zh-CN', { minimumFractionDigits: 2 })} : item));
+          logAction('项目管理', '编辑', editingRecord.projectCode, '编辑项目：' + addForm.projectName);
+          antd.message.success('编辑成功');
+        } else {
+          const newCode = generateDocNo('XM');
+          const now = new Date().toLocaleString('zh-CN', { hour12: false });
+          setTableData(prev => [{ key: String(Date.now()) + Math.random().toString(36).slice(2, 6), flowStatus: '草稿', projectCode: newCode, projectName: addForm.projectName, projectDate: addForm.projectDate ? addForm.projectDate.format('YYYY-MM-DD') : '', manager: addForm.manager, department: addForm.department, budget: parseAmount(addForm.budget).toLocaleString('zh-CN', { minimumFractionDigits: 2 }), status: addForm.status || '进行中', description: addForm.description || '', submitter: '用户257522', submitTime: now, updateTime: now, currentNode: '草稿', currentOwner: '用户257522' }, ...prev]);
+          logAction('项目管理', '新增', newCode, '新增项目：' + addForm.projectName);
+          notify('info', '项目已提交', '项目 ' + newCode + '（' + addForm.projectName + '）已提交', 'procurement/project');
+          antd.message.success('提交成功，项目编码：' + newCode);
+        }
+        setEditingRecord(null);
+        setAddVisible(false);
+      };
+      const handleAddSaveDraft = () => {
+        if (editingRecord) {
+          setTableData(prev => prev.map(item => item.key === editingRecord.key ? {...item, ...addForm} : item));
+        } else {
+          const newCode = generateDocNo('XM');
+          const now = new Date().toLocaleString('zh-CN', { hour12: false });
+          setTableData(prev => [{ key: String(Date.now()) + Math.random().toString(36).slice(2, 6), flowStatus: '草稿', projectCode: newCode, projectName: addForm.projectName || '未命名项目', projectDate: addForm.projectDate ? addForm.projectDate.format('YYYY-MM-DD') : '', manager: addForm.manager, department: addForm.department, budget: parseAmount(addForm.budget).toLocaleString('zh-CN', { minimumFractionDigits: 2 }), status: addForm.status || '进行中', description: addForm.description || '', submitter: '用户257522', submitTime: now, updateTime: now, currentNode: '草稿', currentOwner: '用户257522' }, ...prev]);
+        }
+        antd.message.success('草稿已保存');
+        setEditingRecord(null);
+        setAddVisible(false);
+      };
       const handleSelectManager = () => { setAddForm(prev => ({ ...prev, manager: '用户257522' })); };
       const handleSelectDept = () => { setAddForm(prev => ({ ...prev, department: '采购部' })); };
 
@@ -3841,33 +4091,21 @@
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
             <Space size={8}>
               <Button type="primary" style={blueBtnStyle} icon={React.createElement(PlusOutlined)} onClick={() => { setEditingRecord(null); setAddForm({ projectName: '', projectDate: null, manager: '', department: '', budget: '', status: '进行中', description: '' }); setAddVisible(true); }}>新建</Button>
-              <Button icon={React.createElement(ImportOutlined)}>导入</Button>
-              <Button icon={React.createElement(ExportOutlined)}>导出</Button>
+              <Button icon={React.createElement(ImportOutlined)} onClick={() => antd.message.info('导入/导出功能开发中')}>导入</Button>
+              <Button icon={React.createElement(ExportOutlined)} onClick={() => antd.message.info('导入/导出功能开发中')}>导出</Button>
             </Space>
             <Space size={8}>
-              <Select defaultValue="all" size="middle" style={{ width: 110 }}>
-                <Option value="all">搜索范围</Option>
+              <Select value={statusFilter || 'all'} size="middle" style={{ width: 110 }} allowClear onChange={(v) => { setStatusFilter(v); setProjectPage(1); }}>
+                <Option value="all">全部状态</Option>
+                <Option value="草稿">草稿</Option>
+                <Option value="已生效">已生效</Option>
               </Select>
-              <Input placeholder="请输入搜索内容" style={{ width: 220 }} suffix={React.createElement(SearchOutlined)} />
+              <Input placeholder="搜索项目编码/名称/负责人" style={{ width: 240 }} suffix={React.createElement(SearchOutlined)} value={searchText} onChange={(e) => { setSearchText(e.target.value); setProjectPage(1); }} allowClear />
             </Space>
           </div>
 
           {/* 数据表格 */}
-          <Table columns={columns} dataSource={tableData} rowSelection={{ selectedRowKeys, onChange: setSelectedRowKeys }} bordered size="middle" pagination={false} scroll={{ x: 2200 }} />
-
-          {/* 底部分页 */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 12, paddingTop: 12, padding: '12px 0 8px', borderTop: '1px solid #f0f0f0' }}>
-            <Space size={16}>
-              {React.createElement(ColumnWidthOutlined, { style: { color: '#8c8c8c' } })}
-              <Select defaultValue="20" size="small" style={{ width: 90 }}>
-                <Option value="20">20条/页</Option>
-                <Option value="50">50条/页</Option>
-                <Option value="100">100条/页</Option>
-              </Select>
-              <span style={{ color: '#595959', fontSize: 13 }}>共 {tableData.length} 条</span>
-            </Space>
-            <Pagination current={1} total={tableData.length} pageSize={20} size="small" showSizeChanger={false} />
-          </div>
+          <Table columns={columns} dataSource={filteredProjectData} rowSelection={{ selectedRowKeys, onChange: setSelectedRowKeys }} bordered size="middle" pagination={projectPagination} scroll={{ x: 2200 }} />
 
           {/* 详情弹框 */}
           <Modal title="项目详情" open={detailVisible} onCancel={() => setDetailVisible(false)} footer={<Button onClick={() => setDetailVisible(false)}>关闭</Button>} width={800}>
@@ -3943,7 +4181,7 @@
                 </Col>
                 <Col span={12}>
                   <div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>立项日期 <span style={{ color: '#ff4d4f' }}>*</span></div>
-                  <DatePicker style={{ width: '100%' }} value={addForm.projectDate} onChange={(d) => setAddForm(prev => ({ ...prev, projectDate: d }))} />
+                  <SafeDatePicker style={{ width: '100%' }} value={addForm.projectDate} onChange={(d) => setAddForm(prev => ({ ...prev, projectDate: d }))} />
                 </Col>
               </Row>
               <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
@@ -4018,6 +4256,40 @@
         { key: '3', flowStatus: '草稿', applyNo: 'CGSQ20260728003', applyDate: '2026-07-28', applicant: '用户257522', dept: '', company: '', amount: '0.00', projectCode: '', projectName: '', budget: '', receiver: '', phone: '', address: '', description: '', fromBom: '否', applyQty: 0, inquiryProgress: '', purchaseProgress: '', applySource: '手工创建', submitter: '用户257522', submitTime: '-', updateTime: '2026-07-28 08:00:00', currentNode: '草稿', currentOwner: '用户257522' },
       ]);
 
+      const [searchText, setSearchText] = useState('');
+      const [statusFilter, setStatusFilter] = useState(undefined);
+      const [applyPage, setApplyPage] = useState(1);
+      const [applySize, setApplySize] = useState(20);
+      const applySearchFields = ['applyNo', 'applicant', 'dept', 'company', 'projectCode', 'projectName'];
+      const filteredApplyData = useMemo(() => {
+        let result = filterByKeyword(tableData, searchText, applySearchFields);
+        if (statusFilter && statusFilter !== 'all') result = result.filter(item => item.flowStatus === statusFilter);
+        return result;
+      }, [tableData, searchText, statusFilter]);
+      const applyPagination = { ...standardPagination, total: filteredApplyData.length, current: applyPage, pageSize: applySize, onChange: (p, s) => { setApplyPage(p); setApplySize(s); }, pageSizeOptions: ['10', '20', '50', '100'] };
+      const buildNewApplyRecord = (flowStatus, docNo, now) => ({
+        key: String(Date.now()) + Math.random().toString(36).slice(2, 6),
+        flowStatus: flowStatus,
+        applyNo: docNo,
+        applyDate: addForm.applyDate ? addForm.applyDate.format('YYYY-MM-DD') : new Date().toISOString().slice(0, 10),
+        applicant: addForm.applicant,
+        dept: addForm.dept,
+        company: addForm.company,
+        amount: parseAmount(addForm.amount).toLocaleString('zh-CN', { minimumFractionDigits: 2 }),
+        projectCode: addForm.projectCode,
+        projectName: addForm.projectName,
+        budget: addForm.budget,
+        receiver: addForm.receiver,
+        phone: addForm.phone,
+        address: addForm.receiverAddr,
+        description: addForm.description,
+        fromBom: addForm.fromBom ? '是' : '否',
+        applyQty: (addForm.details || []).reduce(function(s, d) { return s + parseAmount(d.qty); }, 0),
+        inquiryProgress: '', purchaseProgress: '', applySource: '手工创建',
+        submitter: '用户257522', submitTime: now, updateTime: now,
+        currentNode: flowStatus === '草稿' ? '草稿' : '', currentOwner: '用户257522'
+      });
+
       const detailItems = [
         { key: '1', idx: 1, code: 'WP2025110005', name: '雷达传感器', spec: '奔驰 A0009...', unit: '个', qty: 1000, expectDate: '2025-03-31' },
         { key: '2', idx: 2, code: 'WP2025110004', name: '火花塞', spec: 'NGK LZKAR...', unit: '个', qty: 1000, expectDate: '2025-03-31' },
@@ -4029,8 +4301,39 @@
       const handleViewDetail = (record) => { setDetailRecord(record); setDetailVisible(true); };
       const handleEdit = (record) => { setEditingRecord(record); setAddForm({ applyDate: record.applyDate || null, applicant: record.applicant || '', dept: record.dept || '', company: record.company || '', amount: record.amount || '0.00', project: '', projectCode: record.projectCode || '', projectName: record.projectName || '', budget: record.budget || '', shipAddress: '', receiver: record.receiver || '', phone: record.phone || '', receiverAddr: record.address || '', description: record.description || '', fromBom: record.fromBom === '是', details: [] }); setAddVisible(true); };
       const handleDelete = (record) => { Modal.confirm({ title: '确认删除', content: '确定要删除该采购申请吗？', okText: '确定', cancelText: '取消', okButtonProps: { danger: true }, onOk: () => { setTableData(prev => prev.filter(item => item.key !== record.key)); antd.message.success('删除成功'); } }); };
-      const handleAddSubmit = () => { if (addForm.dept) { var budgetCheck = checkBudget(addForm.dept, parseFloat(addForm.amount) || 0); if (!budgetCheck.allowed) { antd.Modal.error({ title: '预算已冻结', content: budgetCheck.dept + ' - ' + budgetCheck.project + ' 预算执行率已达' + budgetCheck.rate + '%，流程已被冻结，无法提交新的采购申请。请联系财务部门解冻。' }); return; } } if (editingRecord) { setTableData(prev => prev.map(item => item.key === editingRecord.key ? {...item, ...addForm} : item)); antd.message.success('编辑成功'); } else { antd.message.success('提交成功'); } setEditingRecord(null); setAddVisible(false); };
-      const handleAddSaveDraft = () => { if (editingRecord) { setTableData(prev => prev.map(item => item.key === editingRecord.key ? {...item, ...addForm} : item)); } antd.message.success('草稿已保存'); setEditingRecord(null); setAddVisible(false); };
+      const handleAddSubmit = () => {
+        if (!addForm.applicant) { antd.message.warning('请选择申请人'); return; }
+        if (!addForm.dept) { antd.message.warning('请选择所属部门'); return; }
+        if (!addForm.details || addForm.details.length === 0) { antd.message.warning('请添加采购明细内容'); return; }
+        var budgetCheck = checkBudget(addForm.dept, parseAmount(addForm.amount));
+        if (!budgetCheck.allowed) { antd.Modal.error({ title: '预算已冻结', content: budgetCheck.dept + ' - ' + budgetCheck.project + ' 预算执行率已达' + budgetCheck.rate + '%，流程已被冻结，无法提交新的采购申请。请联系财务部门解冻。' }); return; }
+        if (editingRecord) {
+          setTableData(prev => prev.map(item => item.key === editingRecord.key ? {...item, ...addForm, amount: parseAmount(addForm.amount).toLocaleString('zh-CN', { minimumFractionDigits: 2 })} : item));
+          logAction('采购申请', '编辑', editingRecord.applyNo, '编辑采购申请：' + (addForm.description || ''));
+          antd.message.success('编辑成功');
+        } else {
+          const newNo = generateDocNo('CGSQ');
+          const now = new Date().toLocaleString('zh-CN', { hour12: false });
+          setTableData(prev => [buildNewApplyRecord('草稿', newNo, now), ...prev]);
+          logAction('采购申请', '新增', newNo, '新增采购申请：' + (addForm.description || ''));
+          notify('info', '采购申请已提交', '采购申请 ' + newNo + ' 已提交，等待审批', 'procurement/apply');
+          antd.message.success('提交成功，申请单号：' + newNo);
+        }
+        setEditingRecord(null);
+        setAddVisible(false);
+      };
+      const handleAddSaveDraft = () => {
+        if (editingRecord) {
+          setTableData(prev => prev.map(item => item.key === editingRecord.key ? {...item, ...addForm} : item));
+        } else {
+          const newNo = generateDocNo('CGSQ');
+          const now = new Date().toLocaleString('zh-CN', { hour12: false });
+          setTableData(prev => [buildNewApplyRecord('草稿', newNo, now), ...prev]);
+        }
+        antd.message.success('草稿已保存');
+        setEditingRecord(null);
+        setAddVisible(false);
+      };
 
       const detailColDefs = {
         goodsCode: { title: '商品编码', dataIndex: 'goodsCode', width: 120 },
@@ -4095,25 +4398,21 @@
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
             <Space size={8}>
               <Button type="primary" style={blueBtnStyle} icon={React.createElement(PlusOutlined)} onClick={() => { setEditingRecord(null); setAddForm({ applyDate: null, applicant: '', dept: '', company: '', amount: '0.00', project: '', projectCode: '', projectName: '', budget: '', shipAddress: '', receiver: '', phone: '', receiverAddr: '', description: '', fromBom: false, details: [] }); setAddVisible(true); }}>新建</Button>
-              <Button icon={React.createElement(ImportOutlined)}>导入</Button>
-              <Button icon={React.createElement(ExportOutlined)}>导出</Button>
+              <Button icon={React.createElement(ImportOutlined)} onClick={() => antd.message.info('导入/导出功能开发中')}>导入</Button>
+              <Button icon={React.createElement(ExportOutlined)} onClick={() => antd.message.info('导入/导出功能开发中')}>导出</Button>
             </Space>
             <Space size={8}>
-              <Select defaultValue="all" size="middle" style={{ width: 110 }}><Option value="all">搜索范围</Option></Select>
-              <Input placeholder="请输入搜索内容" style={{ width: 220 }} suffix={React.createElement(SearchOutlined)} />
+              <Select value={statusFilter || 'all'} size="middle" style={{ width: 110 }} allowClear onChange={(v) => { setStatusFilter(v); setApplyPage(1); }}>
+                <Option value="all">全部状态</Option>
+                <Option value="草稿">草稿</Option>
+                <Option value="已生效">已生效</Option>
+                <Option value="审批中">审批中</Option>
+              </Select>
+              <Input placeholder="搜索申请单号/申请人/部门" style={{ width: 240 }} suffix={React.createElement(SearchOutlined)} value={searchText} onChange={(e) => { setSearchText(e.target.value); setApplyPage(1); }} allowClear />
             </Space>
           </div>
           {/* 表格 */}
-          <Table columns={allColumns} dataSource={tableData} rowSelection={{ selectedRowKeys, onChange: setSelectedRowKeys }} bordered size="small" pagination={false} scroll={{ x: 4000 }} />
-          {/* 分页 */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 12, padding: '12px 0 8px', borderTop: '1px solid #f0f0f0' }}>
-            <Space size={16}>
-              {React.createElement(ColumnWidthOutlined, { style: { color: '#8c8c8c' } })}
-              <Select defaultValue="20" size="small" style={{ width: 90 }}><Option value="20">20条/页</Option><Option value="50">50条/页</Option></Select>
-              <span style={{ color: '#595959', fontSize: 13 }}>共 {tableData.length} 条</span>
-            </Space>
-            <Pagination current={1} total={tableData.length} pageSize={20} size="small" showSizeChanger={false} />
-          </div>
+          <Table columns={allColumns} dataSource={filteredApplyData} rowSelection={{ selectedRowKeys, onChange: setSelectedRowKeys }} bordered size="small" pagination={applyPagination} scroll={{ x: 4000 }} />
 
           {/* 详情弹框 */}
           <Modal title="采购申请详情" open={detailVisible} onCancel={() => setDetailVisible(false)} footer={<Button onClick={() => setDetailVisible(false)}>关闭</Button>} width={1000}>
@@ -4182,7 +4481,7 @@
           <Modal title={editingRecord ? '编辑采购申请' : '新增采购申请'} open={addVisible} onCancel={() => { setAddVisible(false); setEditingRecord(null); }} footer={null} width={1000}>
             <div style={{ padding: '16px 20px', maxHeight: '70vh', overflowY: 'auto' }}>
               <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
-                <Col span={8}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>申请日期</div><DatePicker style={{ width: '100%' }} value={addForm.applyDate} onChange={(d) => setAddForm(prev => ({ ...prev, applyDate: d }))} /></Col>
+                <Col span={8}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>申请日期</div><SafeDatePicker style={{ width: '100%' }} value={addForm.applyDate} onChange={(d) => setAddForm(prev => ({ ...prev, applyDate: d }))} /></Col>
                 <Col span={8}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>申请人 <span style={{ color: '#ff4d4f' }}>*</span></div><div style={{ display: 'flex', gap: 8 }}><div style={{ flex: 1, display: 'flex', alignItems: 'center', border: '1px solid #d9d9d9', borderRadius: 4, padding: '4px 8px', minHeight: 32 }}>{addForm.applicant ? React.createElement('span', { style: { display: 'inline-flex', alignItems: 'center', gap: 4, background: '#f0f0f0', borderRadius: 4, padding: '2px 8px' } }, React.createElement(Avatar, { size: 18, style: { backgroundColor: '#7c5cfc', fontSize: 10 } }, addForm.applicant[0]), React.createElement('span', { style: { fontSize: 13 } }, addForm.applicant), React.createElement(CloseOutlined, { style: { fontSize: 10, color: '#8c8c8c', cursor: 'pointer', marginLeft: 4 }, onClick: () => setAddForm(prev => ({ ...prev, applicant: '' })) })) : React.createElement('span', { style: { color: '#bfbfbf' } }, '请选择')}</div><Button type="primary" style={purpleBtnStyle} onClick={() => setAddForm(prev => ({ ...prev, applicant: '用户257522' }))}>选择</Button></div></Col>
                 <Col span={8}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>所属部门</div><div style={{ display: 'flex', gap: 8 }}><Input value={addForm.dept} readOnly style={{ flex: 1 }} placeholder="请选择" /><Button type="primary" style={purpleBtnStyle} onClick={() => setAddForm(prev => ({ ...prev, dept: '采购部' }))}>选择</Button></div></Col>
               </Row>
@@ -4339,7 +4638,7 @@
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
             <Space size={8}>
               <Button type="primary" style={blueBtnStyle} icon={React.createElement(PlusOutlined)} onClick={() => { setEditingRecord(null); setAddForm({ source: '', applyNo: '', applicant: '', applyDate: null, dept: '', amount: '', description: '', budgetTotal: '', goodsCode: '', goodsName: '', spec: '', unit: '', qty: '', priceExTax: '', taxRate: '', amountExTax: '', localPriceExTax: '', expectDate: null, origDemand: '', origPoolNo: '', sourceMethod: '', poolStatus: '', amountInTax: '' }); setActiveTab('source'); setAddVisible(true); }}>新建</Button>
-              {selectedRowKeys.length > 1 && <Button type="primary" style={purpleBtnStyle} icon={React.createElement(SwapOutlined)} onClick={() => { antd.message.success('已将 ' + selectedRowKeys.length + ' 条需求合并为一次寻源任务，请前往询价申请查看'); logAction('需求池', '合并寻源', selectedRowKeys.length + '条', '合并为一次寻源'); notify('info', '需求合并', '已合并 ' + selectedRowKeys.length + ' 条需求为一次寻源任务'); setSelectedRowKeys([]); }}>合并寻源</Button>}
+              {selectedRowKeys.length > 1 && <Button type="primary" style={purpleBtnStyle} icon={React.createElement(SwapOutlined)} onClick={() => { const newNo = generateDocNo('XJ'); const now = new Date().toLocaleString('zh-CN', { hour12: false }); const picked = selectedRowKeys.map(k => tableData.find(x => x.key === k)).filter(Boolean); const names = picked.map(r => r.goodsName).filter(Boolean).join('、'); const poolNos = picked.map(r => r.serialNo).filter(Boolean).join('、'); const merged = { key: String(Date.now()) + Math.random().toString(36).slice(2, 6), flowStatus: '草稿', applyNo: newNo, projectName: '合并寻源-' + (names || '多需求'), inquiryDate: now.slice(0, 10), manager: '用户257522', contentApplyNo: '', goodsName: names, spec: '', unit: '', expectDate: '', applyQty: '', budgetPrice: '', amountExTax: '', taxRate: '', amountInTax: '', poolNo: poolNos, needPreReview: '否', reviewTemplate: '', passScore: '', preReviewer: '', preReviewTime: '', reviewerCount: '', reviewItem: '', reviewRatio: '', needSignup: '否', signupDeadline: '', needDeposit: '否', deposit: '', sealedQuote: '否', supplierName: '', contactPerson: '', contactPhone: '', contactEmail: '', collabType: '协同', supplierRelation: '', inquiryStatus: '待报价', inquiryDesc: '由需求池合并寻源生成', confirmAux: '', quoteRounds: '', round1Start: '', round1Deadline: '', round2Start: '', round2Deadline: '', round3Start: '', round3Deadline: '', invoiceType: '增值税专用发票', paymentMethod: '银行转账', payCondition: '', payRatio: '', currentTime: now, submitter: '用户257522', submitTime: now, updateTime: now, currentNode: '草稿', currentOwner: '用户257522' }; globalStore.inquiries = [merged, ...(globalStore.inquiries || [])]; notifyStoreChange(); logAction('需求池', '合并寻源', newNo, '合并 ' + selectedRowKeys.length + ' 条需求为一次寻源任务'); notify('info', '需求合并', '已合并 ' + selectedRowKeys.length + ' 条需求为一次寻源任务，生成询价申请草稿 ' + newNo); setSelectedRowKeys([]); setHashKey('rfq/apply'); antd.message.success('已合并 ' + selectedRowKeys.length + ' 条需求，生成询价申请草稿：' + newNo + '，请前往询价申请查看'); }}>合并寻源</Button>}
               <Button icon={React.createElement(ImportOutlined)}>导入</Button>
               <Button icon={React.createElement(ExportOutlined)}>导出</Button>
             </Space>
@@ -4363,7 +4662,7 @@
                 <Col span={6}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>需求来源</div><Select style={{ width: '100%' }} value={addForm.source || undefined} placeholder="请选择" onChange={(v) => setAddForm(prev => ({ ...prev, source: v }))}><Option value="采购申请">采购申请</Option><Option value="手工创建">手工创建</Option></Select></Col>
                 <Col span={6}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>申请单号</div><Input value={addForm.applyNo} onChange={(e) => setAddForm(prev => ({ ...prev, applyNo: e.target.value }))} /></Col>
                 <Col span={6}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>申请人</div><div style={{ display: 'flex', gap: 8 }}><Input value={addForm.applicant} readOnly style={{ flex: 1 }} placeholder="请选择" /><Button type="primary" style={purpleBtnStyle} onClick={() => setAddForm(prev => ({ ...prev, applicant: '用户257522' }))}>选择</Button></div></Col>
-                <Col span={6}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>申请日期</div><DatePicker style={{ width: '100%' }} value={addForm.applyDate} onChange={(d) => setAddForm(prev => ({ ...prev, applyDate: d }))} /></Col>
+                <Col span={6}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>申请日期</div><SafeDatePicker style={{ width: '100%' }} value={addForm.applyDate} onChange={(d) => setAddForm(prev => ({ ...prev, applyDate: d }))} /></Col>
               </Row>
               <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
                 <Col span={6}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>所属部门</div><div style={{ display: 'flex', gap: 8 }}><Input value={addForm.dept} readOnly style={{ flex: 1 }} /><Button type="primary" style={purpleBtnStyle} onClick={() => setAddForm(prev => ({ ...prev, dept: '采购部' }))}>选择</Button></div></Col>
@@ -4385,7 +4684,7 @@
               </Row>
               <Row gutter={[16, 16]} style={{ marginBottom: 20 }}>
                 <Col span={6}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>本币核价单价（不含税）</div><Input value={addForm.localPriceExTax} onChange={(e) => setAddForm(prev => ({ ...prev, localPriceExTax: e.target.value }))} /></Col>
-                <Col span={6}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>期望到货时间</div><DatePicker style={{ width: '100%' }} value={addForm.expectDate} onChange={(d) => setAddForm(prev => ({ ...prev, expectDate: d }))} /></Col>
+                <Col span={6}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>期望到货时间</div><SafeDatePicker style={{ width: '100%' }} value={addForm.expectDate} onChange={(d) => setAddForm(prev => ({ ...prev, expectDate: d }))} /></Col>
                 <Col span={6}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>原需求</div><Input value={addForm.origDemand} readOnly placeholder="" suffix={React.createElement(Button, { type: 'link', size: 'small', icon: React.createElement(SearchOutlined), style: { padding: 0 } }, '关联表单')} /></Col>
                 <Col span={6}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>原需求池编号</div><Input value={addForm.origPoolNo} onChange={(e) => setAddForm(prev => ({ ...prev, origPoolNo: e.target.value }))} /></Col>
               </Row>
@@ -4512,13 +4811,58 @@ const colConfigTree = [
         }
       };
 
-      const tableData = [
+      const handleInquirySubmit = () => {
+        if (!addForm.projectName) { antd.message.warning('请填写询价项目名称'); return; }
+        if (!addForm.contentItems || addForm.contentItems.length === 0) { antd.message.warning('请添加询价内容'); return; }
+        if (!addForm.suppliers || addForm.suppliers.length === 0) { antd.message.warning('请添加入围供应商'); return; }
+        if (!addForm.quoteRounds) { antd.message.warning('请选择报价轮数'); return; }
+        if (!addForm.round1Deadline) { antd.message.warning('请选择第一轮截止时间'); return; }
+        const newNo = generateDocNo('XJ');
+        const now = new Date().toLocaleString('zh-CN', { hour12: false });
+        const goodsNames = (addForm.contentItems || []).map(function(i) { return i.goodsName; }).filter(Boolean).join('、');
+        const supplierNames = (addForm.suppliers || []).map(function(s) { return s.name; }).filter(Boolean).join('、');
+        setTableData(prev => [{
+          key: String(Date.now()) + Math.random().toString(36).slice(2, 6),
+          flowStatus: '草稿', applyNo: newNo, projectName: addForm.projectName,
+          inquiryDate: addForm.inquiryDate ? addForm.inquiryDate.format('YYYY-MM-DD') : '',
+          manager: addForm.manager, contentApplyNo: '', goodsName: goodsNames, spec: '', unit: '',
+          expectDate: '', applyQty: '', budgetPrice: '', amountExTax: '', taxRate: '', amountInTax: '',
+          poolNo: '', needPreReview: addForm.needPreReview ? '是' : '否', reviewTemplate: '', passScore: '',
+          preReviewer: '', preReviewTime: '', reviewerCount: '', reviewItem: '', reviewRatio: '',
+          needSignup: '否', signupDeadline: '', needDeposit: '否', deposit: '', sealedQuote: '否',
+          supplierName: supplierNames, contactPerson: '', contactPhone: '', contactEmail: '', collabType: '协同', supplierRelation: '',
+          inquiryStatus: '待报价', inquiryDesc: addForm.description, confirmAux: '',
+          quoteRounds: addForm.quoteRounds, round1Start: '一轮报价',
+          round1Deadline: addForm.round1Deadline ? addForm.round1Deadline.format('YYYY-MM-DD HH:mm') : '',
+          round2Start: '', round2Deadline: '', round3Start: '', round3Deadline: '',
+          invoiceType: addForm.invoiceType, paymentMethod: addForm.paymentMethod, payCondition: '', payRatio: '',
+          currentTime: now, submitter: '用户257522', submitTime: now, updateTime: now, currentNode: '草稿', currentOwner: '用户257522'
+        }, ...prev]);
+        logAction('询价申请', '新增', newNo, '新增询价申请：' + addForm.projectName);
+        notify('info', '询价申请已提交', '询价申请 ' + newNo + ' 已提交，等待审批', 'rfq/apply');
+        antd.message.success('提交成功，询价单号：' + newNo);
+        setAddVisible(false);
+      };
+
+      const [tableData, setTableData] = useStoreList('inquiries', [
         { key: '1', flowStatus: '已生效', applyNo: 'XJ20260129001', projectName: '整车配件2026年第一季度采购', inquiryDate: '2026-01-29', manager: '李里', contentApplyNo: 'SQ20260129001', goodsName: '汽车轮胎', spec: '米其林 205/55R16 Energy XM2', unit: '条', expectDate: '2026-01-31', applyQty: 4000, budgetPrice: '320.00', amountExTax: '1,132,743.36', taxRate: '13%', amountInTax: '1,280,000.00', poolNo: 'XQC202601290014', needPreReview: '是', reviewTemplate: '通用方案', passScore: 80, preReviewer: '李里', preReviewTime: '2026-01-29 22:05', reviewerCount: 1, reviewItem: '技术团队配置', reviewRatio: '40%', needSignup: '否', signupDeadline: '2026-01-29 23:59', needDeposit: '否', deposit: '', sealedQuote: '否', supplierName: '上海易点科技有限公司', contactPerson: '李里', contactPhone: '123', contactEmail: '123@123.com', collabType: '协同', supplierRelation: '', inquiryStatus: '已完成', inquiryDesc: '', confirmAux: '是', quoteRounds: '二轮报价', round1Start: '一轮报价', round1Deadline: '2026-01-30 18:05', round2Start: '二轮报价', round2Deadline: '2026-01-29 23:20', round3Start: '三轮报价', round3Deadline: '', invoiceType: '增值税专用发票', paymentMethod: '银行转账', payCondition: '', payRatio: '', currentTime: '2026-01-29 18:05', submitter: '用户257522', submitTime: '2026-07-21 11:31:49', updateTime: '', currentNode: '', currentOwner: '' },
         { key: '2', flowStatus: '已生效', applyNo: 'XJ20260129002', projectName: '制动盘紧急采购', inquiryDate: '2026-01-29', manager: '李里', contentApplyNo: 'SQ20260129001', goodsName: '制动盘', spec: '萨瓦尼尼 282X23', unit: '组', expectDate: '2026-01-31', applyQty: 2000, budgetPrice: '85.00', amountExTax: '150,442.48', taxRate: '13%', amountInTax: '170,000.00', poolNo: 'XQC202601290013', needPreReview: '否', reviewTemplate: '', passScore: '', preReviewer: '', preReviewTime: '', reviewerCount: '', reviewItem: '', reviewRatio: '', needSignup: '否', signupDeadline: '', needDeposit: '否', deposit: '', sealedQuote: '否', supplierName: '武汉办公用品有限公司', contactPerson: 'lixd0126@yi', contactPhone: '123', contactEmail: '123@123.com', collabType: '协同', supplierRelation: '母子公司', inquiryStatus: '已完成', inquiryDesc: '', confirmAux: '是', quoteRounds: '一轮报价', round1Start: '一轮报价', round1Deadline: '2026-01-30 18:05', round2Start: '', round2Deadline: '', round3Start: '', round3Deadline: '', invoiceType: '增值税专用发票', paymentMethod: '银行转账', payCondition: '', payRatio: '', currentTime: '2026-01-29 18:05', submitter: '用户257522', submitTime: '2026-07-21 11:31:49', updateTime: '', currentNode: '', currentOwner: '' },
-      ];
+      ]);
+
+      const [searchText, setSearchText] = useState('');
+      const [statusFilter, setStatusFilter] = useState(undefined);
+      const [inquiryPage, setInquiryPage] = useState(1);
+      const [inquirySize, setInquirySize] = useState(20);
+      const inquirySearchFields = ['applyNo', 'projectName', 'goodsName', 'supplierName', 'manager'];
+      const filteredInquiryData = useMemo(() => {
+        let result = filterByKeyword(tableData, searchText, inquirySearchFields);
+        if (statusFilter && statusFilter !== 'all') result = result.filter(item => item.flowStatus === statusFilter);
+        return result;
+      }, [tableData, searchText, statusFilter]);
+      const inquiryPagination = { ...standardPagination, total: filteredInquiryData.length, current: inquiryPage, pageSize: inquirySize, onChange: (p, s) => { setInquiryPage(p); setInquirySize(s); }, pageSizeOptions: ['10', '20', '50', '100'] };
 
       const allColumns = [
-        { title: '流程状态', dataIndex: 'flowStatus', width: 90, fixed: 'left', render: (v) => React.createElement(Tag, { color: v === '已生效' ? 'success' : 'default' }, v) },
+        { title: '流程状态', dataIndex: 'flowStatus', width: 90, fixed: 'left', render: (v) => renderStatusTag('inquiry', v) },
         { title: '申请单号', dataIndex: 'applyNo', width: 150 },
         { title: '询价项目名称', dataIndex: 'projectName', width: 200, ellipsis: true },
         { title: '询价日期', dataIndex: 'inquiryDate', width: 110 },
@@ -4601,16 +4945,21 @@ const colConfigTree = [
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
             <Space size={8}>
               <Button type="primary" style={blueBtnStyle} icon={React.createElement(PlusOutlined)} onClick={() => { setAddForm({ projectName: '', inquiryDate: null, manager: '用户257522', needPreReview: false, emailQuote: true, foreignCurrency: 'no', suppliers: [], supplierTotal: 0, description: '', quoteRounds: '', round1: true, round1Deadline: null, round2: false, round2Deadline: null, round3: false, round3Deadline: null, invoiceType: '增值税专用发票', paymentMethod: '银行转账', paymentTerms: [], contentItems: [] }); setAddVisible(true); }}>新建</Button>
-              <Button icon={React.createElement(ImportOutlined)}>导入</Button>
-              <Button icon={React.createElement(ExportOutlined)}>导出</Button>
+              <Button icon={React.createElement(ImportOutlined)} onClick={() => antd.message.info('导入/导出功能开发中')}>导入</Button>
+              <Button icon={React.createElement(ExportOutlined)} onClick={() => antd.message.info('导入/导出功能开发中')}>导出</Button>
             </Space>
             <Space size={8}>
-              <Select defaultValue="all" size="middle" style={{ width: 110 }}><Option value="all">搜索范围</Option></Select>
-              <Input placeholder="请输入搜索内容" style={{ width: 220 }} suffix={React.createElement(SearchOutlined)} />
+              <Select value={statusFilter || 'all'} size="middle" style={{ width: 110 }} allowClear onChange={(v) => { setStatusFilter(v); setInquiryPage(1); }}>
+                <Option value="all">全部状态</Option>
+                <Option value="草稿">草稿</Option>
+                <Option value="已生效">已生效</Option>
+                <Option value="报价中">报价中</Option>
+              </Select>
+              <Input placeholder="搜索申请单号/项目名称" style={{ width: 240 }} suffix={React.createElement(SearchOutlined)} value={searchText} onChange={(e) => { setSearchText(e.target.value); setInquiryPage(1); }} allowClear />
             </Space>
           </div>
           {/* 表格 */}
-          <Table columns={visibleColumns} dataSource={tableData} rowSelection={{ selectedRowKeys, onChange: setSelectedRowKeys }} bordered size="small" pagination={false} scroll={{ x: 6000 }} />
+          <Table columns={visibleColumns} dataSource={filteredInquiryData} rowSelection={{ selectedRowKeys, onChange: setSelectedRowKeys }} bordered size="small" pagination={inquiryPagination} scroll={{ x: 6000 }} />
           {/* 分页 */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 12, padding: '12px 0 8px', borderTop: '1px solid #f0f0f0' }}>
             <Space size={16}>
@@ -4620,10 +4969,8 @@ const colConfigTree = [
               <Popover content={renderColConfig()} trigger="click" open={colConfigVisible} onOpenChange={setColConfigVisible} placement="topLeft">
                 {React.createElement(ColumnWidthOutlined, { style: { color: '#8c8c8c', cursor: 'pointer' } })}
               </Popover>
-              <Select defaultValue="20" size="small" style={{ width: 90 }}><Option value="20">20条/页</Option><Option value="50">50条/页</Option></Select>
-              <span style={{ color: '#595959', fontSize: 13 }}>共 {tableData.length} 条</span>
+              <span style={{ color: '#595959', fontSize: 13 }}>共 {filteredInquiryData.length} 条</span>
             </Space>
-            <Pagination current={1} total={tableData.length} pageSize={20} size="small" showSizeChanger={false} />
           </div>
 
           {/* ===== 新建弹框 ===== */}
@@ -4632,7 +4979,7 @@ const colConfigTree = [
               {/* 头部表单 */}
               <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
                 <Col span={8}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>询价项目名称 <span style={{ color: '#ff4d4f' }}>*</span></div><Input value={addForm.projectName} onChange={(e) => setAddForm(prev => ({ ...prev, projectName: e.target.value }))} placeholder="请输入" /></Col>
-                <Col span={8}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>询价日期</div><DatePicker style={{ width: '100%' }} value={addForm.inquiryDate} onChange={(d) => setAddForm(prev => ({ ...prev, inquiryDate: d }))} /></Col>
+                <Col span={8}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>询价日期</div><SafeDatePicker style={{ width: '100%' }} value={addForm.inquiryDate} onChange={(d) => setAddForm(prev => ({ ...prev, inquiryDate: d }))} /></Col>
                 <Col span={8}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>询价负责人</div><div style={{ display: 'flex', alignItems: 'center', border: '1px solid #d9d9d9', borderRadius: 4, padding: '4px 8px', minHeight: 32, background: '#fafafa' }}>{React.createElement(Avatar, { size: 20, style: { backgroundColor: '#52c41a', fontSize: 11 } }, '用')}<span style={{ marginLeft: 6, fontSize: 13 }}>{addForm.manager}</span></div></Col>
               </Row>
               {/* 询价内容 */}
@@ -4684,7 +5031,7 @@ const colConfigTree = [
               <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
                 <Col span={8}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>报价轮数 <span style={{ color: '#ff4d4f' }}>*</span></div><Select style={{ width: '100%' }} value={addForm.quoteRounds} onChange={(v) => setAddForm(prev => ({ ...prev, quoteRounds: v }))} placeholder="请选择"><Option value="一轮报价">一轮报价</Option><Option value="二轮报价">二轮报价</Option><Option value="三轮报价">三轮报价</Option></Select></Col>
                 <Col span={8}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>启动第一轮报价 <span style={{ color: '#ff4d4f' }}>*</span></div><div style={{ display: 'flex', alignItems: 'center', gap: 8, paddingTop: 4 }}><Radio checked={addForm.round1} onChange={() => setAddForm(prev => ({ ...prev, round1: true }))} /><Tag color="green">一轮报价</Tag></div></Col>
-                <Col span={8}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>第一轮截止时间 <span style={{ color: '#ff4d4f' }}>*</span></div><DatePicker showTime style={{ width: '100%' }} value={addForm.round1Deadline} onChange={(d) => setAddForm(prev => ({ ...prev, round1Deadline: d }))} /></Col>
+                <Col span={8}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>第一轮截止时间 <span style={{ color: '#ff4d4f' }}>*</span></div><SafeDatePicker showTime style={{ width: '100%' }} value={addForm.round1Deadline} onChange={(d) => setAddForm(prev => ({ ...prev, round1Deadline: d }))} /></Col>
               </Row>
               {/* 商务条款 */}
               {sectionTitle('商务条款')}
@@ -4705,7 +5052,7 @@ const colConfigTree = [
                 </div>
               </div>
               <div style={{ textAlign: 'center', padding: '16px 0 4px', borderTop: '1px solid #f0f0f0' }}>
-                <Button type="primary" style={{ ...blueBtnStyle, width: 120, height: 36 }} onClick={() => { antd.message.success('提交成功'); setAddVisible(false); }}>提交</Button>
+                <Button type="primary" style={{ ...blueBtnStyle, width: 120, height: 36 }} onClick={handleInquirySubmit}>提交</Button>
               </div>
             </div>
           </Modal>
@@ -5006,13 +5353,72 @@ const colConfigTree = [
         }
       };
 
-      const tableData = [
+      const [tableData, setTableData] = useStoreList('confirms', [
         { key: '1', flowStatus: '已生效', confirmNo: 'JG20260129001', bidProjectName: '整车配件2026年第一季度采购', inquiryNo: 'XJ20260129012', quoteRounds: '二轮报价', priceChecker: '李里', checkDate: '2026-01-29', goods: '汽车轮胎', spec: '米其林 205/55R16 Energy XM2 韧悦 91V', unit: '条', qty: 4000, expectDate: '2026-01-31', priceAnalysis: '', supplierName: '武汉办公用品有限公司', supplierCode: '', goodsCode: '', goodsName: '制动盘', winSpec: '萨瓦尼尼 282X23', demandQty: 2000, availQty: 2000, winUnit: '组', winExpectDate: '2026-01-31', winQty: 2000, currency: 'CNY', rate: '1', priceInTax: '85.00', priceExTax: '75.22', checkPrice: '75.22', taxRate: '13%', checkPriceLocal: '75.22', amtExTax: '150,442.48', amtExTaxLocal: '150,442.48', amtInTax: '170,000.00', amtInTaxLocal: '170,000.00', validUntil: '2026-03-31', inquiryResult: '完成采购寻源，进入合同阶段。', totalExTax: '6,637,180.00', taxAmount: '862,833.40', totalInTax: '7,500,013.40', attachment: '-', submitter: '用户257522', submitTime: '2026-07-21 11:31:48', updateTime: '', currentNode: '', currentOwner: '' },
         { key: '2', flowStatus: '草稿', confirmNo: 'JG20260728002', bidProjectName: '', inquiryNo: '', quoteRounds: '', priceChecker: '用户257522', checkDate: '2026-07-28', goods: '', spec: '', unit: '', qty: '', expectDate: '', priceAnalysis: '', supplierName: '', supplierCode: '', goodsCode: '', goodsName: '', winSpec: '', demandQty: '', availQty: '', winUnit: '', winExpectDate: '', winQty: '', currency: '', rate: '', priceInTax: '', priceExTax: '', checkPrice: '', taxRate: '', checkPriceLocal: '', amtExTax: '', amtExTaxLocal: '', amtInTax: '', amtInTaxLocal: '', validUntil: '', inquiryResult: '', totalExTax: '', taxAmount: '', totalInTax: '', attachment: '-', submitter: '用户257522', submitTime: '-', updateTime: '2026-07-28 08:00:00', currentNode: '草稿', currentOwner: '用户257522' },
-      ];
+      ]);
+
+      const [searchText, setSearchText] = useState('');
+      const [statusFilter, setStatusFilter] = useState(undefined);
+      const [confirmPage, setConfirmPage] = useState(1);
+      const [confirmSize, setConfirmSize] = useState(20);
+      const confirmSearchFields = ['confirmNo', 'inquiryNo', 'bidProjectName', 'supplierName', 'priceChecker'];
+      const filteredConfirmData = useMemo(() => {
+        let result = filterByKeyword(tableData, searchText, confirmSearchFields);
+        if (statusFilter && statusFilter !== 'all') result = result.filter(item => item.flowStatus === statusFilter);
+        return result;
+      }, [tableData, searchText, statusFilter]);
+      const confirmPagination = { ...standardPagination, total: filteredConfirmData.length, current: confirmPage, pageSize: confirmSize, onChange: (p, s) => { setConfirmPage(p); setConfirmSize(s); }, pageSizeOptions: ['10', '20', '50', '100'] };
+
+      const handleConfirmSubmit = () => {
+        if (!addForm.inquiryNo) { antd.message.warning('请填写询价单号'); return; }
+        if (!addForm.priceChecker) { antd.message.warning('请选择核价人'); return; }
+        if (!addForm.winSuppliers || addForm.winSuppliers.length === 0) { antd.message.warning('请添加中标供应商及中标数量'); return; }
+        const newNo = generateDocNo('JG');
+        const now = new Date().toLocaleString('zh-CN', { hour12: false });
+        const winSupplierNames = (addForm.winSuppliers || []).map(function(s) { return s.supplierName || s.winSupplier; }).filter(Boolean).join('、');
+        setTableData(prev => [{
+          key: String(Date.now()) + Math.random().toString(36).slice(2, 6),
+          flowStatus: '草稿', confirmNo: newNo, bidProjectName: addForm.projectName, inquiryNo: addForm.inquiryNo,
+          quoteRounds: addForm.quoteRounds, priceChecker: addForm.priceChecker,
+          checkDate: addForm.checkDate ? addForm.checkDate.format('YYYY-MM-DD') : '',
+          goods: '', spec: '', unit: '', qty: '', expectDate: '', priceAnalysis: '',
+          supplierName: winSupplierNames, supplierCode: '', goodsCode: '', goodsName: '', winSpec: '',
+          demandQty: '', availQty: '', winUnit: '', winExpectDate: '', winQty: '',
+          currency: '', rate: '', priceInTax: '', priceExTax: '', checkPrice: '', taxRate: '',
+          checkPriceLocal: '', amtExTax: '', amtExTaxLocal: '', amtInTax: '', amtInTaxLocal: '', validUntil: '',
+          inquiryResult: addForm.inquiryResult, totalExTax: '', taxAmount: '', totalInTax: '',
+          attachment: '-', submitter: '用户257522', submitTime: now, updateTime: now,
+          currentNode: '草稿', currentOwner: '用户257522'
+        }, ...prev]);
+        logAction('询价结果', '新增', newNo, '新增询价结果确认：' + (addForm.projectName || ''));
+        notify('info', '询价结果已提交', '询价结果确认单 ' + newNo + ' 已提交', 'rfq/confirm');
+        antd.message.success('提交成功，询价结果单号：' + newNo);
+        setAddVisible(false);
+      };
+
+      const handleGenContract = (record) => {
+        const htNo = generateDocNo('HT');
+        globalStore.contracts = [{ key: String(Date.now()) + Math.random().toString(36).slice(2, 6), code: htNo, name: record.bidProjectName || record.inquiryNo || htNo, type: '采购合同', party: record.supplierName || '', amount: record.totalInTax || record.amtInTax || '', paidAmount: '0.00', signDate: new Date().toISOString().slice(0, 10), expireDate: '', execStatus: '草稿', sourceDocNo: record.confirmNo, milestones: [{ name: '签约', done: false }, { name: '交货', done: false }, { name: '验收', done: false }, { name: '付款', done: false }, { name: '归档', done: false }], submitter: '用户257522', submitTime: new Date().toLocaleString('zh-CN', { hour12: false }), updateTime: '' }, ...(globalStore.contracts || [])];
+        notifyStoreChange();
+        logAction('询价结果', '生成合同', record.confirmNo, '生成合同：' + htNo);
+        notify('success', '合同已生成', '已从询价结果「' + record.confirmNo + '」生成合同，编号：' + htNo + '，请前往合同管理-合同台账查看', 'contract/ledger');
+        antd.message.success('已生成合同：' + htNo + '，请前往合同管理-合同台账查看');
+      };
+      const handleGenOrder = (record) => {
+        const poNo = generateDocNo('PO');
+        globalStore.orders = [{ key: String(Date.now()) + Math.random().toString(36).slice(2, 6), orderNo: poNo, supplier: record.supplierName || '', contractNo: '', amount: record.totalInTax || record.amtInTax || '', orderDate: new Date().toISOString().slice(0, 10), deliveryDate: '', status: '草稿', sourceDocNo: record.confirmNo, sourceDocType: '询价结果' }, ...(globalStore.orders || [])];
+        notifyStoreChange();
+        logAction('询价结果', '生成订单', record.confirmNo, '生成订单：' + poNo);
+        notify('success', '采购订单已生成', '已从询价结果「' + record.confirmNo + '」生成订单，编号：' + poNo + '，请前往订单执行-采购订单查看', 'order/po');
+        antd.message.success('已生成订单：' + poNo + '，请前往订单执行-采购订单查看');
+      };
+
+      const traceContract = (globalStore.contracts || []).find(function(x) { return x.sourceDocNo === (detailRecord ? detailRecord.confirmNo : ''); });
+      const traceOrder = (globalStore.orders || []).find(function(x) { return x.sourceDocNo === (detailRecord ? detailRecord.confirmNo : ''); });
 
       const allColumns = [
-        { title: '流程状态', dataIndex: 'flowStatus', width: 90, fixed: 'left', render: (v) => React.createElement(Tag, { color: v === '已生效' ? 'success' : 'default' }, v) },
+        { title: '流程状态', dataIndex: 'flowStatus', width: 90, fixed: 'left', render: (v) => renderStatusTag('inquiry', v) },
         { title: '询价结果单号', dataIndex: 'confirmNo', width: 150 },
         { title: '招标项目名称', dataIndex: 'bidProjectName', width: 200, ellipsis: true },
         { title: '询价单号', dataIndex: 'inquiryNo', width: 150 },
@@ -5057,7 +5463,7 @@ const colConfigTree = [
         { title: '更新时间', dataIndex: 'updateTime', width: 170 },
         { title: '当前节点', dataIndex: 'currentNode', width: 90 },
         { title: '当前负责人', dataIndex: 'currentOwner', width: 100 },
-        { title: '操作', key: 'action', width: 200, fixed: 'right', render: (_, record) => React.createElement(Space, { size: 8 }, React.createElement('a', { style: { color: '#1677ff' }, onClick: () => { setDetailRecord(record); setDetailVisible(true); } }, '详情'), record.flowStatus === '已生效' && React.createElement('a', { style: { color: '#faad14' }, onClick: () => { const htNo = generateDocNo('HT'); logAction('询价结果', '生成合同', record.confirmNo, '生成合同：' + htNo); notify('success', '合同已生成', '已从询价结果「' + record.confirmNo + '」生成合同，编号：' + htNo); antd.message.success('已生成合同：' + htNo + '，请前往合同管理-合同起草查看'); } }, '生成合同'), record.flowStatus === '已生效' && React.createElement('a', { style: { color: '#52c41a' }, onClick: () => { const poNo = generateDocNo('PO'); logAction('询价结果', '生成订单', record.confirmNo, '生成订单：' + poNo); notify('success', '采购订单已生成', '已从询价结果「' + record.confirmNo + '」生成订单，编号：' + poNo); antd.message.success('已生成订单：' + poNo + '，请前往订单执行-采购订单查看'); } }, '生成订单')) },
+        { title: '操作', key: 'action', width: 200, fixed: 'right', render: (_, record) => React.createElement(Space, { size: 8 }, React.createElement('a', { style: { color: '#1677ff' }, onClick: () => { setDetailRecord(record); setDetailVisible(true); } }, '详情'), record.flowStatus === '已生效' && React.createElement('a', { style: { color: '#faad14' }, onClick: () => handleGenContract(record) }, '生成合同'), record.flowStatus === '已生效' && React.createElement('a', { style: { color: '#52c41a' }, onClick: () => handleGenOrder(record) }, '生成订单')) },
       ];
 
       // 列配置过滤
@@ -5123,16 +5529,20 @@ const colConfigTree = [
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
             <Space size={8}>
               <Button type="primary" style={blueBtnStyle} icon={React.createElement(PlusOutlined)} onClick={() => { setAddForm({ inquirySelect: '', projectName: '', inquiryNo: '', quoteRounds: '', priceChecker: '用户257522', checkDate: null, winSuppliers: [], inquiryResult: '完成采购寻源，进入合同阶段。' }); setAddTab('compare'); setAddVisible(true); }}>新建</Button>
-              <Button icon={React.createElement(ImportOutlined)}>导入</Button>
-              <Button icon={React.createElement(ExportOutlined)}>导出</Button>
+              <Button icon={React.createElement(ImportOutlined)} onClick={() => antd.message.info('导入/导出功能开发中')}>导入</Button>
+              <Button icon={React.createElement(ExportOutlined)} onClick={() => antd.message.info('导入/导出功能开发中')}>导出</Button>
             </Space>
             <Space size={8}>
-              <Select defaultValue="all" size="middle" style={{ width: 110 }}><Option value="all">搜索范围</Option></Select>
-              <Input placeholder="请输入搜索内容" style={{ width: 220 }} suffix={React.createElement(SearchOutlined)} />
+              <Select value={statusFilter || 'all'} size="middle" style={{ width: 110 }} allowClear onChange={(v) => { setStatusFilter(v); setConfirmPage(1); }}>
+                <Option value="all">全部状态</Option>
+                <Option value="草稿">草稿</Option>
+                <Option value="已生效">已生效</Option>
+              </Select>
+              <Input placeholder="搜索结果单号/询价单号/项目名称" style={{ width: 240 }} suffix={React.createElement(SearchOutlined)} value={searchText} onChange={(e) => { setSearchText(e.target.value); setConfirmPage(1); }} allowClear />
             </Space>
           </div>
           {/* 表格 */}
-          <Table columns={visibleColumns} dataSource={tableData} rowSelection={{ selectedRowKeys, onChange: setSelectedRowKeys }} bordered size="small" pagination={false} scroll={{ x: 6000 }} />
+          <Table columns={visibleColumns} dataSource={filteredConfirmData} rowSelection={{ selectedRowKeys, onChange: setSelectedRowKeys }} bordered size="small" pagination={confirmPagination} scroll={{ x: 6000 }} />
           {/* 分页 */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 12, padding: '12px 0 8px', borderTop: '1px solid #f0f0f0' }}>
             <Space size={16}>
@@ -5142,10 +5552,8 @@ const colConfigTree = [
               <Popover content={renderColConfig()} trigger="click" open={colConfigVisible} onOpenChange={setColConfigVisible} placement="topLeft">
                 {React.createElement(ColumnWidthOutlined, { style: { color: '#8c8c8c', cursor: 'pointer' } })}
               </Popover>
-              <Select defaultValue="20" size="small" style={{ width: 90 }}><Option value="20">20条/页</Option><Option value="50">50条/页</Option></Select>
-              <span style={{ color: '#595959', fontSize: 13 }}>共 {tableData.length} 条</span>
+              <span style={{ color: '#595959', fontSize: 13 }}>共 {filteredConfirmData.length} 条</span>
             </Space>
-            <Pagination current={1} total={tableData.length} pageSize={20} size="small" showSizeChanger={false} />
           </div>
 
           {/* ===== 新建弹框 ===== */}
@@ -5162,7 +5570,7 @@ const colConfigTree = [
               </Row>
               <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
                 <Col span={12}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>核价人 <span style={{ color: '#ff4d4f' }}>*</span></div><div style={{ display: 'flex', gap: 8 }}><div style={{ flex: 1, display: 'flex', alignItems: 'center', border: '1px solid #d9d9d9', borderRadius: 4, padding: '4px 8px', minHeight: 32, background: '#fafafa' }}>{React.createElement(Avatar, { size: 20, style: { backgroundColor: '#52c41a', fontSize: 11 } }, '用')}<span style={{ marginLeft: 6, fontSize: 13 }}>{addForm.priceChecker}</span></div><Button type="primary" style={purpleBtnStyle}>选择</Button></div></Col>
-                <Col span={12}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>核价日期</div><DatePicker style={{ width: '100%' }} value={addForm.checkDate} onChange={(d) => setAddForm(prev => ({ ...prev, checkDate: d }))} /></Col>
+                <Col span={12}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>核价日期</div><SafeDatePicker style={{ width: '100%' }} value={addForm.checkDate} onChange={(d) => setAddForm(prev => ({ ...prev, checkDate: d }))} /></Col>
               </Row>
               {/* Tabs */}
               <div style={{ borderBottom: '2px solid #1677ff', marginBottom: 16 }}>
@@ -5198,7 +5606,7 @@ const colConfigTree = [
               {addTab === 'content' && <div style={{ padding: '40px 0', textAlign: 'center', color: '#8c8c8c' }}>询价内容（选择询价单后自动填充）</div>}
               {addTab === 'smart' && <div style={{ padding: '40px 0', textAlign: 'center', color: '#8c8c8c' }}>智能比价功能开发中</div>}
               <div style={{ textAlign: 'center', padding: '16px 0 4px', borderTop: '1px solid #f0f0f0' }}>
-                <Button type="primary" style={{ ...blueBtnStyle, width: 120, height: 36 }} onClick={() => { antd.message.success('提交成功'); setAddVisible(false); }}>提交</Button>
+                <Button type="primary" style={{ ...blueBtnStyle, width: 120, height: 36 }} onClick={handleConfirmSubmit}>提交</Button>
               </div>
             </div>
           </Modal>
@@ -5368,8 +5776,8 @@ const colConfigTree = [
                       { key: '1', docType: '需求池', docNo: detailRecord.poolNo || 'XQC202601290014', status: '已完成', time: '2026-01-29' },
                       { key: '2', docType: '询价申请', docNo: detailRecord.inquiryNo || 'XJ20260129001', status: '已生效', time: '2026-01-29' },
                       { key: '3', docType: '询价结果', docNo: detailRecord.confirmNo || 'JG20260129001', status: detailRecord.flowStatus || '已生效', time: detailRecord.checkDate || '2026-01-29' },
-                      { key: '4', docType: '合同', docNo: '-', status: '待生成', time: '-' },
-                      { key: '5', docType: '采购订单', docNo: '-', status: '待生成', time: '-' },
+                      { key: '4', docType: '合同', docNo: traceContract ? (traceContract.code || traceContract.contractNo) : '-', status: traceContract ? traceContract.execStatus || traceContract.status : '待生成', time: traceContract ? (traceContract.submitTime || traceContract.signDate || '-') : '-' },
+                      { key: '5', docType: '采购订单', docNo: traceOrder ? traceOrder.orderNo : '-', status: traceOrder ? traceOrder.status : '待生成', time: traceOrder ? (traceOrder.orderDate || '-') : '-' },
                       { key: '6', docType: '发货单', docNo: '-', status: '-', time: '-' },
                       { key: '7', docType: '收货单', docNo: '-', status: '-', time: '-' },
                       { key: '8', docType: '付款申请', docNo: '-', status: '-', time: '-' },
@@ -5462,6 +5870,18 @@ const colConfigTree = [
         { key: '3', flowStatus: '已关闭', serialNo: 'BJ20251215003', collabType: '协同', inquiryNo: 'XJ20251201004', projectName: '制动盘询价', sealed: '否', manager: '李里', contact: '010-12345678', inquiryStatus: '已结束', deadline: '2025-12-20', round: '一轮报价', rate: '', emailQuote: '否', supplierEmail: 'haiye@163.com', quoteEmail: '已发送', supplier: '天津海叶商贸', quoter: '张三', quoteDate: '2025-12-15', supplierCode: 'GYS000008', supplierName: '天津海叶商贸', joinQuote: '是', foreignQuote: '否', currency: 'CNY', quoteTime: '2025-12-15 16:00:00', ladderInfo: '', quoteDesc: '含税含运', totalExTax: '150,442.48', taxAmount: '19,557.52', totalInTax: '170,000.00', amountCN: '壹拾柒万元整', file: '报价单.pdf', openPrice: '是', purchaseHelper: '王五', supplierContact: '李四', submitter: '用户257522', submitTime: '2026-07-19 08:00:00', updateTime: '2026-07-20 12:00:00', currentNode: '已关闭', currentOwner: '-' },
       ];
 
+      const [searchText, setSearchText] = useState('');
+      const [statusFilter, setStatusFilter] = useState(undefined);
+      const [quotePage, setQuotePage] = useState(1);
+      const [quoteSize, setQuoteSize] = useState(20);
+      const quoteSearchFields = ['serialNo', 'inquiryNo', 'projectName', 'supplierName', 'supplierCode'];
+      const filteredQuoteData = useMemo(() => {
+        let result = filterByKeyword(tableData, searchText, quoteSearchFields);
+        if (statusFilter && statusFilter !== 'all') result = result.filter(item => (item.flowStatus || item.inquiryStatus) === statusFilter);
+        return result;
+      }, [tableData, searchText, statusFilter]);
+      const quotePagination = { ...standardPagination, total: filteredQuoteData.length, current: quotePage, pageSize: quoteSize, onChange: (p, s) => { setQuotePage(p); setQuoteSize(s); }, pageSizeOptions: ['10', '20', '50', '100'] };
+
       const allColumns = [
         { title: '流程状态', dataIndex: 'flowStatus', width: 90, fixed: 'left', render: (v) => React.createElement(Tag, { color: v === '已生效' ? 'success' : v === '已关闭' ? 'default' : 'processing' }, v) },
         { title: '流水号', dataIndex: 'serialNo', width: 140 },
@@ -5523,26 +5943,28 @@ const colConfigTree = [
           {/* 工具栏 */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
             <Space size={8}>
-              <Button icon={React.createElement(ImportOutlined)}>导入</Button>
-              <Button icon={React.createElement(ExportOutlined)}>导出</Button>
+              <Button icon={React.createElement(ImportOutlined)} onClick={() => antd.message.info('导入/导出功能开发中')}>导入</Button>
+              <Button icon={React.createElement(ExportOutlined)} onClick={() => antd.message.info('导入/导出功能开发中')}>导出</Button>
             </Space>
             <Space size={8}>
-              <Select defaultValue="all" size="middle" style={{ width: 110 }}><Option value="all">搜索范围</Option></Select>
-              <Input placeholder="请输入搜索内容" style={{ width: 220 }} suffix={React.createElement(SearchOutlined)} />
+              <Select value={statusFilter || 'all'} size="middle" style={{ width: 110 }} allowClear onChange={(v) => { setStatusFilter(v); setQuotePage(1); }}>
+                <Option value="all">全部状态</Option>
+                <Option value="已生效">已生效</Option>
+                <Option value="已关闭">已关闭</Option>
+              </Select>
+              <Input placeholder="搜索流水号/询价单号/供应商" style={{ width: 240 }} suffix={React.createElement(SearchOutlined)} value={searchText} onChange={(e) => { setSearchText(e.target.value); setQuotePage(1); }} allowClear />
             </Space>
           </div>
           {/* 表格 */}
-          <Table columns={visibleColumns} dataSource={tableData} rowSelection={{ selectedRowKeys, onChange: setSelectedRowKeys }} bordered size="small" pagination={false} scroll={{ x: 5000 }} />
+          <Table columns={visibleColumns} dataSource={filteredQuoteData} rowSelection={{ selectedRowKeys, onChange: setSelectedRowKeys }} bordered size="small" pagination={quotePagination} scroll={{ x: 5000 }} />
           {/* 分页 */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 12, padding: '12px 0 8px', borderTop: '1px solid #f0f0f0' }}>
             <Space size={16}>
               <Popover content={renderColConfig()} trigger="click" open={colConfigVisible} onOpenChange={setColConfigVisible} placement="topLeft">
                 {React.createElement(ColumnWidthOutlined, { style: { color: '#8c8c8c', cursor: 'pointer' } })}
               </Popover>
-              <Select defaultValue="20" size="small" style={{ width: 90 }}><Option value="20">20条/页</Option><Option value="50">50条/页</Option></Select>
-              <span style={{ color: '#595959', fontSize: 13 }}>共 {tableData.length} 条</span>
+              <span style={{ color: '#595959', fontSize: 13 }}>共 {filteredQuoteData.length} 条</span>
             </Space>
-            <Pagination current={1} total={tableData.length} pageSize={20} size="small" showSizeChanger={false} />
           </div>
 
           {/* ===== 详情弹框 ===== */}
@@ -5965,13 +6387,12 @@ const colConfigTree = [
     // ===== 财务支出看板组件（预算执行监控） =====
     function FinanceExpenseBoard() {
       const cardStyle = { background: '#fff', borderRadius: 12, padding: '20px 24px', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' };
-      const [budgetData, setBudgetData] = React.useState([
-        { key: '1', dept: '采购部', project: '2026年原材料采购', budget: '5,000,000.00', used: '2,250,000.00', available: '2,750,000.00', rate: 45, frozen: false },
-        { key: '2', dept: 'IT部', project: 'IT设备采购', budget: '800,000.00', used: '680,000.00', available: '120,000.00', rate: 85, frozen: false },
-        { key: '3', dept: '工程部', project: '厂房建设', budget: '2,000,000.00', used: '2,100,000.00', available: '-100,000.00', rate: 105, frozen: false },
-        { key: '4', dept: '行政部', project: '办公用品采购', budget: '200,000.00', used: '32,000.00', available: '168,000.00', rate: 16, frozen: false },
-      ]);
-      React.useEffect(function() { globalBudgetData = budgetData; }, [budgetData]);
+      const [, refresh] = React.useState(0);
+      const budgetData = globalBudgetData;
+      const handleFreezeToggle = (record) => {
+        globalBudgetData = globalBudgetData.map(r => r.key === record.key ? { ...r, frozen: !r.frozen } : r);
+        refresh(n => n + 1);
+      };
       const columns = [
         { title: '部门', dataIndex: 'dept', width: 100 },
         { title: '预算项目', dataIndex: 'project', width: 180 },
@@ -5990,10 +6411,10 @@ const colConfigTree = [
         { title: '状态', key: 'status', width: 100, render: (_, r) => r.frozen ? React.createElement(Tag, { color: 'error' }, '已冻结') : r.rate >= 100 ? React.createElement(Tag, { color: 'warning' }, '超预算') : r.rate >= 80 ? React.createElement(Tag, { color: 'warning' }, '预警') : React.createElement(Tag, { color: 'success' }, '正常') },
         { title: '操作', key: 'action', width: 100, render: function(text, record) {
           if (record.frozen) {
-            return React.createElement(antd.Button, { type: 'link', size: 'small', onClick: function() { record.frozen = false; setBudgetData(budgetData.slice()); antd.message.success(record.dept + ' - ' + record.project + ' 已解冻'); } }, '解冻');
+            return React.createElement(antd.Button, { type: 'link', size: 'small', onClick: function() { handleFreezeToggle(record); antd.message.success(record.dept + ' - ' + record.project + ' 已解冻'); } }, '解冻');
           }
           if (record.rate >= 100) {
-            return React.createElement(antd.Button, { type: 'link', size: 'small', danger: true, onClick: function() { record.frozen = true; setBudgetData(budgetData.slice()); antd.message.warning(record.dept + ' - ' + record.project + ' 流程已冻结，超预算项目将被拦截'); logAction('预算管理', '冻结', record.dept + '-' + record.project, '预算执行率' + record.rate + '%，已冻结流程'); notify('warning', '预算冻结', record.dept + ' - ' + record.project + ' 因超预算（执行率' + record.rate + '%）已被冻结'); } }, '冻结流程');
+            return React.createElement(antd.Button, { type: 'link', size: 'small', danger: true, onClick: function() { handleFreezeToggle(record); antd.message.warning(record.dept + ' - ' + record.project + ' 流程已冻结，超预算项目将被拦截'); logAction('预算管理', '冻结', record.dept + '-' + record.project, '预算执行率' + record.rate + '%，已冻结流程'); notify('warning', '预算冻结', record.dept + ' - ' + record.project + ' 因超预算（执行率' + record.rate + '%）已被冻结'); } }, '冻结流程');
           }
           return React.createElement(Tag, { color: 'default' }, '-');
         } },
@@ -6098,7 +6519,7 @@ const colConfigTree = [
                 <Col span={12}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>选择合同 <span style={{ color: '#ff4d4f' }}>*</span></div><Select style={{ width: '100%' }} placeholder="请选择合同" value={addForm.contract} onChange={(v) => { const c = contractOptions.find(o => o.value === v); setAddForm(prev => ({ ...prev, contract: v })); }}> {contractOptions.map(o => <Option key={o.value} value={o.value}>{o.label}</Option>)}</Select></Col>
                 <Col span={12}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>合同编号</div><Input placeholder="自动带入" value={addForm.contract ? contractOptions.find(o => o.value === addForm.contract)?.contractNo : ''} readOnly disabled style={{ background: '#f5f5f5' }} /></Col>
                 <Col span={12}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>计划金额 <span style={{ color: '#ff4d4f' }}>*</span></div><InputNumber style={{ width: '100%' }} placeholder="请输入" addonAfter="元" value={addForm.amount} onChange={(v) => setAddForm(prev => ({ ...prev, amount: v }))} /></Col>
-                <Col span={12}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>计划付款日期 <span style={{ color: '#ff4d4f' }}>*</span></div><DatePicker style={{ width: '100%' }} value={addForm.planDate} onChange={(v) => setAddForm(prev => ({ ...prev, planDate: v }))} /></Col>
+                <Col span={12}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>计划付款日期 <span style={{ color: '#ff4d4f' }}>*</span></div><SafeDatePicker style={{ width: '100%' }} value={addForm.planDate} onChange={(v) => setAddForm(prev => ({ ...prev, planDate: v }))} /></Col>
                 <Col span={12}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>付款比例 <span style={{ color: '#ff4d4f' }}>*</span></div><InputNumber style={{ width: '100%' }} placeholder="请输入" addonAfter="%" min={0} max={100} value={addForm.ratio} onChange={(v) => setAddForm(prev => ({ ...prev, ratio: v }))} /></Col>
                 <Col span={24}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>备注</div><TextArea rows={3} placeholder="请输入备注" value={addForm.remark} onChange={(e) => setAddForm(prev => ({ ...prev, remark: e.target.value }))} /></Col>
               </Row>
@@ -6151,7 +6572,7 @@ const colConfigTree = [
               <Row gutter={[16, 16]}>
                 <Col span={12}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>选择供应商 <span style={{ color: '#ff4d4f' }}>*</span></div><Select style={{ width: '100%' }} placeholder="请选择供应商" value={addForm.supplier} onChange={(v) => setAddForm(prev => ({ ...prev, supplier: v }))}>{supplierOptions.map(o => <Option key={o.value} value={o.value}>{o.label}</Option>)}</Select></Col>
                 <Col span={12}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>供应商编号</div><Input placeholder="自动带入" value={addForm.supplier ? supplierOptions.find(o => o.value === addForm.supplier)?.code : ''} readOnly disabled style={{ background: '#f5f5f5' }} /></Col>
-                <Col span={12}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>对账周期 <span style={{ color: '#ff4d4f' }}>*</span></div><DatePicker.RangePicker style={{ width: '100%' }} value={addForm.dateRange} onChange={(v) => setAddForm(prev => ({ ...prev, dateRange: v }))} /></Col>
+                <Col span={12}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>对账周期 <span style={{ color: '#ff4d4f' }}>*</span></div><SafeRangePicker style={{ width: '100%' }} value={addForm.dateRange} onChange={(v) => setAddForm(prev => ({ ...prev, dateRange: v }))} /></Col>
                 <Col span={12}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>对账范围 <span style={{ color: '#ff4d4f' }}>*</span></div><Select style={{ width: '100%' }} placeholder="请选择" value={addForm.scope} onChange={(v) => setAddForm(prev => ({ ...prev, scope: v }))}><Option value="all">全部订单</Option><Option value="specified">指定订单</Option><Option value="category">指定品类</Option></Select></Col>
                 <Col span={12}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>对账人 <span style={{ color: '#ff4d4f' }}>*</span></div><Select style={{ width: '100%' }} placeholder="请选择" value={addForm.reconciler} onChange={(v) => setAddForm(prev => ({ ...prev, reconciler: v }))}>{reconcilerOptions.map(o => <Option key={o.value} value={o.value}>{o.label}</Option>)}</Select></Col>
                 <Col span={24}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>备注</div><TextArea rows={3} placeholder="请输入备注" value={addForm.remark} onChange={(e) => setAddForm(prev => ({ ...prev, remark: e.target.value }))} /></Col>
@@ -6206,7 +6627,7 @@ const colConfigTree = [
                 <Col span={12}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>扣款原因 <span style={{ color: '#ff4d4f' }}>*</span></div><Select style={{ width: '100%' }} placeholder="请选择" value={addForm.reason} onChange={(v) => setAddForm(prev => ({ ...prev, reason: v }))}><Option value="质量不合格">质量不合格</Option><Option value="交期延误">交期延误</Option><Option value="数量短缺">数量短缺</Option><Option value="其他">其他</Option></Select></Col>
                 <Col span={12}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>扣款金额 <span style={{ color: '#ff4d4f' }}>*</span></div><InputNumber style={{ width: '100%' }} placeholder="请输入" addonAfter="元" value={addForm.amount} onChange={(v) => setAddForm(prev => ({ ...prev, amount: v }))} /></Col>
                 <Col span={12}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>关联记录 <span style={{ color: '#ff4d4f' }}>*</span></div><Select style={{ width: '100%' }} placeholder="请选择" value={addForm.relatedRecord} onChange={(v) => setAddForm(prev => ({ ...prev, relatedRecord: v }))}>{relatedRecordOptions.map(o => <Option key={o.value} value={o.value}>{o.label}</Option>)}</Select></Col>
-                <Col span={12}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>扣款日期 <span style={{ color: '#ff4d4f' }}>*</span></div><DatePicker style={{ width: '100%' }} value={addForm.deductDate} onChange={(v) => setAddForm(prev => ({ ...prev, deductDate: v }))} /></Col>
+                <Col span={12}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>扣款日期 <span style={{ color: '#ff4d4f' }}>*</span></div><SafeDatePicker style={{ width: '100%' }} value={addForm.deductDate} onChange={(v) => setAddForm(prev => ({ ...prev, deductDate: v }))} /></Col>
                 <Col span={24}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>备注</div><TextArea rows={3} placeholder="请输入备注" value={addForm.remark} onChange={(e) => setAddForm(prev => ({ ...prev, remark: e.target.value }))} /></Col>
               </Row>
               <div style={{ textAlign: 'center', padding: '20px 0 4px', marginTop: 16, borderTop: '1px solid #f0f0f0' }}>
@@ -6223,10 +6644,36 @@ const colConfigTree = [
       const [addVisible, setAddVisible] = useState(false);
       const [detailVisible, setDetailVisible] = useState(false);
       const [detailRecord, setDetailRecord] = useState(null);
-      const tableData = [
+      const [tableData, setTableData] = useState([
         { key: '1', applyNo: 'FK20260301001', supplier: '上海易点科技有限公司', contractNo: 'HT20260129001', contractName: 'HT20260129001 雷达传感器采购合同', amount: '200,000.00', method: '银行转账', invoice: 'FP20260228001', status: '已审批', applicant: '管理员', applyDate: '2026-03-01', reason: '雷达传感器采购货款结算', payeeName: '上海易点科技有限公司', payeeAccount: '3100 1234 5678 0001', bank: '中国工商银行上海分行', relatedReceipt: 'SH20260225001', approver: '张经理', approverOpinion: '同意付款' },
         { key: '2', applyNo: 'FK20260315002', supplier: '天津海叶商贸', contractNo: 'HT20260201002', contractName: 'HT20260201002 办公耗材供应合同', amount: '170,000.00', method: '银行转账', invoice: 'FP20260310002', status: '待审批', applicant: '管理员', applyDate: '2026-03-15', reason: '办公耗材季度结算', payeeName: '天津海叶商贸', payeeAccount: '6222 0000 1234 5678', bank: '中国农业银行天津分行', relatedReceipt: 'SH20260308002', approver: '-', approverOpinion: '-' },
-      ];
+      ]);
+      const [payForm, setPayForm] = useState({ contract: '', amount: '', method: 'bank', invoice: '', date: null, reason: '', payeeName: '', payeeAccount: '', bank: '', relatedReceipt: '' });
+      const [searchText, setSearchText] = useState('');
+      const [statusFilter, setStatusFilter] = useState(undefined);
+      const [payPage, setPayPage] = useState(1);
+      const [paySize, setPaySize] = useState(20);
+      const paySearchFields = ['applyNo', 'supplier', 'contractNo', 'invoice'];
+      const filteredPayData = useMemo(() => {
+        let result = filterByKeyword(tableData, searchText, paySearchFields);
+        if (statusFilter && statusFilter !== 'all') result = result.filter(item => item.status === statusFilter);
+        return result;
+      }, [tableData, searchText, statusFilter]);
+      const payPagination = { ...standardPagination, total: filteredPayData.length, current: payPage, pageSize: paySize, onChange: (p, s) => { setPayPage(p); setPaySize(s); }, pageSizeOptions: ['10', '20', '50', '100'] };
+      const handlePaySubmit = () => {
+        if (!payForm.contract) { antd.message.warning('请选择合同'); return; }
+        if (!payForm.amount || parseAmount(payForm.amount) <= 0) { antd.message.warning('请填写申请金额'); return; }
+        if (!payForm.reason) { antd.message.warning('请填写付款事由'); return; }
+        if (!payForm.payeeName || !payForm.payeeAccount || !payForm.bank) { antd.message.warning('请填写收款账户信息'); return; }
+        const newNo = generateDocNo('FK');
+        const now = new Date().toLocaleString('zh-CN', { hour12: false });
+        setTableData(prev => [{ key: String(Date.now()) + Math.random().toString(36).slice(2, 6), applyNo: newNo, supplier: '上海易点科技有限公司', contractNo: payForm.contract, contractName: payForm.contract, amount: parseAmount(payForm.amount).toLocaleString('zh-CN', { minimumFractionDigits: 2 }), method: payForm.method === 'bank' ? '银行转账' : '现金', invoice: payForm.invoice || '', status: '待审批', applicant: '管理员', applyDate: payForm.date ? payForm.date.format('YYYY-MM-DD') : new Date().toISOString().slice(0, 10), reason: payForm.reason, payeeName: payForm.payeeName, payeeAccount: payForm.payeeAccount, bank: payForm.bank, relatedReceipt: payForm.relatedReceipt || '', approver: '-', approverOpinion: '-' }, ...prev]);
+        logAction('付款申请', '新增', newNo, '新增付款申请：' + (payForm.reason || ''));
+        notify('info', '付款申请已提交', '付款申请 ' + newNo + ' 已提交，等待审批', 'finance/payment-apply');
+        antd.message.success('提交成功，申请单号：' + newNo);
+        setAddVisible(false);
+        setPayForm({ contract: '', amount: '', method: 'bank', invoice: '', date: null, reason: '', payeeName: '', payeeAccount: '', bank: '', relatedReceipt: '' });
+      };
       const columns = [
         { title: '申请单号', dataIndex: 'applyNo', width: 150 },
         { title: '供应商', dataIndex: 'supplier', width: 180 },
@@ -6242,28 +6689,34 @@ const colConfigTree = [
       return (
         <div style={{ background: '#fff', borderRadius: 8, padding: '16px 24px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-            <Button type="primary" icon={React.createElement(PlusOutlined)} onClick={() => setAddVisible(true)}>新建付款申请</Button>
-            <Input placeholder="搜索申请单号/供应商" style={{ width: 240 }} suffix={React.createElement(SearchOutlined)} />
+            <Button type="primary" icon={React.createElement(PlusOutlined)} onClick={() => { setPayForm({ contract: '', amount: '', method: 'bank', invoice: '', date: null, reason: '', payeeName: '', payeeAccount: '', bank: '', relatedReceipt: '' }); setAddVisible(true); }}>新建付款申请</Button>
+            <Space size={8}>
+              <Select value={statusFilter || 'all'} style={{ width: 120 }} allowClear onChange={(v) => { setStatusFilter(v); setPayPage(1); }}>
+                <Option value="all">全部状态</Option>
+                <Option value="待审批">待审批</Option>
+                <Option value="已审批">已审批</Option>
+              </Select>
+              <Input placeholder="搜索申请单号/供应商" style={{ width: 240 }} suffix={React.createElement(SearchOutlined)} value={searchText} onChange={(e) => { setSearchText(e.target.value); setPayPage(1); }} allowClear />
+            </Space>
           </div>
-          <Table columns={columns} dataSource={tableData} bordered size="small" pagination={false} scroll={{ x: 1100 }} />
-          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 12, padding: '12px 0 8px', borderTop: '1px solid #f0f0f0' }}><span style={{ color: '#595959', fontSize: 13 }}>共 {tableData.length} 条</span></div>
+          <Table columns={columns} dataSource={filteredPayData} bordered size="small" pagination={payPagination} scroll={{ x: 1100 }} />
           <Modal title="新建付款申请" open={addVisible} onCancel={() => setAddVisible(false)} footer={null} width={800}>
             <div style={{ padding: '16px 20px' }}>
               <Row gutter={[16, 16]}>
-                <Col span={12}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>选择合同 <span style={{ color: '#ff4d4f' }}>*</span></div><Select style={{ width: '100%' }} placeholder="请选择"><Option value="1">HT20260129001</Option></Select></Col>
-                <Col span={12}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>申请金额 <span style={{ color: '#ff4d4f' }}>*</span></div><Input placeholder="请输入" /></Col>
-                <Col span={12}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>付款方式</div><Select style={{ width: '100%' }} defaultValue="bank"><Option value="bank">银行转账</Option><Option value="cash">现金</Option></Select></Col>
-                <Col span={12}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>发票号</div><Input placeholder="请输入" /></Col>
+                <Col span={12}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>选择合同 <span style={{ color: '#ff4d4f' }}>*</span></div><Select style={{ width: '100%' }} placeholder="请选择" value={payForm.contract || undefined} onChange={(v) => setPayForm(prev => ({ ...prev, contract: v }))}><Option value="HT20260129001">HT20260129001</Option></Select></Col>
+                <Col span={12}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>申请金额 <span style={{ color: '#ff4d4f' }}>*</span></div><Input placeholder="请输入" value={payForm.amount} onChange={(e) => setPayForm(prev => ({ ...prev, amount: e.target.value }))} /></Col>
+                <Col span={12}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>付款方式</div><Select style={{ width: '100%' }} value={payForm.method} onChange={(v) => setPayForm(prev => ({ ...prev, method: v }))}><Option value="bank">银行转账</Option><Option value="cash">现金</Option></Select></Col>
+                <Col span={12}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>发票号</div><Input placeholder="请输入" value={payForm.invoice} onChange={(e) => setPayForm(prev => ({ ...prev, invoice: e.target.value }))} /></Col>
                 <Col span={12}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>申请人</div><Input readOnly defaultValue="管理员" style={{ background: '#f5f5f5' }} /></Col>
-                <Col span={12}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>申请日期</div><DatePicker style={{ width: '100%' }} defaultValue={typeof dayjs !== 'undefined' ? dayjs() : null} /></Col>
-                <Col span={24}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>付款事由</div><Input.TextArea rows={3} placeholder="请输入付款事由" /></Col>
-                <Col span={12}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>收款账户名</div><Input placeholder="请输入收款账户名" /></Col>
-                <Col span={12}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>收款账号</div><Input placeholder="请输入收款账号" /></Col>
-                <Col span={12}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>开户银行</div><Input placeholder="请输入开户银行" /></Col>
-                <Col span={12}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>关联收货单号</div><Select style={{ width: '100%' }} placeholder="请选择"><Option value="SH20260225001">SH20260225001</Option><Option value="SH20260308002">SH20260308002</Option><Option value="SH20260320003">SH20260320003</Option></Select></Col>
+                <Col span={12}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>申请日期</div><SafeDatePicker style={{ width: '100%' }} value={payForm.date} onChange={(d) => setPayForm(prev => ({ ...prev, date: d }))} /></Col>
+                <Col span={24}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>付款事由 <span style={{ color: '#ff4d4f' }}>*</span></div><Input.TextArea rows={3} placeholder="请输入付款事由" value={payForm.reason} onChange={(e) => setPayForm(prev => ({ ...prev, reason: e.target.value }))} /></Col>
+                <Col span={12}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>收款账户名 <span style={{ color: '#ff4d4f' }}>*</span></div><Input placeholder="请输入收款账户名" value={payForm.payeeName} onChange={(e) => setPayForm(prev => ({ ...prev, payeeName: e.target.value }))} /></Col>
+                <Col span={12}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>收款账号 <span style={{ color: '#ff4d4f' }}>*</span></div><Input placeholder="请输入收款账号" value={payForm.payeeAccount} onChange={(e) => setPayForm(prev => ({ ...prev, payeeAccount: e.target.value }))} /></Col>
+                <Col span={12}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>开户银行 <span style={{ color: '#ff4d4f' }}>*</span></div><Input placeholder="请输入开户银行" value={payForm.bank} onChange={(e) => setPayForm(prev => ({ ...prev, bank: e.target.value }))} /></Col>
+                <Col span={12}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>关联收货单号</div><Select style={{ width: '100%' }} placeholder="请选择" value={payForm.relatedReceipt || undefined} onChange={(v) => setPayForm(prev => ({ ...prev, relatedReceipt: v }))}><Option value="SH20260225001">SH20260225001</Option><Option value="SH20260308002">SH20260308002</Option><Option value="SH20260320003">SH20260320003</Option></Select></Col>
               </Row>
               <div style={{ textAlign: 'center', padding: '20px 0 4px', marginTop: 16, borderTop: '1px solid #f0f0f0' }}>
-                <Space size={12}><Button type="primary" onClick={() => { antd.message.success('提交成功'); setAddVisible(false); }}>提交</Button><Button onClick={() => setAddVisible(false)}>取消</Button></Space>
+                <Space size={12}><Button type="primary" onClick={handlePaySubmit}>提交</Button><Button onClick={() => setAddVisible(false)}>取消</Button></Space>
               </div>
             </div>
           </Modal>
@@ -6428,20 +6881,38 @@ const colConfigTree = [
     // ===== 采购订单组件 =====
     function OrderPo() {
       const [addVisible, setAddVisible] = useState(false);
-      const [tableData, setTableData] = useState([
+      const [tableData, setTableData] = useStoreList('orders', [
         { key: '1', orderNo: 'PO20260129001', supplier: '上海易点科技有限公司', contractNo: 'HT20260129001', amount: '455,000.00', orderDate: '2026-01-29', deliveryDate: '2026-02-15', status: '执行中', sourceDocNo: 'JG20260129001', sourceDocType: '询价结果' },
         { key: '2', orderNo: 'PO20260201002', supplier: '天津海叶商贸', contractNo: 'HT20260201002', amount: '170,000.00', orderDate: '2026-02-01', deliveryDate: '2026-02-20', status: '已完成', sourceDocNo: 'HT20260201002', sourceDocType: '合同' },
         { key: '3', orderNo: 'PO20260315003', supplier: '京东企业购', contractNo: '-', amount: '32,000.00', orderDate: '2026-03-15', deliveryDate: '2026-03-25', status: '待供应商确认', sourceDocNo: '', sourceDocType: '' },
       ]);
       const [searchText, setSearchText] = useState('');
       const [statusFilter, setStatusFilter] = useState(undefined);
+      const [poPage, setPoPage] = useState(1);
+      const [poSize, setPoSize] = useState(10);
       const searchFields = ['orderNo', 'supplier', 'contractNo'];
       const filteredData = useMemo(() => {
         let result = filterByKeyword(tableData, searchText, searchFields);
         if (statusFilter && statusFilter !== 'all') result = result.filter(item => item.status === statusFilter);
         return result;
       }, [tableData, searchText, statusFilter, searchFields]);
-      const poPagination = { ...standardPagination, total: filteredData.length, current: 1, pageSize: 10, onChange: () => {} };
+      const poPagination = { ...standardPagination, total: filteredData.length, current: poPage, pageSize: poSize, onChange: (p, s) => { setPoPage(p); setPoSize(s); } };
+      const [rejectVisible, setRejectVisible] = useState(false);
+      const [rejectRecord, setRejectRecord] = useState(null);
+      const [rejectReason, setRejectReason] = useState('');
+      const handleReject = (record) => {
+        setRejectRecord(record);
+        setRejectReason('');
+        setRejectVisible(true);
+      };
+      const handleRejectConfirm = () => {
+        if (!rejectReason.trim()) { antd.message.warning('请填写拒绝原因'); return; }
+        handlePoStatusChange(rejectRecord, '已拒绝');
+        logAction('采购订单', '状态变更', rejectRecord.orderNo, '拒绝原因：' + rejectReason.trim());
+        setRejectVisible(false);
+        setRejectRecord(null);
+        setRejectReason('');
+      };
 
       // 订单明细子表状态
       const [detailItems, setDetailItems] = useState([
@@ -6493,9 +6964,11 @@ const colConfigTree = [
           return React.createElement(Space, { size: 8 },
             React.createElement('a', { style: { color: '#1677ff' }, onClick: () => showRecordDetail(record) }, '详情'),
             record.status === '待供应商确认' && React.createElement('a', { style: { color: '#52c41a' }, onClick: () => handlePoStatusChange(record, '供应商已确认') }, '确认接单'),
-            record.status === '待供应商确认' && React.createElement('a', { style: { color: '#ff4d4f' }, onClick: () => { antd.message.warning('请填写拒绝原因'); handlePoStatusChange(record, '草稿'); } }, '拒绝'),
+            record.status === '待供应商确认' && React.createElement('a', { style: { color: '#ff4d4f' }, onClick: () => handleReject(record) }, '拒绝'),
             record.status === '供应商已确认' && React.createElement('a', { style: { color: '#1677ff' }, onClick: () => handlePoStatusChange(record, '执行中') }, '开始执行'),
             record.status === '执行中' && React.createElement('a', { style: { color: '#1677ff' }, onClick: () => handlePoStatusChange(record, '已完成') }, '完成'),
+            record.status === '已拒绝' && React.createElement('a', { style: { color: '#1677ff' }, onClick: () => handlePoStatusChange(record, '草稿') }, '重新提交'),
+            record.status === '已拒绝' && React.createElement('a', { style: { color: '#ff4d4f' }, onClick: () => handlePoStatusChange(record, '已取消') }, '取消订单'),
             transitions.length === 0 && React.createElement('span', { style: { color: '#bfbfbf', fontSize: 12 } }, '无可用操作')
           );
         } },
@@ -6503,7 +6976,7 @@ const colConfigTree = [
       return (
         <div style={{ background: '#fff', borderRadius: 8, padding: '16px 24px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-            <Space size={8}><Button type="primary" icon={React.createElement(PlusOutlined)} onClick={() => setAddVisible(true)}>新建订单</Button><Button icon={React.createElement(ExportOutlined)} onClick={() => antd.message.info('导入/导出功能开发中')}>导出</Button></Space>
+            <Space size={8}><Button type="primary" icon={React.createElement(PlusOutlined)} onClick={() => { setDetailItems([{ key: 1, material: 'A4复印纸', spec: '70g/500张', unit: '箱', qty: 100, price: 45, tax: 13 }, { key: 2, material: '碳素笔', spec: '0.5mm黑色', unit: '盒', qty: 200, price: 12, tax: 13 }]); setAddVisible(true); }}>新建订单</Button><Button icon={React.createElement(ExportOutlined)} onClick={() => antd.message.info('导入/导出功能开发中')}>导出</Button></Space>
             <Space size={8}>
               <Select value={statusFilter || 'all'} style={{ width: 140 }} allowClear onChange={(v) => setStatusFilter(v)}>
                 <Option value="all">全部状态</Option>
@@ -6513,13 +6986,13 @@ const colConfigTree = [
             </Space>
           </div>
           <Table columns={columns} dataSource={filteredData} bordered size="small" pagination={poPagination} scroll={{ x: 1300 }} />
-          <Modal title="新建采购订单" open={addVisible} onCancel={() => setAddVisible(false)} footer={null} width={1000}>
+          <Modal title="新建采购订单" open={addVisible} onCancel={() => { setDetailItems([{ key: 1, material: 'A4复印纸', spec: '70g/500张', unit: '箱', qty: 100, price: 45, tax: 13 }, { key: 2, material: '碳素笔', spec: '0.5mm黑色', unit: '盒', qty: 200, price: 12, tax: 13 }]); setAddVisible(false); }} footer={null} width={1000}>
             <div style={{ padding: '16px 20px' }}>
               <Row gutter={[16, 16]}>
                 <Col span={12}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>订单编号</div><Input value={generateDocNo('PO')} readOnly style={{ width: '100%', background: '#f5f5f5' }} /></Col>
                 <Col span={12}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>供应商 <span style={{ color: '#ff4d4f' }}>*</span></div><Select style={{ width: '100%' }} placeholder="请选择"><Option value="1">上海易点科技有限公司</Option><Option value="2">天津海叶商贸</Option></Select></Col>
                 <Col span={12}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>关联合同号 <span style={{ color: '#ff4d4f' }}>*</span></div><Select style={{ width: '100%' }} placeholder="请选择合同"><Option value="HT20260129001">HT20260129001</Option><Option value="HT20260201002">HT20260201002</Option><Option value="HT20260315003">HT20260315003</Option></Select></Col>
-                <Col span={12}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>交货日期 <span style={{ color: '#ff4d4f' }}>*</span></div><DatePicker style={{ width: '100%' }} /></Col>
+                <Col span={12}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>交货日期 <span style={{ color: '#ff4d4f' }}>*</span></div><SafeDatePicker style={{ width: '100%' }} /></Col>
                 <Col span={12}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>付款条款 <span style={{ color: '#ff4d4f' }}>*</span></div><Select style={{ width: '100%' }} placeholder="请选择"><Option value="预付30%+验收70%">预付30%+验收70%</Option><Option value="月结30天">月结30天</Option><Option value="月结60天">月结60天</Option><Option value="货到付款">货到付款</Option></Select></Col>
                 <Col span={12}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>发票要求 <span style={{ color: '#ff4d4f' }}>*</span></div><Select style={{ width: '100%' }} placeholder="请选择"><Option value="增值税专用发票">增值税专用发票</Option><Option value="增值税普通发票">增值税普通发票</Option><Option value="无需发票">无需发票</Option></Select></Col>
                 <Col span={12}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>运输方式</div><Select style={{ width: '100%' }} placeholder="请选择"><Option value="供应商配送">供应商配送</Option><Option value="自提">自提</Option><Option value="第三方物流">第三方物流</Option></Select></Col>
@@ -6532,7 +7005,18 @@ const colConfigTree = [
                 <div style={{ fontSize: 14 }}>合计金额：<span style={{ color: '#ff4d4f', fontWeight: 600, fontSize: 16 }}>¥{detailAmount.toFixed(2)}</span></div>
               </div>
               <div style={{ textAlign: 'center', padding: '20px 0 4px', marginTop: 16, borderTop: '1px solid #f0f0f0' }}>
-                <Space size={12}><Button type="primary" onClick={() => { const newNo = generateDocNo('PO'); setTableData(prev => [{ key: String(Date.now()), orderNo: newNo, supplier: '天津海叶商贸', contractNo: '-', amount: detailAmount.toFixed(2), orderDate: new Date().toISOString().slice(0,10), deliveryDate: '', status: '草稿', sourceDocNo: '', sourceDocType: '' }, ...prev]); logAction('采购订单', '新增', newNo); antd.message.success('提交成功，订单号：' + newNo); setAddVisible(false); setDetailItems([{ key: 1, material: 'A4复印纸', spec: '70g/500张', unit: '箱', qty: 100, price: 45, tax: 13 }, { key: 2, material: '碳素笔', spec: '0.5mm黑色', unit: '盒', qty: 200, price: 12, tax: 13 }]); }}>提交</Button><Button onClick={() => setAddVisible(false)}>取消</Button></Space>
+                <Space size={12}><Button type="primary" onClick={() => { const newNo = generateDocNo('PO'); setTableData(prev => [{ key: String(Date.now()) + Math.random().toString(36).slice(2, 6), orderNo: newNo, supplier: '天津海叶商贸', contractNo: '-', amount: detailAmount.toFixed(2), orderDate: new Date().toISOString().slice(0,10), deliveryDate: '', status: '草稿', sourceDocNo: '', sourceDocType: '' }, ...prev]); logAction('采购订单', '新增', newNo); notify('info', '采购订单已创建', '订单 ' + newNo + ' 已创建，等待供应商确认', 'order/po'); antd.message.success('提交成功，订单号：' + newNo); setAddVisible(false); setDetailItems([{ key: 1, material: 'A4复印纸', spec: '70g/500张', unit: '箱', qty: 100, price: 45, tax: 13 }, { key: 2, material: '碳素笔', spec: '0.5mm黑色', unit: '盒', qty: 200, price: 12, tax: 13 }]); }}>提交</Button><Button onClick={() => setAddVisible(false)}>取消</Button></Space>
+              </div>
+            </div>
+          </Modal>
+          <Modal title="拒绝订单" open={rejectVisible} onCancel={() => setRejectVisible(false)} footer={null} width={500}>
+            <div style={{ padding: '16px 20px' }}>
+              <div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>订单号</div>
+              <Input value={rejectRecord ? rejectRecord.orderNo : ''} readOnly style={{ background: '#f5f5f5', marginBottom: 16 }} />
+              <div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>拒绝原因 <span style={{ color: '#ff4d4f' }}>*</span></div>
+              <TextArea rows={3} placeholder="请填写拒绝原因" value={rejectReason} onChange={(e) => setRejectReason(e.target.value)} />
+              <div style={{ textAlign: 'center', padding: '20px 0 4px', marginTop: 16, borderTop: '1px solid #f0f0f0' }}>
+                <Space size={12}><Button type="primary" danger onClick={handleRejectConfirm}>确认拒绝</Button><Button onClick={() => setRejectVisible(false)}>取消</Button></Space>
               </div>
             </div>
           </Modal>
@@ -6596,8 +7080,8 @@ const colConfigTree = [
                 <Col span={12}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>订单编号</div><Input value={addForm.orderNo} readOnly placeholder="选择订单后自动带入" /></Col>
               </Row>
               <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
-                <Col span={12}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>原交期</div><DatePicker style={{ width: '100%' }} value={addForm.origDate} readOnly disabled placeholder="选择订单后自动带入" /></Col>
-                <Col span={12}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>新交期 <span style={{ color: '#ff4d4f' }}>*</span></div><DatePicker style={{ width: '100%' }} value={addForm.newDate} onChange={(d) => setAddForm(prev => ({ ...prev, newDate: d }))} placeholder="请选择新交期" /></Col>
+                <Col span={12}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>原交期</div><SafeDatePicker style={{ width: '100%' }} value={addForm.origDate} readOnly disabled placeholder="选择订单后自动带入" /></Col>
+                <Col span={12}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>新交期 <span style={{ color: '#ff4d4f' }}>*</span></div><SafeDatePicker style={{ width: '100%' }} value={addForm.newDate} onChange={(d) => setAddForm(prev => ({ ...prev, newDate: d }))} placeholder="请选择新交期" /></Col>
               </Row>
               <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
                 <Col span={12}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>变更原因 <span style={{ color: '#ff4d4f' }}>*</span></div><Select style={{ width: '100%' }} placeholder="请选择变更原因" value={addForm.reason || undefined} onChange={(v) => setAddForm(prev => ({ ...prev, reason: v }))} options={reasonOptions.map(r => ({ value: r, label: r }))} /></Col>
@@ -6671,7 +7155,7 @@ const colConfigTree = [
                 <Col span={12}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>订单编号</div><Input value={addForm.orderNo} readOnly placeholder="选择订单后自动带入" /></Col>
               </Row>
               <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
-                <Col span={12}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>预约日期 <span style={{ color: '#ff4d4f' }}>*</span></div><DatePicker style={{ width: '100%' }} value={addForm.appointDate} onChange={(d) => setAddForm(prev => ({ ...prev, appointDate: d }))} placeholder="请选择预约日期" /></Col>
+                <Col span={12}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>预约日期 <span style={{ color: '#ff4d4f' }}>*</span></div><SafeDatePicker style={{ width: '100%' }} value={addForm.appointDate} onChange={(d) => setAddForm(prev => ({ ...prev, appointDate: d }))} placeholder="请选择预约日期" /></Col>
                 <Col span={12}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>预计到货数量</div><InputNumber style={{ width: '100%' }} value={addForm.arrivalQty ? Number(addForm.arrivalQty) : undefined} onChange={(v) => setAddForm(prev => ({ ...prev, arrivalQty: v ? String(v) : '' }))} min={1} placeholder="请输入数量" /></Col>
               </Row>
               <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
@@ -6751,12 +7235,12 @@ const colConfigTree = [
                 <Col span={12}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>订单编号</div><Input value={addForm.orderNo} readOnly placeholder="选择订单后自动带入" /></Col>
               </Row>
               <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
-                <Col span={12}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>发货日期 <span style={{ color: '#ff4d4f' }}>*</span></div><DatePicker style={{ width: '100%' }} value={addForm.shipDate} onChange={(d) => setAddForm(prev => ({ ...prev, shipDate: d }))} placeholder="请选择发货日期" /></Col>
+                <Col span={12}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>发货日期 <span style={{ color: '#ff4d4f' }}>*</span></div><SafeDatePicker style={{ width: '100%' }} value={addForm.shipDate} onChange={(d) => setAddForm(prev => ({ ...prev, shipDate: d }))} placeholder="请选择发货日期" /></Col>
                 <Col span={12}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>物流单号 <span style={{ color: '#ff4d4f' }}>*</span></div><Input value={addForm.logisticsNo} onChange={(e) => setAddForm(prev => ({ ...prev, logisticsNo: e.target.value }))} placeholder="请输入物流单号" /></Col>
               </Row>
               <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
                 <Col span={12}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>物流公司 <span style={{ color: '#ff4d4f' }}>*</span></div><Select style={{ width: '100%' }} placeholder="请选择物流公司" value={addForm.logisticsCompany || undefined} onChange={(v) => setAddForm(prev => ({ ...prev, logisticsCompany: v }))} options={companyOptions.map(c => ({ value: c, label: c }))} /></Col>
-                <Col span={12}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>预计到达日期</div><DatePicker style={{ width: '100%' }} value={addForm.expectArriveDate} onChange={(d) => setAddForm(prev => ({ ...prev, expectArriveDate: d }))} placeholder="请选择预计到达日期" /></Col>
+                <Col span={12}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>预计到达日期</div><SafeDatePicker style={{ width: '100%' }} value={addForm.expectArriveDate} onChange={(d) => setAddForm(prev => ({ ...prev, expectArriveDate: d }))} placeholder="请选择预计到达日期" /></Col>
               </Row>
               <div style={{ marginBottom: 16 }}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>备注</div><TextArea rows={3} value={addForm.remark} onChange={(e) => setAddForm(prev => ({ ...prev, remark: e.target.value }))} placeholder="请输入备注信息" /></div>
               <div style={{ textAlign: 'center', padding: '12px 0 4px', borderTop: '1px solid #f0f0f0' }}>
@@ -6833,8 +7317,15 @@ const colConfigTree = [
       const [diffRecord, setDiffRecord] = useState(null);
       const [diffForm, setDiffForm] = useState({ diffType: '', diffQty: 0, reason: '', suggestion: '' });
       const [tableData, setTableData] = useState([
-        { key: '1', receiptNo: 'SH20260214001', orderNo: 'PO20260129001', supplier: '上海易点科技有限公司', arriveDate: '2026-02-14', actualQty: 3980, diffQty: -20, receiver: '张三', status: '已收货', diffStatus: '已登记' },
+        { key: '1', receiptNo: 'SH20260214001', orderNo: 'PO20260129001', supplier: '上海易点科技有限公司', arriveDate: '2026-02-14', actualQty: 3980, diffQty: -20, receiver: '张三', status: '待收货', diffStatus: '已登记' },
       ]);
+
+      const handleConfirmReceipt = (record) => {
+        setTableData(prev => prev.map(item => item.key === record.key ? { ...item, status: '已收货' } : item));
+        logAction('收货确认', '状态变更', record.receiptNo, '确认收货：' + record.receiptNo);
+        notify('info', '收货已确认', '收货单「' + record.receiptNo + '」已确认收货', 'order/receipt');
+        antd.message.success('已确认收货');
+      };
 
       const handleDiffSubmit = () => {
         if (!diffForm.diffType) { antd.message.warning('请选择差异类型'); return; }
@@ -6857,7 +7348,7 @@ const colConfigTree = [
         { title: '差异状态', dataIndex: 'diffStatus', width: 90, render: (v) => v === '已登记' ? React.createElement(Tag, { color: 'warning' }, v) : React.createElement(Tag, null, v || '未登记') },
         { title: '收货人', dataIndex: 'receiver', width: 80 },
         { title: '状态', dataIndex: 'status', width: 90, render: (v) => React.createElement(Tag, { color: 'success' }, v) },
-        { title: '操作', key: 'action', width: 200, fixed: 'right', render: (_, record) => React.createElement(Space, { size: 8 }, React.createElement('a', { style: { color: '#1677ff' }, onClick: () => antd.message.success('已确认收货') }, '确认收货'), React.createElement('a', { style: { color: '#ff4d4f' }, onClick: () => { setDiffRecord(record); setDiffForm({ diffType: '', diffQty: Math.abs(record.diffQty) || 0, reason: '', suggestion: '' }); setDiffVisible(true); } }, '登记差异')) },
+        { title: '操作', key: 'action', width: 200, fixed: 'right', render: (_, record) => React.createElement(Space, { size: 8 }, React.createElement('a', { style: { color: '#1677ff' }, onClick: () => handleConfirmReceipt(record) }, '确认收货'), React.createElement('a', { style: { color: '#ff4d4f' }, onClick: () => { setDiffRecord(record); setDiffForm({ diffType: '', diffQty: Math.abs(record.diffQty) || 0, reason: '', suggestion: '' }); setDiffVisible(true); } }, '登记差异')) },
       ];
       return (
         <div style={{ background: '#fff', borderRadius: 8, padding: '16px 24px' }}>
@@ -6894,11 +7385,23 @@ const colConfigTree = [
       const [currentRecord, setCurrentRecord] = useState(null);
       const [resultForm, setResultForm] = useState({ inspectDate: typeof dayjs !== 'undefined' ? dayjs() : null, passQty: null, failQty: null, conclusion: undefined, inspector: undefined, failReason: '', remark: '' });
 
-      const tableData = [
+      const [tableData, setTableData] = useState([
         { key: '1', inspectNo: 'ZJ20260214001', orderNo: 'PO20260129001', receiptNo: 'SH20260214001', supplier: '上海易点科技有限公司', material: '汽车轮胎', sampleRate: '10%', inspectDate: '2026-02-14', passQty: 395, failQty: 5, conclusion: '让步接收', inspector: '王五', failReason: '', remark: '外观轻微划痕，不影响使用', filled: true },
         { key: '2', inspectNo: 'ZJ20260215001', orderNo: 'PO20260129002', receiptNo: 'SH20260215001', supplier: '北京盛达五金有限公司', material: '不锈钢螺栓', sampleRate: '5%', inspectDate: null, passQty: null, failQty: null, conclusion: null, inspector: null, failReason: '', remark: '', filled: false },
-      ];
+      ]);
 
+      const handleInspectSubmit = () => {
+        if (!resultForm.inspectDate) { antd.message.warning('请选择质检日期'); return; }
+        if (!resultForm.inspector) { antd.message.warning('请选择质检员'); return; }
+        if (resultForm.passQty == null || resultForm.failQty == null) { antd.message.warning('请填写合格/不合格数量'); return; }
+        if (!resultForm.conclusion) { antd.message.warning('请选择质检结论'); return; }
+        if (resultForm.conclusion === '不合格' && !resultForm.failReason) { antd.message.warning('请填写不合格原因'); return; }
+        setTableData(prev => prev.map(item => item.key === currentRecord.key ? { ...item, filled: true, inspectDate: resultForm.inspectDate ? resultForm.inspectDate.format('YYYY-MM-DD') : '', passQty: resultForm.passQty, failQty: resultForm.failQty, conclusion: resultForm.conclusion, inspector: resultForm.inspector, failReason: resultForm.failReason, remark: resultForm.remark } : item));
+        logAction('质检验收', '状态变更', currentRecord.inspectNo, '质检结论：' + resultForm.conclusion);
+        notify('info', '质检结果已登记', '检验单「' + currentRecord.inspectNo + '」质检结论：' + resultForm.conclusion);
+        antd.message.success('质检结果提交成功');
+        setResultVisible(false);
+      };
       const conclusionColorMap = { '合格': 'success', '不合格': 'error', '有条件接收': 'warning', '让步接收': 'warning' };
 
       const openResultModal = (record) => {
@@ -6935,7 +7438,7 @@ const colConfigTree = [
           <Modal title="质检结果登记" open={resultVisible} onCancel={() => setResultVisible(false)} footer={null} width={750} destroyOnClose>
             <div style={{ padding: '16px 20px' }}>
               <Row gutter={[16, 16]}>
-                <Col span={12}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>质检日期 <span style={{ color: '#ff4d4f' }}>*</span></div><DatePicker style={{ width: '100%' }} value={resultForm.inspectDate} onChange={(d) => setResultForm(prev => ({ ...prev, inspectDate: d }))} /></Col>
+                <Col span={12}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>质检日期 <span style={{ color: '#ff4d4f' }}>*</span></div><SafeDatePicker style={{ width: '100%' }} value={resultForm.inspectDate} onChange={(d) => setResultForm(prev => ({ ...prev, inspectDate: d }))} /></Col>
                 <Col span={12}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>质检员 <span style={{ color: '#ff4d4f' }}>*</span></div><Select style={{ width: '100%' }} placeholder="请选择质检员" value={resultForm.inspector} onChange={(v) => setResultForm(prev => ({ ...prev, inspector: v }))}><Option value="张工">张工</Option><Option value="李工">李工</Option><Option value="王工">王工</Option></Select></Col>
                 <Col span={12}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>合格数量 <span style={{ color: '#ff4d4f' }}>*</span></div><InputNumber style={{ width: '100%' }} min={0} placeholder="请输入合格数量" value={resultForm.passQty} onChange={(v) => setResultForm(prev => ({ ...prev, passQty: v }))} /></Col>
                 <Col span={12}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>不合格数量 <span style={{ color: '#ff4d4f' }}>*</span></div><InputNumber style={{ width: '100%' }} min={0} placeholder="请输入不合格数量" value={resultForm.failQty} onChange={(v) => setResultForm(prev => ({ ...prev, failQty: v }))} /></Col>
@@ -6946,7 +7449,7 @@ const colConfigTree = [
                 <Col span={24}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>备注</div><Input.TextArea rows={3} placeholder="请输入备注" value={resultForm.remark} onChange={(e) => setResultForm(prev => ({ ...prev, remark: e.target.value }))} /></Col>
               </Row>
               <div style={{ textAlign: 'center', padding: '20px 0 4px', marginTop: 16, borderTop: '1px solid #f0f0f0' }}>
-                <Space size={12}><Button type="primary" onClick={() => { antd.message.success('质检结果提交成功'); setResultVisible(false); }}>提交</Button><Button onClick={() => setResultVisible(false)}>取消</Button></Space>
+                <Space size={12}><Button type="primary" onClick={handleInspectSubmit}>提交</Button><Button onClick={() => setResultVisible(false)}>取消</Button></Space>
               </div>
             </div>
           </Modal>
@@ -6990,9 +7493,16 @@ const colConfigTree = [
       const [currentRecord, setCurrentRecord] = useState(null);
       const [printVisible, setPrintVisible] = useState(false);
       const [printRecord, setPrintRecord] = useState(null);
-      const tableData = [
+      const [tableData, setTableData] = useState([
         { key: '1', warehouseNo: 'RK20260215001', orderNo: 'PO20260129001', receiptNo: 'SH20260214001', supplier: '上海易点科技有限公司', warehouseDate: '2026-02-15', material: '汽车轮胎', qty: 395, warehouse: '北京主仓', location: 'A-03-12', time: '2026-02-15 14:30', operator: '张三', remark: '物料已检验合格，全部入库', materials: [{ key: '1', materialName: '汽车轮胎', spec: '205/55R16', qty: 200, price: 180, amount: '36,000.00' }, { key: '2', materialName: '轮毂盖', spec: 'ABS/黑色', qty: 195, price: 25, amount: '4,875.00' }] },
-      ];
+      ]);
+      const handleConfirmWarehouse = (record) => {
+        setTableData(prev => prev.map(item => item.key === record.key ? { ...item, status: '已入库' } : item));
+        logAction('采购入库', '状态变更', record.warehouseNo, '确认入库：' + record.warehouseNo);
+        notify('info', '入库已确认', '入库单「' + record.warehouseNo + '」已确认入库', 'order/warehouse');
+        antd.message.success('已确认入库');
+      };
+
       const columns = [
         { title: '入库单号', dataIndex: 'warehouseNo', width: 150 },
         { title: '订单号', dataIndex: 'orderNo', width: 150 },
@@ -7002,7 +7512,7 @@ const colConfigTree = [
         { title: '库位', dataIndex: 'location', width: 90 },
         { title: '入库时间', dataIndex: 'time', width: 160 },
         { title: '操作人', dataIndex: 'operator', width: 80 },
-        { title: '操作', key: 'action', width: 200, fixed: 'right', render: (_, record) => React.createElement(Space, { size: 8 }, React.createElement('a', { style: { color: '#1677ff' }, onClick: () => antd.message.success('已确认入库') }, '确认入库'), React.createElement('a', { style: { color: '#1677ff' }, onClick: () => { setPrintRecord(record); setPrintVisible(true); } }, '打印'), React.createElement('a', { style: { color: '#1677ff' }, onClick: () => { setCurrentRecord(record); setDetailVisible(true); } }, '详情')) },
+        { title: '操作', key: 'action', width: 200, fixed: 'right', render: (_, record) => React.createElement(Space, { size: 8 }, React.createElement('a', { style: { color: '#1677ff' }, onClick: () => handleConfirmWarehouse(record) }, '确认入库'), React.createElement('a', { style: { color: '#1677ff' }, onClick: () => { setPrintRecord(record); setPrintVisible(true); } }, '打印'), React.createElement('a', { style: { color: '#1677ff' }, onClick: () => { setCurrentRecord(record); setDetailVisible(true); } }, '详情')) },
       ];
       return (
         <div style={{ background: '#fff', borderRadius: 8, padding: '16px 24px' }}>
@@ -7120,7 +7630,7 @@ const colConfigTree = [
               <Row gutter={[16, 16]}>
                 <Col span={8}><div style={labelStyle}>退货单号</div><Input value={returnNo} readOnly placeholder="自动生成" /></Col>
                 <Col span={8}><div style={labelStyle}>原订单号{requiredMark}</div><Input value={orderNo} onChange={(e) => { setOrderNo(e.target.value); if (e.target.value) setSupplierName('上海易点科技有限公司'); else setSupplierName(''); }} placeholder="请输入原订单号" /></Col>
-                <Col span={8}><div style={labelStyle}>退货日期</div><DatePicker style={{ width: '100%' }} value={returnDate} disabled /></Col>
+                <Col span={8}><div style={labelStyle}>退货日期</div><SafeDatePicker style={{ width: '100%' }} value={returnDate} disabled /></Col>
                 <Col span={8}><div style={labelStyle}>供应商名称</div><Input value={supplierName} onChange={(e) => setSupplierName(e.target.value)} placeholder="请输入供应商名称" /></Col>
                 <Col span={8}><div style={labelStyle}>关联采购入库单号</div><Input value={relatedInboundNo} readOnly placeholder="暂无关联入库单" /></Col>
                 <Col span={8}><div style={labelStyle}>退货原因</div><Select style={{ width: '100%' }} placeholder="请选择"><Option value="quality">质量不合格</Option><Option value="spec">规格不符</Option><Option value="package">包装破损</Option><Option value="other">其他</Option></Select></Col>
@@ -7278,7 +7788,7 @@ const colConfigTree = [
                 <Col span={12}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>合同金额</div><Input placeholder="请输入" value={addForm.amount} onChange={(e) => setAddForm(p => ({ ...p, amount: e.target.value }))} /></Col>
               </Row>
               <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
-                <Col span={12}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>合同有效期 <span style={{ color: '#ff4d4f' }}>*</span></div><DatePicker.RangePicker style={{ width: '100%' }} value={addForm.validDateRange} onChange={(v) => setAddForm(p => ({ ...p, validDateRange: v }))} /></Col>
+                <Col span={12}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>合同有效期 <span style={{ color: '#ff4d4f' }}>*</span></div><SafeRangePicker style={{ width: '100%' }} value={addForm.validDateRange} onChange={(v) => setAddForm(p => ({ ...p, validDateRange: v }))} /></Col>
                 <Col span={12}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>付款条件 <span style={{ color: '#ff4d4f' }}>*</span></div><Select style={{ width: '100%' }} placeholder="请选择" value={addForm.paymentTerms} onChange={(v) => setAddForm(p => ({ ...p, paymentTerms: v }))} allowClear><Option value="full_prepay">预付全款</Option><Option value="30_70">预付30%+验收70%</Option><Option value="net30">月结30天</Option><Option value="net60">月结60天</Option></Select></Col>
                 <Col span={12}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>违约条款模板</div><Select style={{ width: '100%' }} placeholder="请选择" value={addForm.breachTemplate} onChange={(v) => setAddForm(p => ({ ...p, breachTemplate: v }))} allowClear><Option value="standard">标准模板</Option><Option value="strict">严格模板</Option><Option value="custom">自定义</Option></Select></Col>
                 <Col span={12}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>关联询价单号</div><Select style={{ width: '100%' }} placeholder="请选择" value={addForm.relatedInquiryNo} onChange={(v) => setAddForm(p => ({ ...p, relatedInquiryNo: v }))} allowClear><Option value="XJ20260115001">XJ20260115001</Option><Option value="XJ20260120002">XJ20260120002</Option><Option value="XJ20260210003">XJ20260210003</Option></Select></Col>
@@ -7301,18 +7811,20 @@ const colConfigTree = [
     function ContractLedger() {
       const [searchText, setSearchText] = useState('');
       const [statusFilter, setStatusFilter] = useState(undefined);
-      const [tableData, setTableData] = useState([
+      const [tableData, setTableData] = useStoreList('contracts', [
         { key: '1', code: 'HT20260129001', name: '2026年度IT设备采购合同', type: '采购合同', party: '上海易点科技有限公司', amount: '455,000.00', signDate: '2026-01-29', expireDate: '2027-01-28', execStatus: '执行中', paidAmount: '200,000.00', sourceDocNo: 'JG20260129001', milestones: [{ name: '签约', done: true }, { name: '交货', done: true }, { name: '验收', done: false }, { name: '付款', done: false }, { name: '归档', done: false }] },
         { key: '2', code: 'HT20260201002', name: '制动盘采购框架协议', type: '框架协议', party: '天津海叶商贸', amount: '170,000.00', signDate: '2026-02-01', expireDate: '2026-12-31', execStatus: '已完成', paidAmount: '170,000.00', sourceDocNo: 'JG20260129001', milestones: [{ name: '签约', done: true }, { name: '交货', done: true }, { name: '验收', done: true }, { name: '付款', done: true }, { name: '归档', done: true }] },
         { key: '3', code: 'HT20260315003', name: '厂房建设工程合同', type: '工程合同', party: '武汉办公用品有限公司', amount: '2,000,000.00', signDate: '2026-03-15', expireDate: '2027-03-14', execStatus: '草稿', paidAmount: '0.00', sourceDocNo: '', milestones: [{ name: '签约', done: false }, { name: '交货', done: false }, { name: '验收', done: false }, { name: '付款', done: false }, { name: '归档', done: false }] },
       ]);
+      const [ledgerPage, setLedgerPage] = useState(1);
+      const [ledgerSize, setLedgerSize] = useState(10);
       const searchFields = ['code', 'name', 'party', 'type'];
       const filteredData = useMemo(() => {
         let result = filterByKeyword(tableData, searchText, searchFields);
         if (statusFilter && statusFilter !== 'all') result = result.filter(item => item.execStatus === statusFilter);
         return result;
       }, [tableData, searchText, statusFilter, searchFields]);
-      const contractPagination = { ...standardPagination, total: filteredData.length, current: 1, pageSize: 10, onChange: () => {} };
+      const contractPagination = { ...standardPagination, total: filteredData.length, current: ledgerPage, pageSize: ledgerSize, onChange: (p, s) => { setLedgerPage(p); setLedgerSize(s); } };
 
       const columns = [
         { title: '合同编号', dataIndex: 'code', width: 150 },
@@ -7498,7 +8010,7 @@ const colConfigTree = [
                 </Col>
                 <Col span={12}>
                   <div style={{ marginBottom: 6, fontSize: 13, color: '#595959' }}>期望完成日期</div>
-                  <DatePicker style={{ width: '100%' }} value={formData.expectDate} onChange={(v) => setFormData(prev => ({ ...prev, expectDate: v }))} />
+                  <SafeDatePicker style={{ width: '100%' }} value={formData.expectDate} onChange={(v) => setFormData(prev => ({ ...prev, expectDate: v }))} />
                 </Col>
               </Row>
               <div style={{ marginBottom: 16 }}>
@@ -7625,7 +8137,7 @@ const colConfigTree = [
                 <Col span={12}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>借阅人 <span style={{ color: '#ff4d4f' }}>*</span></div><Input placeholder="请输入借阅人" value={borrowForm.borrower} onChange={(e) => setBorrowForm(p => ({ ...p, borrower: e.target.value }))} /></Col>
                 <Col span={12}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>借阅部门 <span style={{ color: '#ff4d4f' }}>*</span></div><Input placeholder="请输入借阅部门" value={borrowForm.department} onChange={(e) => setBorrowForm(p => ({ ...p, department: e.target.value }))} /></Col>
                 <Col span={24}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>借阅原因 <span style={{ color: '#ff4d4f' }}>*</span></div><TextArea rows={3} placeholder="请输入借阅原因" value={borrowForm.reason} onChange={(e) => setBorrowForm(p => ({ ...p, reason: e.target.value }))} /></Col>
-                <Col span={12}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>预计归还日期 <span style={{ color: '#ff4d4f' }}>*</span></div><DatePicker style={{ width: '100%' }} value={borrowForm.returnDate} onChange={(d) => setBorrowForm(p => ({ ...p, returnDate: d }))} /></Col>
+                <Col span={12}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>预计归还日期 <span style={{ color: '#ff4d4f' }}>*</span></div><SafeDatePicker style={{ width: '100%' }} value={borrowForm.returnDate} onChange={(d) => setBorrowForm(p => ({ ...p, returnDate: d }))} /></Col>
                 <Col span={12}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>备注</div><Input placeholder="请输入备注" value={borrowForm.remark} onChange={(e) => setBorrowForm(p => ({ ...p, remark: e.target.value }))} /></Col>
               </Row>
               <div style={{ textAlign: 'center', padding: '20px 0 4px', marginTop: 16, borderTop: '1px solid #f0f0f0' }}>
@@ -7659,7 +8171,7 @@ const colConfigTree = [
               <Col span={6}><div style={{ fontSize: 12, color: '#8c8c8c', marginBottom: 4 }}>关键词</div><Input placeholder="合同名称/编号" value={searchText} onChange={e => setSearchText(e.target.value)} /></Col>
               <Col span={6}><div style={{ fontSize: 12, color: '#8c8c8c', marginBottom: 4 }}>合同类型</div><Select style={{ width: '100%' }} placeholder="全部"><Option value="1">采购合同</Option><Option value="2">框架协议</Option></Select></Col>
               <Col span={6}><div style={{ fontSize: 12, color: '#8c8c8c', marginBottom: 4 }}>签约方</div><Input placeholder="供应商名称" /></Col>
-              <Col span={6}><div style={{ fontSize: 12, color: '#8c8c8c', marginBottom: 4 }}>签订时间</div><DatePicker.RangePicker style={{ width: '100%' }} /></Col>
+              <Col span={6}><div style={{ fontSize: 12, color: '#8c8c8c', marginBottom: 4 }}>签订时间</div><SafeRangePicker style={{ width: '100%' }} /></Col>
             </Row>
             <div style={{ textAlign: 'center', marginTop: 12 }}><Button type="primary" icon={React.createElement(SearchOutlined)} onClick={() => antd.message.info('搜索功能开发中')}>搜索</Button></div>
           </div>
@@ -8061,7 +8573,22 @@ const colConfigTree = [
         { title: '调价原因', dataIndex: 'reason', width: 140 },
         { title: '申请人', dataIndex: 'applicant', width: 100 },
         { title: '审批状态', dataIndex: 'status', width: 90, render: (v) => React.createElement(Tag, { color: v === '已审批' ? 'success' : 'warning' }, v) },
-        { title: '操作', key: 'action', width: 120, fixed: 'right', render: (_, r) => React.createElement(Space, { size: 8 }, r.status === '待审批' && React.createElement('a', { style: { color: '#1677ff' }, onClick: () => { antd.Modal.confirm({ title: '确认审批', content: '确认通过该调价申请？', onOk() { setTableData(prev => prev.map(item => item.key === r.key ? {...item, status: '已审批'} : item)); logAction('调价审批', '审批通过', r.adjustNo, '审批通过调价单 ' + r.adjustNo); notify('success', '调价审批', '调价单 ' + r.adjustNo + ' 已审批通过'); antd.message.success('审批成功'); } }); } }, '审批'), React.createElement('a', { style: { color: '#1677ff' }, onClick: () => { antd.Modal.info({ title: '调价单详情 - ' + r.adjustNo, width: 640, content: React.createElement('div', null, React.createElement('div', {style: {fontWeight:500, borderBottom:'1px solid #f0f0f0', marginBottom:12, paddingBottom:8}}, '基本信息'), React.createElement('div', {style: {display:'grid', gridTemplateColumns:'1fr 1fr', gap:'12px 24px'}}, React.createElement('div', null, React.createElement('span', {style: {color:'#8c8c8c', fontSize:13}}, '调价单号：'), React.createElement('span', {style: {fontSize:13}}, r.adjustNo)), React.createElement('div', null, React.createElement('span', {style: {color:'#8c8c8c', fontSize:13}}, '物料名称：'), React.createElement('span', {style: {fontSize:13}}, r.material)), React.createElement('div', null, React.createElement('span', {style: {color:'#8c8c8c', fontSize:13}}, '调整前价格：'), React.createElement('span', {style: {fontSize:13}}, '¥' + r.origPrice)), React.createElement('div', null, React.createElement('span', {style: {color:'#8c8c8c', fontSize:13}}, '调整后价格：'), React.createElement('span', {style: {fontSize:13}}, '¥' + r.newPrice)), React.createElement('div', null, React.createElement('span', {style: {color:'#8c8c8c', fontSize:13}}, '调价幅度：'), React.createElement('span', {style: {fontSize:13, color: parseFloat(r.newPrice) > parseFloat(r.origPrice) ? '#ff4d4f' : '#52c41a'}}, (parseFloat(r.newPrice) > parseFloat(r.origPrice) ? '+' : '') + (parseFloat(r.newPrice) - parseFloat(r.origPrice)).toFixed(2))), React.createElement('div', null, React.createElement('span', {style: {color:'#8c8c8c', fontSize:13}}, '审批状态：'), React.createElement(Tag, {color: r.status === '已审批' ? 'success' : 'warning'}, r.status)), React.createElement('div', {style: {gridColumn:'1/3'}}, React.createElement('span', {style: {color:'#8c8c8c', fontSize:13}}, '调价原因：'), React.createElement('span', {style: {fontSize:13}}, r.reason)), React.createElement('div', null, React.createElement('span', {style: {color:'#8c8c8c', fontSize:13}}, '申请人：'), React.createElement('span', {style: {fontSize:13}}, r.applicant)) )); } }, '详情')) },
+        { title: '操作', key: 'action', width: 120, fixed: 'right', render: (_, r) => React.createElement(Space, { size: 8 },
+          r.status === '待审批' && React.createElement('a', { style: { color: '#1677ff' }, onClick: () => { antd.Modal.confirm({ title: '确认审批', content: '确认通过该调价申请？', onOk: () => { setTableData(prev => prev.map(item => item.key === r.key ? { ...item, status: '已审批' } : item)); logAction('调价审批', '审批通过', r.adjustNo, '审批通过调价单 ' + r.adjustNo); notify('success', '调价审批', '调价单 ' + r.adjustNo + ' 已审批通过'); antd.message.success('审批成功'); } }); } }, '审批'),
+          React.createElement('a', { style: { color: '#1677ff' }, onClick: () => { antd.Modal.info({ title: '调价单详情 - ' + r.adjustNo, width: 640, content: React.createElement('div', null,
+            React.createElement('div', { style: { fontWeight: 500, borderBottom: '1px solid #f0f0f0', marginBottom: 12, paddingBottom: 8 } }, '基本信息'),
+            React.createElement('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px 24px' } },
+              React.createElement('div', null, React.createElement('span', { style: { color: '#8c8c8c', fontSize: 13 } }, '调价单号：'), React.createElement('span', { style: { fontSize: 13 } }, r.adjustNo)),
+              React.createElement('div', null, React.createElement('span', { style: { color: '#8c8c8c', fontSize: 13 } }, '物料名称：'), React.createElement('span', { style: { fontSize: 13 } }, r.material)),
+              React.createElement('div', null, React.createElement('span', { style: { color: '#8c8c8c', fontSize: 13 } }, '调整前价格：'), React.createElement('span', { style: { fontSize: 13 } }, '¥' + r.origPrice)),
+              React.createElement('div', null, React.createElement('span', { style: { color: '#8c8c8c', fontSize: 13 } }, '调整后价格：'), React.createElement('span', { style: { fontSize: 13 } }, '¥' + r.newPrice)),
+              React.createElement('div', null, React.createElement('span', { style: { color: '#8c8c8c', fontSize: 13 } }, '调价幅度：'), React.createElement('span', { style: { fontSize: 13, color: parseFloat(r.newPrice) > parseFloat(r.origPrice) ? '#ff4d4f' : '#52c41a' } }, (parseFloat(r.newPrice) > parseFloat(r.origPrice) ? '+' : '') + (parseFloat(r.newPrice) - parseFloat(r.origPrice)).toFixed(2))),
+              React.createElement('div', null, React.createElement('span', { style: { color: '#8c8c8c', fontSize: 13 } }, '审批状态：'), React.createElement(Tag, { color: r.status === '已审批' ? 'success' : 'warning' }, r.status)),
+              React.createElement('div', { style: { gridColumn: '1/3' } }, React.createElement('span', { style: { color: '#8c8c8c', fontSize: 13 } }, '调价原因：'), React.createElement('span', { style: { fontSize: 13 } }, r.reason)),
+              React.createElement('div', null, React.createElement('span', { style: { color: '#8c8c8c', fontSize: 13 } }, '申请人：'), React.createElement('span', { style: { fontSize: 13 } }, r.applicant))
+            )
+          )}); } }, '详情'))
+        },
       ];
       return (
         <div style={{ background: '#fff', borderRadius: 8, padding: '16px 24px' }}>
@@ -8102,7 +8629,10 @@ const colConfigTree = [
         { title: '报名时间', dataIndex: 'signupTime', width: 160 },
         { title: '报名状态', dataIndex: 'status', width: 100, render: (v) => React.createElement(Tag, { color: v === '已通过' ? 'success' : v === '待审核' ? 'warning' : 'error' }, v) },
         { title: '联系人', dataIndex: 'contact', width: 100 },
-        { title: '操作', key: 'action', width: 150, fixed: 'right', render: (_, r) => r.status === '待审核' ? React.createElement(Space, { size: 8 }, React.createElement('a', { style: { color: '#52c41a' }, onClick: () => { Modal.confirm({ title: '确认通过', content: '确定通过供应商「' + r.supplier + '」的询比价报名申请吗？', okText: '确定', cancelText: '取消', onOk: () => { setTableData(prev => prev.map(item => item.key === r.key ? { ...item, status: '已通过' } : item)); logAction('询比价报名', '通过审核', r.inquiryNo, '通过供应商：' + r.supplier); notify('success', '报名审核', '供应商「' + r.supplier + '」的报名已通过审核'); antd.message.success('已通过报名申请'); } }); }, '通过'), React.createElement('a', { style: { color: '#ff4d4f' }, onClick: () => { Modal.confirm({ title: '确认拒绝', content: '确定拒绝供应商「' + r.supplier + '」的询比价报名申请吗？', okText: '确定', cancelText: '取消', okButtonProps: { danger: true }, onOk: () => { setTableData(prev => prev.map(item => item.key === r.key ? { ...item, status: '已拒绝' } : item)); logAction('询比价报名', '拒绝审核', r.inquiryNo, '拒绝供应商：' + r.supplier); notify('warning', '报名审核', '供应商「' + r.supplier + '」的报名已被拒绝'); antd.message.success('已拒绝报名申请'); } }); }, '拒绝')) : React.createElement('a', { style: { color: '#1677ff' }, onClick: () => showRecordDetail(r) }, '详情') },
+        { title: '操作', key: 'action', width: 150, fixed: 'right', render: (_, r) => r.status === '待审核' ? React.createElement(Space, { size: 8 },
+          React.createElement('a', { style: { color: '#52c41a' }, onClick: () => { Modal.confirm({ title: '确认通过', content: '确定通过供应商「' + r.supplier + '」的询比价报名申请吗？', okText: '确定', cancelText: '取消', onOk: () => { setTableData(prev => prev.map(item => item.key === r.key ? { ...item, status: '已通过' } : item)); logAction('询比价报名', '通过审核', r.inquiryNo, '通过供应商：' + r.supplier); notify('success', '报名审核', '供应商「' + r.supplier + '」的报名已通过审核'); antd.message.success('已通过报名申请'); } }); } }, '通过'),
+          React.createElement('a', { style: { color: '#ff4d4f' }, onClick: () => { Modal.confirm({ title: '确认拒绝', content: '确定拒绝供应商「' + r.supplier + '」的询比价报名申请吗？', okText: '确定', cancelText: '取消', okButtonProps: { danger: true }, onOk: () => { setTableData(prev => prev.map(item => item.key === r.key ? { ...item, status: '已拒绝' } : item)); logAction('询比价报名', '拒绝审核', r.inquiryNo, '拒绝供应商：' + r.supplier); notify('warning', '报名审核', '供应商「' + r.supplier + '」的报名已被拒绝'); antd.message.success('已拒绝报名申请'); } }); } }, '拒绝')
+        ) : React.createElement('a', { style: { color: '#1677ff' }, onClick: () => showRecordDetail(r) }, '详情') },
       ];
       return (
         <div style={{ background: '#fff', borderRadius: 8, padding: '16px 24px' }}>
@@ -8163,7 +8693,7 @@ const colConfigTree = [
         { title: '公示开始', dataIndex: 'startTime', width: 110 },
         { title: '公示结束', dataIndex: 'endTime', width: 110 },
         { title: '状态', dataIndex: 'status', width: 90, render: (v) => React.createElement(Tag, { color: v === '公示中' ? 'processing' : 'default' }, v) },
-        { title: '操作', key: 'action', width: 160, fixed: 'right', render: (_, r) => React.createElement(Space, { size: 8 }, r.status === '公示中' && React.createElement('a', { style: { color: '#ff4d4f' }, onClick: () => { Modal.confirm({ title: '确认结束公示', content: '确定结束公示「' + r.publicityNo + '」吗？结束后将无法恢复。', okText: '确定', cancelText: '取消', okButtonProps: { danger: true }, onOk: () => { setPubTableData(prev => prev.map(item => item.key === r.key ? { ...item, status: '已结束' } : item)); logAction('中标公示', '结束公示', r.publicityNo, '结束公示：' + r.publicityNo); notify('info', '公示结束', '公示「' + r.publicityNo + '」已结束'); antd.message.success('公示已结束'); } }); }, '结束公示'), React.createElement('a', { style: { color: '#1677ff' }, onClick: () => showRecordDetail(r) }, '详情')) },
+        { title: '操作', key: 'action', width: 160, fixed: 'right', render: (_, r) => React.createElement(Space, { size: 8 }, r.status === '公示中' && React.createElement('a', { style: { color: '#ff4d4f' }, onClick: () => { Modal.confirm({ title: '确认结束公示', content: '确定结束公示「' + r.publicityNo + '」吗？结束后将无法恢复。', okText: '确定', cancelText: '取消', okButtonProps: { danger: true }, onOk: () => { setPubTableData(prev => prev.map(item => item.key === r.key ? { ...item, status: '已结束' } : item)); logAction('中标公示', '结束公示', r.publicityNo, '结束公示：' + r.publicityNo); notify('info', '公示结束', '公示「' + r.publicityNo + '」已结束'); antd.message.success('公示已结束'); } }); } }, '结束公示'), React.createElement('a', { style: { color: '#1677ff' }, onClick: () => showRecordDetail(r) }, '详情')) },
       ];
       return (
         <div style={{ background: '#fff', borderRadius: 8, padding: '16px 24px' }}>
@@ -8180,7 +8710,7 @@ const colConfigTree = [
               <div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>公示内容 <span style={{ color: '#ff4d4f' }}>*</span></div>
               <TextArea rows={4} value={publishForm.content} onChange={(e) => setPublishForm(p => ({ ...p, content: e.target.value }))} placeholder="请输入公示内容" style={{ marginBottom: 16 }} />
               <div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>公示截止日期 <span style={{ color: '#ff4d4f' }}>*</span></div>
-              <DatePicker style={{ width: '100%', marginBottom: 20 }} value={publishForm.endDate} onChange={(d) => setPublishForm(p => ({ ...p, endDate: d }))} placeholder="请选择截止日期" />
+              <SafeDatePicker style={{ width: '100%', marginBottom: 20 }} value={publishForm.endDate} onChange={(d) => setPublishForm(p => ({ ...p, endDate: d }))} placeholder="请选择截止日期" />
               <div style={{ textAlign: 'right' }}>
                 <Space size={12}>
                   <Button onClick={() => setPublishVisible(false)}>取消</Button>
@@ -8335,7 +8865,7 @@ const colConfigTree = [
         { title: '报名时间', dataIndex: 'signupTime', width: 160 },
         { title: '报名状态', dataIndex: 'status', width: 100, render: (v) => React.createElement(Tag, { color: v === '已通过' ? 'success' : v === '待审核' ? 'warning' : 'error' }, v) },
         { title: '保证金状态', dataIndex: 'depositStatus', width: 100, render: (v) => v === '已缴纳' ? React.createElement(Tag, { color: 'success' }, v) : React.createElement(Tag, null, v) },
-        { title: '操作', key: 'action', width: 150, fixed: 'right', render: (_, r) => r.status === '待审核' ? React.createElement(Space, { size: 8 }, React.createElement('a', { style: { color: '#52c41a' }, onClick: () => { Modal.confirm({ title: '确认通过', content: '确定通过供应商「' + r.supplier + '」的竞价报名申请吗？', okText: '确定', cancelText: '取消', onOk: () => { setTableData(prev => prev.map(item => item.key === r.key ? { ...item, status: '已通过' } : item)); logAction('竞价报名', '通过审核', r.biddingNo, '通过供应商：' + r.supplier); notify('success', '报名审核', '供应商「' + r.supplier + '」的报名已通过审核'); antd.message.success('已通过报名申请'); } }); }, '通过'), React.createElement('a', { style: { color: '#ff4d4f' }, onClick: () => { Modal.confirm({ title: '确认拒绝', content: '确定拒绝供应商「' + r.supplier + '」的竞价报名申请吗？', okText: '确定', cancelText: '取消', okButtonProps: { danger: true }, onOk: () => { setTableData(prev => prev.map(item => item.key === r.key ? { ...item, status: '已拒绝' } : item)); logAction('竞价报名', '拒绝审核', r.biddingNo, '拒绝供应商：' + r.supplier); notify('warning', '报名审核', '供应商「' + r.supplier + '」的报名已被拒绝'); antd.message.success('已拒绝报名申请'); } }); }, '拒绝')) : React.createElement('a', { style: { color: '#1677ff' }, onClick: () => showRecordDetail(r) }, '详情') },
+        { title: '操作', key: 'action', width: 150, fixed: 'right', render: (_, r) => r.status === '待审核' ? React.createElement(Space, { size: 8 }, React.createElement('a', { style: { color: '#52c41a' }, onClick: () => { Modal.confirm({ title: '确认通过', content: '确定通过供应商「' + r.supplier + '」的竞价报名申请吗？', okText: '确定', cancelText: '取消', onOk: () => { setTableData(prev => prev.map(item => item.key === r.key ? { ...item, status: '已通过' } : item)); logAction('竞价报名', '通过审核', r.biddingNo, '通过供应商：' + r.supplier); notify('success', '报名审核', '供应商「' + r.supplier + '」的报名已通过审核'); antd.message.success('已通过报名申请'); } }); } }, '通过'), React.createElement('a', { style: { color: '#ff4d4f' }, onClick: () => { Modal.confirm({ title: '确认拒绝', content: '确定拒绝供应商「' + r.supplier + '」的竞价报名申请吗？', okText: '确定', cancelText: '取消', okButtonProps: { danger: true }, onOk: () => { setTableData(prev => prev.map(item => item.key === r.key ? { ...item, status: '已拒绝' } : item)); logAction('竞价报名', '拒绝审核', r.biddingNo, '拒绝供应商：' + r.supplier); notify('warning', '报名审核', '供应商「' + r.supplier + '」的报名已被拒绝'); antd.message.success('已拒绝报名申请'); } }); } }, '拒绝')) : React.createElement('a', { style: { color: '#1677ff' }, onClick: () => showRecordDetail(r) }, '详情') },
       ];
       return (
         <div style={{ background: '#fff', borderRadius: 8, padding: '16px 24px' }}>
@@ -8368,7 +8898,7 @@ const colConfigTree = [
         { title: '参与供应商', dataIndex: 'supplierCount', width: 100, align: 'center' },
         { title: '剩余时间', dataIndex: 'remaining', width: 110 },
         { title: '状态', dataIndex: 'status', width: 90, render: (v) => React.createElement(Tag, { color: v === '进行中' ? 'processing' : v === '已暂停' ? 'warning' : 'default' }, v) },
-        { title: '操作', key: 'action', width: 200, fixed: 'right', render: (_, r) => React.createElement(Space, { size: 8 }, r.status === '进行中' && React.createElement(React.Fragment, null, React.createElement('a', { style: { color: '#faad14' }, onClick: () => { Modal.confirm({ title: '确认暂停', content: '确定暂停竞价项目「' + r.projectName + '」吗？暂停后供应商将无法出价。', okText: '确定', cancelText: '取消', onOk: () => { setTableData(prev => prev.map(item => item.key === r.key ? { ...item, status: '已暂停' } : item)); logAction('竞价管理', '暂停竞价', r.biddingNo, '暂停项目：' + r.projectName); notify('warning', '竞价暂停', '竞价项目「' + r.projectName + '」已暂停'); antd.message.success('竞价已暂停'); } }); }, '暂停'), React.createElement('a', { style: { color: '#ff4d4f' }, onClick: () => { Modal.confirm({ title: '确认结束', content: '确定结束竞价项目「' + r.projectName + '」吗？结束后将无法继续出价。', okText: '确定', cancelText: '取消', okButtonProps: { danger: true }, onOk: () => { setTableData(prev => prev.map(item => item.key === r.key ? { ...item, status: '已结束' } : item)); logAction('竞价管理', '结束竞价', r.biddingNo, '结束项目：' + r.projectName); notify('info', '竞价结束', '竞价项目「' + r.projectName + '」已结束'); antd.message.success('竞价已结束'); } }); }, '结束')), React.createElement('a', { style: { color: '#1677ff' }, onClick: () => { setQuoteRecord(r); setQuoteVisible(true); } }, '实时报价')) },
+        { title: '操作', key: 'action', width: 200, fixed: 'right', render: (_, r) => React.createElement(Space, { size: 8 }, r.status === '进行中' && React.createElement(React.Fragment, null, React.createElement('a', { style: { color: '#faad14' }, onClick: () => { Modal.confirm({ title: '确认暂停', content: '确定暂停竞价项目「' + r.projectName + '」吗？暂停后供应商将无法出价。', okText: '确定', cancelText: '取消', onOk: () => { setTableData(prev => prev.map(item => item.key === r.key ? { ...item, status: '已暂停' } : item)); logAction('竞价管理', '暂停竞价', r.biddingNo, '暂停项目：' + r.projectName); notify('warning', '竞价暂停', '竞价项目「' + r.projectName + '」已暂停'); antd.message.success('竞价已暂停'); } }); } }, '暂停'), React.createElement('a', { style: { color: '#ff4d4f' }, onClick: () => { Modal.confirm({ title: '确认结束', content: '确定结束竞价项目「' + r.projectName + '」吗？结束后将无法继续出价。', okText: '确定', cancelText: '取消', okButtonProps: { danger: true }, onOk: () => { setTableData(prev => prev.map(item => item.key === r.key ? { ...item, status: '已结束' } : item)); logAction('竞价管理', '结束竞价', r.biddingNo, '结束项目：' + r.projectName); notify('info', '竞价结束', '竞价项目「' + r.projectName + '」已结束'); antd.message.success('竞价已结束'); } }); } }, '结束')), React.createElement('a', { style: { color: '#1677ff' }, onClick: () => { setQuoteRecord(r); setQuoteVisible(true); } }, '实时报价')) },
       ];
       return (
         <div style={{ background: '#fff', borderRadius: 8, padding: '16px 24px' }}>
@@ -8524,7 +9054,7 @@ const colConfigTree = [
         { title: '历史报价次数', dataIndex: 'historyCount', width: 110, align: 'center' },
         { title: '核价状态', dataIndex: 'auditStatus', width: 100, render: (v) => React.createElement(Tag, { color: v === '已核价' ? 'success' : 'warning' }, v) },
         { title: '核价人', dataIndex: 'auditor', width: 80 },
-        { title: '操作', key: 'action', width: 200, fixed: 'right', render: (_, r) => React.createElement(Space, { size: 8 }, r.auditStatus === '待核价' && React.createElement('a', { style: { color: '#1677ff' }, onClick: () => { Modal.confirm({ title: '核价确认', content: '确定确认供应商「' + r.supplier + '」的最终报价 ¥' + r.finalPrice + ' 吗？核价后将生成合同。', okText: '确定', cancelText: '取消', onOk: () => { setTableData(prev => prev.map(item => item.key === r.key ? { ...item, auditStatus: '已核价', auditor: '当前用户' } : item)); logAction('竞价核价', '核价确认', r.biddingNo, '核价供应商：' + r.supplier + '，报价：' + r.finalPrice); notify('success', '核价确认', '供应商「' + r.supplier + '」的报价已核价确认'); antd.message.success('核价确认成功'); } }); }, '核价确认'), React.createElement('a', { style: { color: '#1677ff' }, onClick: () => { const contractNo = generateDocNo('HT'); Modal.success({ title: '合同已生成', content: '合同编号：' + contractNo }); logAction('竞价核价', '生成合同', r.key, '由竞价核价生成'); notify('success', '合同生成', '合同' + contractNo + '已由竞价核价自动生成'); } }, '生成合同'), React.createElement('a', { style: { color: '#1677ff' }, onClick: () => showRecordDetail(r) }, '详情')) },
+        { title: '操作', key: 'action', width: 200, fixed: 'right', render: (_, r) => React.createElement(Space, { size: 8 }, r.auditStatus === '待核价' && React.createElement('a', { style: { color: '#1677ff' }, onClick: () => { Modal.confirm({ title: '核价确认', content: '确定确认供应商「' + r.supplier + '」的最终报价 ¥' + r.finalPrice + ' 吗？核价后将生成合同。', okText: '确定', cancelText: '取消', onOk: () => { setTableData(prev => prev.map(item => item.key === r.key ? { ...item, auditStatus: '已核价', auditor: '当前用户' } : item)); logAction('竞价核价', '核价确认', r.biddingNo, '核价供应商：' + r.supplier + '，报价：' + r.finalPrice); notify('success', '核价确认', '供应商「' + r.supplier + '」的报价已核价确认'); antd.message.success('核价确认成功'); } }); } }, '核价确认'), React.createElement('a', { style: { color: '#1677ff' }, onClick: () => { const contractNo = generateDocNo('HT'); Modal.success({ title: '合同已生成', content: '合同编号：' + contractNo }); logAction('竞价核价', '生成合同', r.key, '由竞价核价生成'); notify('success', '合同生成', '合同' + contractNo + '已由竞价核价自动生成'); } }, '生成合同'), React.createElement('a', { style: { color: '#1677ff' }, onClick: () => showRecordDetail(r) }, '详情')) },
       ];
       return (
         <div style={{ background: '#fff', borderRadius: 8, padding: '16px 24px' }}>
@@ -8613,7 +9143,7 @@ const colConfigTree = [
               <Row gutter={[16, 16]}>
                 <Col span={12}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>项目名称 <span style={{ color: '#ff4d4f' }}>*</span></div><Input placeholder="请输入" value={planForm.projectName} onChange={e => setPlanForm(p => ({ ...p, projectName: e.target.value }))} /></Col>
                 <Col span={12}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>预算金额</div><Input placeholder="请输入" value={planForm.budget} onChange={e => setPlanForm(p => ({ ...p, budget: e.target.value }))} /></Col>
-                <Col span={12}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>计划招标时间</div><DatePicker style={{ width: '100%' }} value={planForm.planDate ? antd.dayjs(planForm.planDate) : null} onChange={(date, dateString) => setPlanForm(p => ({ ...p, planDate: dateString }))} /></Col>
+                <Col span={12}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>计划招标时间</div><SafeDatePicker style={{ width: '100%' }} value={planForm.planDate ? antd.dayjs(planForm.planDate) : null} onChange={(d) => setPlanForm(p => ({ ...p, planDate: d ? d.format('YYYY-MM-DD') : '' }))} /></Col>
                 <Col span={12}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>负责人</div><Input placeholder="请输入" value={planForm.manager} onChange={e => setPlanForm(p => ({ ...p, manager: e.target.value }))} /></Col>
                 <Col span={12}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>预算金额 <span style={{ color: '#ff4d4f' }}>*</span></div><InputNumber style={{ width: '100%' }} placeholder="请输入" addonAfter="元" value={planForm.budgetAmount || undefined} onChange={v => setPlanForm(p => ({ ...p, budgetAmount: v }))} /></Col>
                 <Col span={24}><div style={{ fontSize: 13, color: '#595959', marginBottom: 4 }}>招标范围</div><TextArea rows={3} placeholder="请输入招标范围" value={planForm.scope} onChange={e => setPlanForm(p => ({ ...p, scope: e.target.value }))} /></Col>
@@ -8677,7 +9207,7 @@ const colConfigTree = [
                 <Col span={12}><div style={{ marginBottom: 6, fontSize: 13, color: '#595959' }}>联系方式</div><Input placeholder="请输入联系方式" value={formData.contact} onChange={e => setFormData(prev => ({ ...prev, contact: e.target.value }))} /></Col>
               </Row>
               <Row gutter={16} style={{ marginTop: 16 }}>
-                <Col span={12}><div style={{ marginBottom: 6, fontSize: 13, color: '#595959' }}>截止日期</div><DatePicker style={{ width: '100%' }} value={formData.deadline ? antd.dayjs(formData.deadline) : null} onChange={(date, dateString) => setFormData(prev => ({ ...prev, deadline: dateString }))} /></Col>
+                <Col span={12}><div style={{ marginBottom: 6, fontSize: 13, color: '#595959' }}>截止日期</div><SafeDatePicker style={{ width: '100%' }} value={formData.deadline ? antd.dayjs(formData.deadline) : null} onChange={(d) => setFormData(prev => ({ ...prev, deadline: d ? d.format('YYYY-MM-DD') : '' }))} /></Col>
               </Row>
               <Row gutter={16} style={{ marginTop: 16 }}>
                 <Col span={24}><div style={{ marginBottom: 6, fontSize: 13, color: '#595959' }}>公告内容</div><TextArea rows={4} placeholder="请输入公告内容" value={formData.content} onChange={e => setFormData(prev => ({ ...prev, content: e.target.value }))} /></Col>
@@ -8801,7 +9331,7 @@ const colConfigTree = [
             <div style={{ padding: '16px 0' }}>
               <Row gutter={16}>
                 <Col span={12}><div style={{ marginBottom: 6, fontSize: 13, color: '#595959' }}>选择招标项目</div><Select style={{ width: '100%' }} placeholder="请选择招标项目" value={formData.project || undefined} onChange={v => setFormData(prev => ({ ...prev, project: v }))}><Option value="ZB20260301001">ZB20260301001 - 2026年度IT设备采购</Option><Option value="ZB20260401002">ZB20260401002 - 厂房建设工程</Option></Select></Col>
-                <Col span={12}><div style={{ marginBottom: 6, fontSize: 13, color: '#595959' }}>报价截止时间</div><DatePicker showTime style={{ width: '100%' }} value={formData.deadline ? antd.dayjs(formData.deadline) : null} onChange={(date, dateString) => setFormData(prev => ({ ...prev, deadline: dateString }))} /></Col>
+                <Col span={12}><div style={{ marginBottom: 6, fontSize: 13, color: '#595959' }}>报价截止时间</div><SafeDatePicker showTime style={{ width: '100%' }} value={formData.deadline ? antd.dayjs(formData.deadline) : null} onChange={(d) => setFormData(prev => ({ ...prev, deadline: d ? d.format('YYYY-MM-DD HH:mm') : '' }))} /></Col>
               </Row>
               <Row gutter={16} style={{ marginTop: 16 }}>
                 <Col span={24}><div style={{ marginBottom: 6, fontSize: 13, color: '#595959' }}>报价要求</div><TextArea rows={4} placeholder="请输入报价要求" value={formData.requirement} onChange={e => setFormData(prev => ({ ...prev, requirement: e.target.value }))} /></Col>
@@ -9127,7 +9657,7 @@ const colConfigTree = [
                 <Col span={12}><div style={{ marginBottom: 6, fontSize: 13, color: '#595959' }}>状态</div><Select style={{ width: '100%' }} value={ruleForm.status} onChange={v => setRuleForm(p => ({ ...p, status: v }))}><Option value="启用">启用</Option><Option value="停用">停用</Option></Select></Col>
               </Row>
               <Row gutter={16} style={{ marginTop: 16 }}>
-                <Col span={12}><div style={{ marginBottom: 6, fontSize: 13, color: '#595959' }}>生效日期</div><DatePicker style={{ width: '100%' }} value={ruleForm.effectDate} onChange={v => setRuleForm(p => ({ ...p, effectDate: v }))} /></Col>
+                <Col span={12}><div style={{ marginBottom: 6, fontSize: 13, color: '#595959' }}>生效日期</div><SafeDatePicker style={{ width: '100%' }} value={ruleForm.effectDate} onChange={v => setRuleForm(p => ({ ...p, effectDate: v }))} /></Col>
               </Row>
               <Row gutter={16} style={{ marginTop: 16 }}>
                 <Col span={24}><div style={{ marginBottom: 6, fontSize: 13, color: '#595959' }}>规则描述</div><TextArea rows={3} placeholder="请输入规则描述" value={ruleForm.description} onChange={e => setRuleForm(p => ({ ...p, description: e.target.value }))} /></Col>
@@ -9269,7 +9799,7 @@ const colConfigTree = [
                 </Col>
                 <Col span={12}>
                   <div style={{ marginBottom: 6, fontSize: 13, marginTop: 16 }}><span style={{ color: '#ff4d4f' }}>*</span> 生效日期</div>
-                  <DatePicker style={{ width: '100%' }} placeholder="请选择生效日期" value={bomForm.effectDate} onChange={(v) => setBomForm(prev => ({ ...prev, effectDate: v }))} />
+                  <SafeDatePicker style={{ width: '100%' }} placeholder="请选择生效日期" value={bomForm.effectDate} onChange={(v) => setBomForm(prev => ({ ...prev, effectDate: v }))} />
                 </Col>
                 <Col span={24}>
                   <div style={{ marginBottom: 6, fontSize: 13, marginTop: 16 }}><span style={{ color: '#ff4d4f' }}>*</span> 物料清单</div>
@@ -9674,7 +10204,7 @@ const colConfigTree = [
                 </Col>
                 <Col span={12}>
                   <div style={{ marginBottom: 6, fontSize: 13, marginTop: 16 }}>生效日期</div>
-                  <DatePicker style={{ width: '100%' }} placeholder="请选择生效日期" value={currencyForm.effectDate} onChange={(v) => setCurrencyForm(prev => ({ ...prev, effectDate: v }))} />
+                  <SafeDatePicker style={{ width: '100%' }} placeholder="请选择生效日期" value={currencyForm.effectDate} onChange={(v) => setCurrencyForm(prev => ({ ...prev, effectDate: v }))} />
                 </Col>
               </Row>
             </div>
@@ -9758,6 +10288,37 @@ const colConfigTree = [
         const parentKeys = findAllParentKeys(menuData, key) || [];
         if (parentKeys.length) setOpenKeys(parentKeys);
       }, []);
+
+      // 通知/日志变化驱动 Header 重渲染（全局数组未接入 React 渲染流）
+      const [notifTick, setNotifTick] = useState(0);
+      useEffect(() => {
+        const handler = () => setNotifTick(t => t + 1);
+        window.addEventListener('srm-notify-change', handler);
+        return () => window.removeEventListener('srm-notify-change', handler);
+      }, []);
+
+      // 用户下拉菜单处理
+      const handleUserMenuClick = useCallback(({ key }) => {
+        if (key === 'logout') {
+          Modal.confirm({ title: '退出登录', content: '确定要退出登录吗？', okText: '确定', cancelText: '取消', onOk: () => antd.message.success('已退出登录（原型演示）') });
+        } else if (key === 'profile') {
+          setHashKey('personal/todo');
+        } else if (key === 'settings') {
+          antd.message.info('账号设置功能开发中');
+        }
+      }, []);
+
+      // 通知点击：标记已读并跳转目标页面
+      const handleNotifClick = (n) => {
+        n.read = true;
+        setNotifTick(t => t + 1);
+        if (n.link) setHashKey(n.link);
+      };
+      const handleNotifReadAll = () => {
+        globalNotifications.forEach(n => n.read = true);
+        globalNotifUnread.count = 0;
+        setNotifTick(t => t + 1);
+      };
 
       // 构建 Menu 的 items 属性（递归处理）
       function buildMenuItems(data) {
@@ -9929,13 +10490,13 @@ const colConfigTree = [
                       <div style={{ width: 360, maxHeight: 400, overflowY: 'auto' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, paddingBottom: 8, borderBottom: '1px solid #f0f0f0' }}>
                           <span style={{ fontWeight: 600 }}>消息通知</span>
-                          <a style={{ fontSize: 12, color: '#1677ff' }} onClick={() => { globalNotifications.forEach(n => n.read = true); globalNotifUnread.count = 0; }}>全部已读</a>
+                          <a style={{ fontSize: 12, color: '#1677ff' }} onClick={handleNotifReadAll}>全部已读</a>
                         </div>
                         {globalNotifications.length === 0 ? (
                           <div style={{ textAlign: 'center', padding: 24, color: '#bfbfbf' }}>暂无通知</div>
                         ) : (
                           globalNotifications.slice(0, 10).map(n => (
-                            <div key={n.key} style={{ padding: '10px 12px', marginBottom: 6, background: n.read ? 'transparent' : '#f0f5ff', borderRadius: 6, cursor: 'pointer' }} onClick={() => { n.read = true; }}>
+                            <div key={n.key} style={{ padding: '10px 12px', marginBottom: 6, background: n.read ? 'transparent' : '#f0f5ff', borderRadius: 6, cursor: 'pointer' }} onClick={() => handleNotifClick(n)}>
                               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
                                 <Tag color={n.type === 'success' ? 'success' : n.type === 'warning' ? 'warning' : n.type === 'error' ? 'error' : 'processing'} style={{ fontSize: 11 }}>{n.type}</Tag>
                                 <span style={{ fontSize: 13, fontWeight: 500 }}>{n.title}</span>
@@ -9970,7 +10531,7 @@ const colConfigTree = [
                     </Badge>
                   </Popover>
                   {/* 用户头像下拉 */}
-                  <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">
+                  <Dropdown menu={{ items: userMenuItems, onClick: handleUserMenuClick }} placement="bottomRight">
                     <div className="user-avatar-dropdown">
                       <Avatar
                         size={32}
